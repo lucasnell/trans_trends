@@ -34,10 +34,8 @@ axes_fn <- function(pred_, pca_) {
     pred_ %>%
         select(id, midges_z, time_z, dist_z) %>%
         full_join(as_tibble(pca_$x) %>%
-                      select(PC1, PC2) %>%
                       mutate(id = row_number()))
 }
-
 
 # taxon vectors from pca
 taxon_vec_fn <- function(d_, pca_) {
@@ -48,9 +46,7 @@ taxon_vec_fn <- function(d_, pca_) {
         as_tibble() %>%
         mutate(id = row_number()) %>%
         left_join(taxa_short_) %>%
-        select(taxon, PC1, PC2) %>%
-        mutate(PC1 = PC1,
-               PC2 = PC2)
+        select(taxon, matches("PC"))
 }
 
 # rotation of observed data
@@ -81,7 +77,7 @@ obs_exp_fn <- function(obs_rot_) {
         select(type, matches("PC"))
 }
 
-# run all function and package
+# run pca and package
 pred_pca_fn <- function(d_, beta_, int_) {
     pred_ <- pred_fn(d_, beta_, int_)
     pca_ <- pca_fn(pred_)
@@ -94,5 +90,26 @@ pred_pca_fn <- function(d_, beta_, int_) {
                 obs_rot = obs_rot_, obs_exp = obs_exp_))
 }
 
+# biplot
+biplot_fn <- function(pred_pca_, var_) {
+    var_fn <- function(var__) {
+        if(var_ == "Midges") return(pred_pca_$obs_rot$midges_z)
+        if(var_ == "Time") return(pred_pca_$obs_rot$time_z)
+        if(var_ == "Distance") return(pred_pca_$obs_rot$dist_z)
+    }
+    pred_pca_$obs_rot %>%
+        ggplot(aes(PC1, PC2))+
+        geom_point(aes(color = var_fn(var_)), alpha = 0.6, size = 3)+
+        geom_segment(data = pred_pca_$taxon_vec,
+                     aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
+                     arrow = arrow(length = unit(0.5, "cm")),
+                     size = 0.8, color = "black")+
+        geom_text(data = pred_pca_$taxon_vec,
+                  aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
+                  size = 4, color = "black")+
+        scale_colour_gradient2(var_,low =  "firebrick", mid = "gray70", high = "royalblue",
+                               midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
+        coord_equal()
+}
 
 
