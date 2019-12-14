@@ -131,7 +131,7 @@ myv_arth2 %>%
 # fit <- readRDS("analysis/fit.rds")
 
 # summarize
-m_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
+fit_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
   as.data.frame() %>%
   rownames_to_column() %>%
   as_tibble() %>%
@@ -161,14 +161,14 @@ taxa_long <- myv_arth2 %>%
   mutate(id = row_number())
 
 # ar coefficients
-ar <- m_sum %>%
-  filter(str_detect(m_sum$var, "phi")) %>%
+ar <- fit_sum %>%
+  filter(str_detect(fit_sum$var, "phi")) %>%
   mutate(id = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2]))) %>%
   full_join(taxa_short)
 
 # taxon-specific slopes
-beta <- m_sum %>%
-  filter(str_detect(m_sum$var, "beta"), !str_detect(m_sum$var, "sig")) %>%
+beta <- fit_sum %>%
+  filter(str_detect(fit_sum$var, "beta"), !str_detect(fit_sum$var, "sig")) %>%
   mutate(id = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
          coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[3])),
          coef = factor(coef, levels = c(1:4), labels = c("int","midges","time","dist"))) %>%
@@ -180,8 +180,8 @@ beta <- m_sum %>%
             hi = unique(hi))
 
 # intercepts
-int_full <- m_sum %>%
-  filter(str_detect(m_sum$var, "beta"), !str_detect(m_sum$var, "sig")) %>%
+int_full <- fit_sum %>%
+  filter(str_detect(fit_sum$var, "beta"), !str_detect(fit_sum$var, "sig")) %>%
   mutate(id = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
          coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[3])),
          coef = factor(coef, levels = c(1:4), labels = c("int","midges","time","dist"))) %>%
@@ -197,14 +197,14 @@ int_taxon <- int_full %>%
 
 
 # mean slopes
-alpha <- m_sum %>%
-  filter(str_detect(m_sum$var, "alpha")) %>%
+alpha <- fit_sum %>%
+  filter(str_detect(fit_sum$var, "alpha")) %>%
   mutate(coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
          coef = factor(coef, levels = c(1:4), labels = c("int","midges","time","dist")))
 
 # sigmas
-sig_beta <- m_sum %>%
-  filter(str_detect(m_sum$var, "sig_beta")) %>%
+sig_beta <- fit_sum %>%
+  filter(str_detect(fit_sum$var, "sig_beta")) %>%
   mutate(coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
          coef = factor(coef, levels = c(1:6),
                        labels = c("int_tax","int_plot","int_trans","midges","time","dist")))
@@ -335,172 +335,58 @@ ar %>%
 #========== PCA
 #==========
 
-# predicted values for PCA
-pred_pca <- myv_arth2 %>%
-  expand(taxon,
-         midges_z = seq(min(midges_z), max(midges_z), 1),
-         time_z = seq(min(time_z), max(time_z), 1),
-         dist_z = seq(min(dist_z), max(dist_z), 1)) %>%
-  full_join(beta %>%
-              select(taxon, coef, mi) %>%
-              spread(coef, mi)) %>%
-  full_join(int_taxon %>% select(taxon, mi) %>% rename(int = mi)) %>%
-  mutate(y = int + midges*midges_z + time*time_z + dist*dist_z)
+source("analysis/pca_funs.R")
 
-# define prediction id's
-pred_id <- pred_pca %>%
-  group_by(taxon) %>%
-  mutate(id = row_number()) %>%
-  ungroup()
+# pca on predicted values
+pred_pca <- pred_pca_fn(myv_arth2, beta, int_taxon)
 
-# calculate PC rotations
-pred_pca <- prcomp(pred_id %>%
-                     select(id, taxon, y) %>%
-                     spread(taxon, y) %>%
-                     select(-id) %>%
-                     as.matrix(),
-                   center = F, scale= F)
+# variance explained in predicted values (first three axes must explain everything)
+summary(pred_pca$pca)
 
-# extract PC axes and combine with predictors
-pred_axes <- pred_id %>%
-  select(id, midges_z, time_z, dist_z) %>%
-  full_join(as_tibble(pred_pca$x) %>%
-              select(PC1, PC2) %>%
-              mutate(id = row_number()))
+# plot midge effect
+pred_pca$obs_rot %>%
+    ggplot(aes(PC1, PC2))+
+    geom_point(aes(color = midges_z), alpha = 0.6, size = 3)+
+    geom_segment(data = pred_pca$taxon_vec,
+                 aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
+                 arrow = arrow(length = unit(0.5, "cm")),
+                 size = 0.8, color = "black")+
+    geom_text(data = pred_pca$taxon_vec,
+              aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
+              size = 4, color = "black")+
+    scale_colour_gradient2("Midges",low =  "firebrick", mid = "gray70", high = "royalblue",
+                           midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
+    coord_equal()
 
-# taxa vectors
-taxa_vectors <- pred_pca$rotation %>%
-  as_tibble() %>%
-  mutate(id = row_number()) %>%
-  left_join(taxa_short) %>%
-  select(taxon, PC1, PC2) %>%
-  mutate(PC1 = PC1,
-         PC2 = PC2)
+# plot time effect
+pred_pca$obs_rot %>%
+    ggplot(aes(PC1, PC2))+
+    geom_point(aes(color = time_z), alpha = 0.6, size = 3)+
+    geom_segment(data = pred_pca$taxon_vec,
+                 aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
+                 arrow = arrow(length = unit(0.5, "cm")),
+                 size = 0.8, color = "black")+
+    geom_text(data = pred_pca$taxon_vec,
+              aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
+              size = 4, color = "black")+
+    scale_colour_gradient2("Time",low =  "firebrick", mid = "gray70", high = "royalblue",
+                           midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
+    coord_equal()
 
-# covariate vectors
-cov_vectors <- pred_axes %>%
-  filter(time_z == time_z[which.min(abs(time_z - 0))],
-         dist_z == dist_z[which.min(abs(dist_z - 0))]) %>%
-  filter(midges_z == min(midges_z)|midges_z == max(midges_z)) %>%
-  group_by(midges_z) %>%
-  summarize(PC1 = unique(PC1), PC2 = unique(PC2)) %>%
-  rename(val = midges_z) %>%
-  arrange(val) %>%
-  mutate(var = "midges_z") %>%
-  bind_rows(pred_axes %>%
-              filter(midges_z == midges_z[which.min(abs(midges_z - 0))],
-                     dist_z == dist_z[which.min(abs(dist_z - 0))]) %>%
-              filter(time_z == min(time_z)|time_z == max(time_z)) %>%
-              group_by(time_z) %>%
-              summarize(PC1 = unique(PC1), PC2 = unique(PC2)) %>%
-              rename(val = time_z) %>%
-              mutate(var = "time_z")) %>%
-  bind_rows(pred_axes %>%
-              filter(time_z == time_z[which.min(abs(time_z - 0))],
-                     midges_z == midges_z[which.min(abs(midges_z - 0))]) %>%
-              filter(dist_z == min(dist_z)|dist_z == max(dist_z)) %>%
-              group_by(dist_z) %>%
-              summarize(PC1 = unique(PC1), PC2 = unique(PC2)) %>%
-              rename(val = dist_z) %>%
-              mutate(var = "dist_z")) %>%
-  group_by(var) %>%
-  mutate(PC1 = PC1 - PC1[1],
-         PC2 = PC2 - PC2[1])
-
-cov_vectors %>%
-  group_by(var) %>%
-  summarize(d  = sqrt(diff(PC1)^2 + diff(PC2)^2)) %>%
-  mutate(w = d/(sum(d)))
+# plot distance effect
+pred_pca$obs_rot %>%
+    ggplot(aes(PC1, PC2))+
+    geom_point(aes(color = dist_z), alpha = 0.6, size = 3)+
+    geom_segment(data = pred_pca$taxon_vec,
+                 aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
+                 arrow = arrow(length = unit(0.5, "cm")),
+                 size = 0.8, color = "black")+
+    geom_text(data = pred_pca$taxon_vec,
+              aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
+              size = 4, color = "black")+
+    scale_colour_gradient2("Distance",low =  "firebrick", mid = "gray70", high = "royalblue",
+                           midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
+    coord_equal()
 
 
-
-
-
-# define data id's
-obs_id <- myv_arth2 %>%
-  group_by(taxon) %>%
-  mutate(id = row_number()) %>%
-  ungroup()
-
-# rotate observed data by PC axes
-obs_rot <- predict(pred_pca,
-                   obs_id %>%
-                     select(id, taxon, y) %>%
-                     spread(taxon, y) %>%
-                     select(-id) %>%
-                     as.matrix())
-
-# extract PC axes and combine with predictors
-obs_axes <- obs_id %>%
-  select(id, plot, trans, midges_z, time_z, dist_z) %>%
-  full_join(as_tibble(obs_rot) %>%
-              mutate(id = row_number()))
-
-
-test <- obs_rot[,1:7] %>%
-  apply(2, sd) %>%
-  {.^2/sum(.^2)}
-
-test %>% cumsum()
-
-
-obs_axes %>%
-  gather(pc, val, PC1:PC3) %>%
-  group_by(pc) %>%
-  summarize(r_midges_z = cor(val, midges_z),
-            r_time_z = cor(val, time_z),
-            r_dist_z = cor(val, dist_z))
-
-
-
-
-
-
-
-
-
-# plot
-obs_axes %>%
-  ggplot(aes(PC1, PC2))+
-  geom_point(aes(color = midges_z), alpha = 0.6, size = 3)+
-  geom_segment(data = taxa_vectors,
-               aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
-               arrow = arrow(length = unit(0.5, "cm")),
-               size = 0.8, color = "black")+
-  geom_text(data = taxa_vectors,
-            aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
-            size = 4, color = "black")+
-  scale_colour_gradient2("Midges",low =  "firebrick", mid = "gray70", high = "royalblue",
-                         midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
-  coord_equal()
-
-
-
-obs_axes %>%
-  ggplot(aes(PC1, PC2))+
-  geom_point(aes(color = time_z), alpha = 0.6, size = 3)+
-  geom_segment(data = taxa_vectors,
-               aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
-               arrow = arrow(length = unit(0.5, "cm")),
-               size = 0.8, color = "black")+
-  geom_text(data = taxa_vectors,
-            aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
-            size = 4, color = "black")+
-  scale_colour_gradient2("Time",low =  "firebrick", mid = "gray70", high = "royalblue",
-                         midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
-  coord_equal()
-
-obs_axes %>%
-  ggplot(aes(PC1, PC2))+
-  geom_point(aes(color = dist_z), alpha = 0.6, size = 3)+
-  geom_segment(data = taxa_vectors,
-               aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
-               arrow = arrow(length = unit(0.5, "cm")),
-               size = 0.8, color = "black")+
-  geom_text(data = taxa_vectors,
-            aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
-            size = 4, color = "black")+
-  scale_colour_gradient2("Distance",low =  "firebrick", mid = "gray70", high = "royalblue",
-                         midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
-  coord_equal()
 
