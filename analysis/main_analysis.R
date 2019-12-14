@@ -12,14 +12,18 @@ myv_arth = read_csv("data/myv_arth.csv")
 
 # set theme
 theme_set(theme_bw() %+replace%
-            theme(panel.grid = element_blank(),
-                  strip.background = element_blank(),
-                  legend.margin = margin(0,0,0,0),
-                  strip.text = element_text(size=10),
-                  legend.text = element_text(size=10),
-                  axis.text=element_text(size=10, color="black"),
-                  axis.title.y=element_text(angle = 90 ,margin=margin(0,15,0,0)),
-                  axis.title.x=element_text(margin=margin(15,0,0,0))))
+              theme(panel.grid = element_blank(),
+                    strip.background = element_blank(),
+                    legend.margin = margin(0,0,0,0),
+                    strip.text = element_text(size=12),
+                    legend.text = element_text(size=12),
+                    legend.title = element_text(size=14),
+                    axis.text = element_text(size=12, color="black"),
+                    axis.title.y = element_text(size=14,angle = 90 ,margin=margin(0,15,0,0)),
+                    axis.title.x = element_text(size=14,margin=margin(15,0,0,0)),
+                    strip.text.x = element_text(margin=margin(0,0,10,0)),
+                    strip.text.y = element_text(margin=margin(0,10,0,10), angle=270),
+                    axis.title = element_text(size=14)))
 
 
 
@@ -331,6 +335,7 @@ ar %>%
 
 
 
+
 #==========
 #========== PCA
 #==========
@@ -340,53 +345,39 @@ source("analysis/pca_funs.R")
 # pca on predicted values
 pred_pca <- pred_pca_fn(myv_arth2, beta, int_taxon)
 
+# taxon vectors
+pred_pca$taxon_vec %>%
+    arrange(-abs(PC1))
+
 # variance explained in predicted values (first three axes must explain everything)
 summary(pred_pca$pca)
 
+# variance explained in observed values
+pred_pca$obs_exp
+
 # plot midge effect
-pred_pca$obs_rot %>%
-    ggplot(aes(PC1, PC2))+
-    geom_point(aes(color = midges_z), alpha = 0.6, size = 3)+
-    geom_segment(data = pred_pca$taxon_vec,
-                 aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
-                 arrow = arrow(length = unit(0.5, "cm")),
-                 size = 0.8, color = "black")+
-    geom_text(data = pred_pca$taxon_vec,
-              aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
-              size = 4, color = "black")+
-    scale_colour_gradient2("Midges",low =  "firebrick", mid = "gray70", high = "royalblue",
-                           midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
-    coord_equal()
+biplot_fn(pred_pca, "Midges")
 
 # plot time effect
-pred_pca$obs_rot %>%
-    ggplot(aes(PC1, PC2))+
-    geom_point(aes(color = time_z), alpha = 0.6, size = 3)+
-    geom_segment(data = pred_pca$taxon_vec,
-                 aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
-                 arrow = arrow(length = unit(0.5, "cm")),
-                 size = 0.8, color = "black")+
-    geom_text(data = pred_pca$taxon_vec,
-              aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
-              size = 4, color = "black")+
-    scale_colour_gradient2("Time",low =  "firebrick", mid = "gray70", high = "royalblue",
-                           midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
-    coord_equal()
+biplot_fn(pred_pca, "Time")
 
 # plot distance effect
-pred_pca$obs_rot %>%
-    ggplot(aes(PC1, PC2))+
-    geom_point(aes(color = dist_z), alpha = 0.6, size = 3)+
-    geom_segment(data = pred_pca$taxon_vec,
-                 aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
-                 arrow = arrow(length = unit(0.5, "cm")),
-                 size = 0.8, color = "black")+
-    geom_text(data = pred_pca$taxon_vec,
-              aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
-              size = 4, color = "black")+
-    scale_colour_gradient2("Distance",low =  "firebrick", mid = "gray70", high = "royalblue",
-                           midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
-    coord_equal()
+biplot_fn(pred_pca, "Distance")
 
+
+
+lapply(c("midges_z","time_z","dist_z"), function(x){
+    pred_pca$axes %>%
+        select(id, midges_z, time_z, dist_z, PC1, PC2, PC3) %>%
+        gather(pc, val, PC1, PC2, PC3) %>%
+        select(x, pc, val) %>%
+        split(.$pc) %>%
+        lapply(function(y){
+            unique(y) %>% {tibble(var = x, pc = unique(.$pc), cor = cor(.[,1], .[,3]) %>% round(2))}
+        }) %>%
+        bind_rows()
+    }) %>%
+    bind_rows() %>%
+    spread(pc, cor)
 
 
