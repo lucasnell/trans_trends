@@ -126,13 +126,14 @@ myv_arth2 %>%
 #            x_scale = FALSE,
 #            y_scale = NULL,
 #            hmc = T,
+#            change = T,
 #            rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.9)))
 
 # export fit
 # saveRDS(fit, "analysis/fit.rds")
 
 # import fit
-fit <- readRDS ("analysis/fit.rds")
+# fit <- readRDS ("analysis/fit.rds")
 
 # summarize
 fit_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
@@ -301,6 +302,7 @@ ar %>%
 #           x_scale = FALSE,
 #           y_scale = NULL,
 #           hmc = T,
+#           change = T,
 #           rstan_control = list(iter = 2000, chains = 1, control = list(adapt_delta = 0.8)))
 # })
 
