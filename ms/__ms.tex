@@ -1,0 +1,197 @@
+\documentclass[12pt]{article}
+% \usepackage[sc]{mathpazo} % Like Palatino with extensive math support
+\usepackage{mathptmx} % Like Times New Roman
+\usepackage{fullpage}
+\usepackage[authoryear,sectionbib,sort]{natbib}
+\linespread{2}
+\usepackage[utf8]{inputenc}
+\usepackage{lineno}
+\usepackage{titlesec}
+\titleformat{\section}[block]{\Large\bfseries\filcenter}{\thesection}{1em}{}
+\titleformat{\subsection}[block]{\Large\itshape\filcenter}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}[block]{\large\itshape}{\thesubsubsection}{1em}{}
+\titleformat{\paragraph}[runin]{\itshape}{\theparagraph}{1em}{}[. ]\renewcommand{\refname}{Literature Cited}
+
+%%%%%%%%%%%%%%%%%%%%%
+% Line numbering
+%%%%%%%%%%%%%%%%%%%%%
+%
+% Please use line numbering with your initial submission and
+% subsequent revisions. After acceptance, please turn line numbering
+% off by adding percent signs to the lines %\usepackage{lineno} and
+% to %\linenumbers{} and %\modulolinenumbers[3] below.
+%
+% To avoid line numbering being thrown off around math environments,
+% the math environments have to be wrapped using
+% \begin{linenomath*} and \end{linenomath*}
+%
+% (Thanks to Vlastimil Krivan for pointing this out to us!)
+
+\title{Autoregressive mixed models yield additional insights into community dynamics
+from time series data}
+
+% This version of the LaTeX template was last updated on
+% November 8, 2019.
+
+%%%%%%%%%%%%%%%%%%%%%
+% Authorship
+%%%%%%%%%%%%%%%%%%%%%
+% Please remove authorship information while your paper is under review,
+% unless you wish to waive your anonymity under double-blind review. You
+% will need to add this information back in to your final files after
+% acceptance.
+
+\author{
+Joseph S. Phillips$^{1,2,3,\dagger}$ \\
+Lucas A. Nell$^{1,4,\dagger}$ \\
+Jamieson C. Botsch$^{1}$}
+
+
+
+\usepackage{amsmath} % for split math environment
+
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\noindent{} 1. Department of Integrative Biology, University of Wisconsin, Madison, Wisconsin 53706 USA
+
+\noindent{} 2. Hólar University
+
+\noindent{} 3. E-mail: josephsmphillips@gmail.com
+
+\noindent{} 4. E-mail: lucas@lucasnell.com
+
+\noindent{} $\dagger$ Both authors contributed equally.
+
+
+
+\bigskip
+
+% \textit{Manuscript elements}: %Figure~1, figure~2, table~1, online appendices~A and B (including $-- figure~A1 and figure~A2). Figure~2 is to print in color.
+
+\bigskip
+
+
+\textit{Keywords}: {
+}
+
+
+\bigskip
+
+\textit{Manuscript type}: Statistical Report.
+
+% \bigskip
+% \noindent{\footnotesize Prepared using the suggested \LaTeX{} template for \textit{Am.\ Nat.}}
+
+\linenumbers{}
+% \modulolinenumbers[3]
+
+\newpage{}
+
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% Abstract
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+
+\input{00-abstract}
+
+
+\newpage{}
+
+
+
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% Introduction
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+
+\input{01-intro}
+
+
+
+
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% Methods
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+
+
+\input{02-methods}
+
+
+
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% Results
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+
+\input{03-results}
+
+
+
+
+
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% Discussion
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+
+
+\input{04-discussion}
+
+
+
+
+
+
+
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% Acknowledgments
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% You may wish to remove the Acknowledgments section while your paper
+% is under review (unless you wish to waive your anonymity under
+% double-blind review) if the Acknowledgments reveal your identity.
+% If you remove this section, you will need to add it back in to your
+% final files after acceptance.
+
+% \section*{Acknowledgments}
+%
+% OEC would like to thank the world. GHC is much indebted to the solar system. AQE was supported by a generous grant from the Milky Way (MW/01010/987654).
+
+
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% Appendices
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+
+% \newpage{}
+%
+% \input{app_A}
+
+
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+% Literature Cited
+% ---------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------
+
+
+
+\bibliographystyle{ecology.bst}
+\newpage{}
+\bibliography{refs.bib}
+
+\end{document}
