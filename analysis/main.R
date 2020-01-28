@@ -22,7 +22,7 @@ theme_set(theme_bw() %+replace%
                     axis.title.y = element_text(size=14,angle = 90 ,margin=margin(0,15,0,0)),
                     axis.title.x = element_text(size=14,margin=margin(15,0,0,0)),
                     strip.text.x = element_text(margin=margin(0,0,10,0)),
-                    strip.text.y = element_text(margin=margin(0,10,0,10), angle=270),
+                    strip.text.y = element_text(margin=margin(0,0,0,10), angle=270),
                     axis.title = element_text(size=14)))
 
 
@@ -132,7 +132,7 @@ myv_arth2 %>%
 # saveRDS(fit, "analysis/fit.rds")
 
 # import fit
-# fit <- readRDS("analysis/fit.rds")
+fit <- readRDS ("analysis/fit.rds")
 
 # summarize
 fit_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
@@ -153,7 +153,7 @@ fit_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
 
 
 #==========
-#========== Extract estiamtes
+#========== Extract estimates
 #==========
 
 # create taxon lists
@@ -225,7 +225,7 @@ beta %>%
   filter(coef != "int") %>%
   mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil","acar","cara","stap")))) %>%
   ggplot(aes(tx, mi))+
-  facet_wrap(~coef)+
+  facet_wrap(~coef, nrow = 3)+
   geom_rect(data = alpha%>%
               filter(coef != "int"),
             aes(xmin = 0.5, xmax = 7.5, ymin = lo, ymax = hi), inherit.aes = F,
@@ -238,7 +238,7 @@ beta %>%
                      labels = c("Ground spiders","Wolf spiders","Sheet weavers",
                                               "Harvestman","Mites","Ground beetles","Rove beetles"),
                      limits = c(0.5, 7.5))+
-  theme(axis.text.x = element_text(angle=45, vjust = 1, hjust = 1))
+    coord_flip()
 
 # sigmas
 {fit$stan %>% rstan::extract(pars = "sig_beta")}[[1]] %>%
@@ -273,7 +273,7 @@ ar %>%
                      labels = c("Ground spiders","Wolf spiders","Sheet weavers",
                                 "Harvestman","Mites","Ground beetles","Rove beetles"),
                      limits = c(0.5, 7.5))+
-  theme(axis.text.x = element_text(angle=45, vjust = 1, hjust = 1))
+    coord_flip()
 
 
 
@@ -365,7 +365,7 @@ biplot_fn(pred_pca, "Time")
 biplot_fn(pred_pca, "Distance")
 
 
-
+# correlation between predictors and pc axes
 lapply(c("midges_z","time_z","dist_z"), function(x){
     pred_pca$axes %>%
         select(id, midges_z, time_z, dist_z, PC1, PC2, PC3) %>%
@@ -379,5 +379,26 @@ lapply(c("midges_z","time_z","dist_z"), function(x){
     }) %>%
     bind_rows() %>%
     spread(pc, cor)
+
+# variance partition of PC axes by predictors
+lapply(c("PC1","PC2","PC3"), function(x){
+    y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
+    tibble(var = c("midges_z", "time_z", "dist_z"),
+           pc = x,
+           cont = anova(lm(y, data = pred_pca$axes))[,2] %>% {.[1:3]/sum(.[1:3])} %>% round(3)
+    )
+}) %>%
+    bind_rows() %>%
+    spread(pc, cont)
+
+
+
+
+
+
+
+
+
+
 
 
