@@ -3,8 +3,21 @@ For the most recently compiled PDF version of the manuscript, go to
 <https://uwmadison.box.com/s/bso8x3z16x2hvybho6296njf2tqxwsgi>
 
 
+## File descriptions:
 
-Citations in `__ms.tex`:
+- `___ms_make.command`: This file compiles the LaTeX document. This is the only way
+  users should compile it, since clicking "Compile PDF" in RStudio won't complete all
+  the necessary steps and will leave around extraneous files.
+  Just click on it (on a mac) to use it.
+- `__ms.tex`: The main LaTeX document, mostly containing formatting.
+  The only manuscript content in this file are the title, authors, and keywords.
+- `##-<Description>.tex` files: These files are for the various sections of 
+  the paper. Most of the paper content should be contained in these files.
+- `ecology.bst`: This tells LaTeX how we want to format citations.
+- `ref.bib`: This contains the reference information.
+
+
+## Citations in `__ms.tex`:
 
 1. Go to Google Scholar; click the top left, and select Settings; then in the
    Bibliography manager section, check show links to import citations into BibTeX, 
