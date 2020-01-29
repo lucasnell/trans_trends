@@ -7,7 +7,7 @@ pred_fn <- function(d_, beta_, int_) {
                midges_z = seq(min(midges_z), max(midges_z), 1),
                time_z = seq(min(time_z), max(time_z), 1),
                dist_z = seq(min(dist_z), max(dist_z), 1)) %>%
-        full_join(beta %>%
+        full_join(beta_ %>%
                       select(taxon, coef, mi) %>%
                       spread(coef, mi)) %>%
         full_join(int_ %>% select(taxon, mi) %>% rename(int = mi)) %>%
