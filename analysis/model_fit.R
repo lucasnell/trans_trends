@@ -35,6 +35,7 @@ theme_set(theme_bw() %+replace%
 
 # prepare data
 data_fit <- myv_arth %>%
+    filter(taxon != "acar") %>%
     rename(distance = dist) %>%
     group_by(taxon) %>%
     mutate(y = log1p(count),
@@ -52,9 +53,9 @@ data_fit <- myv_arth %>%
            taxon = factor(taxon),
            plot = factor(paste0(trans, dist)),
            Taxon = factor(taxon,
-                          levels = c("gnap","lyco","sheet","opil","acar","cara","stap"),
+                          levels = c("gnap","lyco","sheet","opil","cara","stap"),
                           labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                     "Harvestman","Mites","Ground beetles","Rove beetles"))) %>%
+                                     "Harvestman","Ground beetles","Rove beetles"))) %>%
     arrange(trans, distance, taxon, year)
 
 # write_csv(data_fit, "analysis/data_fit.csv")
@@ -69,16 +70,16 @@ data_fit <- myv_arth %>%
 #==========
 
 # fit model
-# fit <- liz_fit(formula = y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
-#               (midges_z + time_z + dist_z | taxon),
-#            time_form = ~  time | trans + distf + taxon,
-#            ar_form = ~ taxon,
-#            data = myv_arth2,
-#            x_scale = FALSE,
-#            y_scale = NULL,
-#            hmc = T,
-#            change = T,
-#            rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.9)))
+fit <- liz_fit(formula = y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
+              (midges_z + time_z + dist_z | taxon),
+           time_form = ~  time | trans + distf + taxon,
+           ar_form = ~ taxon,
+           data = data_fit,
+           x_scale = FALSE,
+           y_scale = NULL,
+           hmc = T,
+           change = T,
+           rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.9)))
 
 # export fit
 # saveRDS(fit, "analysis/output/fit.rds")
@@ -109,9 +110,9 @@ fit_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
 #==========
 
 # create taxon lists
-taxa_short <- tibble(taxon = myv_arth2$taxon %>% unique()) %>%
+taxa_short <- tibble(taxon = data_fit$taxon %>% unique()) %>%
     mutate(id = row_number())
-taxa_long <- myv_arth2 %>%
+taxa_long <- data_fit %>%
     expand(nesting(plot, taxon)) %>%
     select(plot, taxon) %>%
     mutate(id = row_number())
@@ -195,7 +196,7 @@ coef_sum <- list(ar = ar, beta = beta, int_full = int_full, int_taxon = int_taxo
 #   liz_fit(formula = as.formula(x),
 #           time_form = ~  time | trans + distf + taxon,
 #           ar_form = ~ taxon,
-#           data = myv_arth2,
+#           data = data_fit,
 #           x_scale = FALSE,
 #           y_scale = NULL,
 #           hmc = T,

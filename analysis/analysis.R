@@ -55,9 +55,9 @@ data_fit %>%
                   mutate(type = factor(type, levels = c("Midge catch", "Mean activity-density"))),
               aes(color = type), size = 1)+
     scale_color_manual("",values = c("red","blue"))+
-    scale_x_continuous("Year", breaks = c(2010,2013,2016), limits = c(2007,2018))+
+    scale_x_continuous("Year", breaks = c(2008,2012,2016), limits = c(2007,2018))+
     scale_y_continuous("Standardized activity-density", limits = c(-4.5,4.5), breaks = c(-3,0,3))+
-    theme(legend.position = c(0.75, 0.1))
+    theme(legend.position = "top")
 
 # distance
 data_fit %>%
@@ -78,7 +78,7 @@ data_fit %>%
     scale_color_manual("",values = c("red","blue"))+
     scale_x_continuous("Distance", trans = "log", breaks = c(5,50,500))+
     scale_y_continuous("Standardized activity-density", limits = c(-4.5,4.5), breaks = c(-3,0,3))+
-    theme(legend.position = c(0.75, 0.1))
+    theme(legend.position = "top")
 
 
 
@@ -91,21 +91,21 @@ data_fit %>%
 # taxon-specific slopes
 coef_sum$beta %>%
     filter(coef != "int") %>%
-    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil","acar","cara","stap")))) %>%
+    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap")))) %>%
     ggplot(aes(tx, mi))+
     facet_wrap(~coef, nrow = 3)+
     geom_rect(data = coef_sum$alpha%>%
                   filter(coef != "int"),
-              aes(xmin = 0.5, xmax = 7.5, ymin = lo, ymax = hi), inherit.aes = F,
+              aes(xmin = 0.5, xmax = 6.5, ymin = lo, ymax = hi), inherit.aes = F,
               alpha = 0.5, fill = "gray50", linetype =  0)+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_point(size = 3)+
     geom_errorbar(aes(ymin = lo, ymax = hi), width = 0)+
-    scale_y_continuous("Effect size (response SD)", breaks = c(-0.5, 0, 0.5))+
-    scale_x_continuous("Taxon",breaks = 1:7,
+    scale_y_continuous("Effect size (response SD)", breaks = c(-0.5, 0, 0.5), limits = c(-0.55, 0.55))+
+    scale_x_continuous("Taxon",breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                  "Harvestman","Mites","Ground beetles","Rove beetles"),
-                       limits = c(0.5, 7.5))+
+                                  "Harvestman","Ground beetles","Rove beetles"),
+                       limits = c(0.5, 6.5))+
     coord_flip()
 
 # sigmas
@@ -131,15 +131,14 @@ coef_sum$beta %>%
 
 # ar
 coef_sum$ar %>%
-    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil","acar","cara","stap")))) %>%
+    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap")))) %>%
     ggplot(aes(tx, mi))+
-    geom_hline(yintercept = median(coef_sum$ar$mi),color = "gray50")+
     geom_point(size = 3)+
     geom_errorbar(aes(ymin = lo, ymax = hi), width = 0)+
     scale_y_continuous("Autoregressive parameter",  limits = c(0, 1), breaks = c(0, 0.5, 1))+
-    scale_x_continuous("Taxon",breaks = 1:7,
+    scale_x_continuous("Taxon",breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                  "Harvestman","Mites","Ground beetles","Rove beetles"),
+                                  "Harvestman","Ground beetles","Rove beetles"),
                        limits = c(0.5, 7.5))+
     coord_flip()
 
@@ -168,13 +167,19 @@ summary(pred_pca$pca)
 pred_pca$obs_exp
 
 # plot midge effect
-biplot_fn(pred_pca, "Midges")
+biplot_fn(pred_pca, "Midges")+
+    scale_x_continuous(limits = c(-5, 5))+
+    scale_y_continuous(limits = c(-5, 5))
 
 # plot time effect
-biplot_fn(pred_pca, "Time")
+biplot_fn(pred_pca, "Time")+
+    scale_x_continuous(limits = c(-5, 5))+
+    scale_y_continuous(limits = c(-5, 5))
 
 # plot distance effect
-biplot_fn(pred_pca, "Distance")
+biplot_fn(pred_pca, "Distance")+
+    scale_x_continuous(limits = c(-5, 5))+
+    scale_y_continuous(limits = c(-5, 5))
 
 
 # correlation between predictors and pc axes
@@ -202,3 +207,4 @@ lapply(c("PC1","PC2","PC3"), function(x){
 }) %>%
     bind_rows() %>%
     spread(pc, cont)
+
