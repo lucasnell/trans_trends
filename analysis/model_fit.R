@@ -51,11 +51,7 @@ data_fit <- myv_arth %>%
            trans = factor(trans),
            distf = factor(dist),
            taxon = factor(taxon),
-           plot = factor(paste0(trans, dist)),
-           Taxon = factor(taxon,
-                          levels = c("gnap","lyco","sheet","opil","cara","stap"),
-                          labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                     "Harvestman","Ground beetles","Rove beetles"))) %>%
+           plot = factor(paste0(trans, dist))) %>%
     arrange(trans, distance, taxon, year)
 
 # write_csv(data_fit, "analysis/data_fit.csv")
