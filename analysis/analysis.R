@@ -8,7 +8,11 @@ library(tidyverse)
 options(mc.cores = parallel::detectCores()-2)
 
 # load data
-data_fit <- read_csv("analysis/data_fit.csv")
+data_fit <- read_csv("analysis/data_fit.csv") %>%
+    mutate(Taxon = factor(taxon,
+                          levels = c("gnap","lyco","sheet","opil","cara","stap"),
+                          labels = c("Ground spiders","Wolf spiders","Sheet weavers",
+                                     "Harvestman","Ground beetles","Rove beetles")))
 fit <- readRDS("analysis/output/fit.rds")
 fit_sum <- read_csv("analysis/output/fit_sum.csv")
 coef_sum <- readRDS("analysis/output/coef_sum.rds")
@@ -165,6 +169,28 @@ summary(pred_pca$pca)
 
 # variance explained in observed values
 pred_pca$obs_exp
+
+# biplot function
+biplot_fn <- function(pred_pca_, var_) {
+    var_fn <- function(var__) {
+        if(var_ == "Midges") return(pred_pca_$obs_rot$midges_z)
+        if(var_ == "Time") return(pred_pca_$obs_rot$time_z)
+        if(var_ == "Distance") return(pred_pca_$obs_rot$dist_z)
+    }
+    pred_pca_$obs_rot %>%
+        ggplot(aes(PC1, PC2))+
+        geom_point(aes(color = var_fn(var_)), alpha = 0.6, size = 3)+
+        geom_segment(data = pred_pca_$taxon_vec,
+                     aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
+                     arrow = arrow(length = unit(0.5, "cm")),
+                     size = 0.8, color = "black")+
+        geom_text(data = pred_pca_$taxon_vec,
+                  aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
+                  size = 4, color = "black")+
+        scale_colour_gradient2(var_,low =  "firebrick", mid = "gray70", high = "royalblue",
+                               midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
+        coord_equal()
+}
 
 # plot midge effect
 biplot_fn(pred_pca, "Midges")+
