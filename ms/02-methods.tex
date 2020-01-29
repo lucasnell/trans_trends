@@ -2,6 +2,36 @@
 
 \section*{Methods}
 
+\begin{equation} \label{eq:y-i}
+\begin{gathered}
+y_i~=~\mathbf{x}_i~{\boldsymbol\beta}_i~+~\phi_{\text{taxon}[i]}^{\text{time}_i-\text{time}\sp{\prime}_i}~y\sp{\prime}_i
+        +~\epsilon_i \\
+\epsilon_i~\sim~\mathcal{N}\left(0,~\sigma_{\text{residual}}\right)
+\end{gathered}
+\end{equation}
 
+\begin{equation} \label{eq:x-vec}
+\mathbf{x}_i~=~\begin{bmatrix} 1 & \text{midge}_i & \text{time}_i & \text{dist}_i \end{bmatrix} \\
+\end{equation}
 
+\begin{equation} \label{eq:beta-vec}
+{\boldsymbol\beta}_i~=~\begin{bmatrix} {}^1\hspace*{-1pt}\beta_i \\ {}^\text{midge}\hspace*{-1pt}\beta_i \\
+    {}^\text{time}\hspace*{-1pt}\beta_i \\ {}^\text{dist}\hspace*{-1pt}\beta_i \end{bmatrix}
+\end{equation}
 
+\begin{equation} \label{eq:betas}
+\begin{gathered}
+{}^1\hspace*{-1pt}\hspace*{-1pt}\beta_i~=~{}^1\hspace*{-1pt}\alpha~+~{}^1\hspace*{-1pt}\zeta_{\text{taxon}[i]}~+~
+        {}^1\hspace*{-1pt}\zeta_{\text{trans}[i]}~+~{}^1\hspace*{-1pt}\zeta_{\text{plot}[i]} \\
+{}^\text{midge}\hspace*{-1pt}\beta_i~=~{}^\text{midge}\hspace*{-1pt}\alpha~+~
+        {}^\text{midge}\hspace*{-1pt}\zeta_{\text{taxon}[i]} \\
+{}^\text{time}\hspace*{-1pt}\beta_i~=~{}^\text{time}\hspace*{-1pt}\alpha~+~
+        {}^\text{time}\hspace*{-1pt}\zeta_{\text{taxon}[i]} \\
+{}^\text{dist}\hspace*{-1pt}\beta_i~=~{}^\text{dist}\hspace*{-1pt}\alpha~+~
+        {}^\text{dist}\hspace*{-1pt}\zeta_{\text{taxon}[i]}
+\end{gathered}
+\end{equation}
+
+\begin{equation} \label{eq:zetas}
+{}^k\hspace*{-1pt}\zeta_j~\sim~\mathcal{N}\left(0,~{}^k\hspace*{-1pt}\sigma_j\right)
+\end{equation}
