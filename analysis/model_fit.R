@@ -4,6 +4,7 @@
 
 # load packages
 library(lizard)
+library(loo)
 library(tidyverse)
 options(mc.cores = parallel::detectCores()-2)
 
@@ -66,16 +67,16 @@ data_fit <- myv_arth %>%
 #==========
 
 # fit model
-fit <- liz_fit(formula = y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
-              (midges_z + time_z + dist_z | taxon),
-           time_form = ~  time | trans + distf + taxon,
-           ar_form = ~ taxon,
-           data = data_fit,
-           x_scale = FALSE,
-           y_scale = NULL,
-           hmc = T,
-           change = T,
-           rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.9)))
+# fit <- liz_fit(formula = y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
+#               (midges_z + time_z + dist_z | taxon),
+#            time_form = ~  time | trans + distf + taxon,
+#            ar_form = ~ taxon,
+#            data = data_fit,
+#            x_scale = FALSE,
+#            y_scale = NULL,
+#            hmc = T,
+#            change = T,
+#            rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.9)))
 
 # export fit
 # saveRDS(fit, "analysis/output/fit.rds")
@@ -175,20 +176,31 @@ coef_sum <- list(ar = ar, beta = beta, int_full = int_full, int_taxon = int_taxo
 
 
 #==========
-#========== Comparison to reduced models
+#========== Comparison to reduced models (remove random slopes by taxon)
 #==========
 
+# function for LOOIC
+loo_fn <- function(x){
+
+    log_lik <- extract_log_lik(x, merge_chains = FALSE)
+    r_eff <- relative_eff(exp(log_lik))
+
+    loo <- loo(log_lik, r_eff = r_eff, cores = 10)
+
+    return(loo)
+}
+
 # reduced models, removing random slopes by taxon
-# red_re <- c("y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
-#               (time_z + dist_z | taxon)",
-#              "y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
-#               (midges_z + dist_z | taxon)",
-#              "y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
-#               (midges_z + time_z | taxon)"
-#              )
+red_re <- c("y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
+              (time_z + dist_z | taxon)",
+             "y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
+              (midges_z + dist_z | taxon)",
+             "y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
+              (midges_z + time_z | taxon)"
+             )
 
 # fit models
-# red_re_fits <- parallel::mclapply(red_re, function(x){m0 =
+# red_re_fits <- lapply(red_re, function(x){m0 =
 #   liz_fit(formula = as.formula(x),
 #           time_form = ~  time | trans + distf + taxon,
 #           ar_form = ~ taxon,
@@ -197,34 +209,110 @@ coef_sum <- list(ar = ar, beta = beta, int_full = int_full, int_taxon = int_taxo
 #           y_scale = NULL,
 #           hmc = T,
 #           change = T,
-#           rstan_control = list(iter = 2000, chains = 1, control = list(adapt_delta = 0.8)))
+#           rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.8)))
 # })
 
-# red_re_names <- c("midges_z","time_z","dist_z","full")
-#
-#
-# loo_fn <- function(x){
-#
-#   log_lik <- loo::extract_log_lik(x, merge_chains = FALSE)
-#   r_eff <- loo::relative_eff(exp(log_lik))
-#
-#   loo <- loo::loo(log_lik, r_eff = r_eff, cores = 10)
-#
-#   return(loo)
-# }
-#
-# red_re_fits2 = lapply(red_re_fits, function(x){x$stan}) %>% append(fit$stan)
-#
-# test <- parallel::mclapply(1:4, function(x){
-#     y <- loo_fn(red_re_fits2[[x]])$estimates["looic",]
-#     return(tibble(model = red_re_names[x], looic = y["Estimate"]))
-#   }) %>%
-#   bind_rows() %>%
-#   mutate(deviance = looic - {filter(., model == "full")$looic}) %>%
-#   filter(model != "full")
-#
-#
-# test
-#
-# loo_fn(red_re_fits2[[4]])
+# append full model
+red_re_stan <- lapply(red_re_fits, function(x){x$stan})
+names(red_re_stan) <- c("midges_z","time_z","dist_z")
+
+# saveRDS(red_re_stan, "analysis/output/reduced_fits_re.rds")
+# red_re_stan <- readRDS("analysis/output/reduced_fits_re.rds")
+
+# calculate deviances
+dev_re <- c("midges_z","time_z","dist_z") %>%
+    parallel::mclapply(function(x){
+        as_tibble(loo_compare(loo_fn(red_re_stan[[x]]), loo_fn(fit$stan))) %>%
+            mutate(var = c("full",x))}
+    ) %>%
+    bind_rows() %>%
+    unique()
+
+# write_csv(dev_re, "analysis/output/dev_re.csv")
+# dev_re <- read_csv("analysis/output/dev_re.csv")
+
+
+
+
+#==========
+#========== Comparison to reduced models (remove fixed + random slopes by taxon)
+#==========
+
+# function for LOOIC
+loo_fn <- function(x){
+
+    log_lik <- extract_log_lik(x, merge_chains = FALSE)
+    r_eff <- relative_eff(exp(log_lik))
+
+    loo <- loo(log_lik, r_eff = r_eff, cores = 10)
+
+    return(loo)
+}
+
+# reduced models, removing random slopes by taxon
+red_fere <- c("y ~ time_z + dist_z + (1 | taxon + plot + trans) +
+            (time_z + dist_z | taxon)",
+            "y ~ midges_z + dist_z + (1 | taxon + plot + trans) +
+            (midges_z + dist_z | taxon)",
+            "y ~ midges_z + time_z + (1 | taxon + plot + trans) +
+            (midges_z + time_z | taxon)"
+)
+
+# fit models
+# red_fere_fits <- lapply(red_fere, function(x){m0 =
+#     liz_fit(formula = as.formula(x),
+#             time_form = ~  time | trans + distf + taxon,
+#             ar_form = ~ taxon,
+#             data = data_fit,
+#             x_scale = FALSE,
+#             y_scale = NULL,
+#             hmc = T,
+#             change = T,
+#             rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.8)))
+# })
+
+red_fere_names <- c("midges_z","time_z","dist_z","full")
+
+# append full model
+red_fere_stan = lapply(red_fere_fits, function(x){x$stan})
+names(red_fere_stan) <- c("midges_z","time_z","dist_z")
+
+# saveRDS(red_fere_stan, "analysis/output/reduced_fits_fere.rds")
+# red_fere_stan <- readRDS("analysis/output/reduced_fits_fere.rds")
+
+# calculate deviances
+dev_fere <- c("midges_z","time_z","dist_z") %>%
+    parallel::mclapply(function(x){
+        as_tibble(loo_compare(loo_fn(red_fere_stan[[x]]), loo_fn(fit$stan))) %>%
+            mutate(var = c("full",x))}
+    ) %>%
+    bind_rows() %>%
+    unique()
+
+# write_csv(dev_fere, "analysis/output/dev_fere.csv")
+# dev_fere <- read_csv("analysis/output/dev_fere.csv")
+
+
+
+
+
+#==========
+#========== Comparison to reduced models (combined)
+#==========
+
+dev <- dev_re %>%
+    mutate(dev = 2*abs(elpd_diff),
+           dev_se = 2*se_diff) %>%
+    select(var, dev, dev_se) %>%
+    rename( dev_re = dev, dev_re_se = dev_se) %>%
+    full_join(dev_fere %>%
+                  mutate(dev = 2*abs(elpd_diff),
+                         dev_se = 2*se_diff) %>%
+                  select(var,dev, dev_se) %>%
+                  rename(dev_fere = dev, dev_fere_se = dev_se)) %>%
+    filter(var != "full")
+
+
+
+
 
