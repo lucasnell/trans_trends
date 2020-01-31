@@ -194,37 +194,25 @@ biplot_fn <- function(pred_pca_, var_) {
 
 # plot midge effect
 biplot_fn(pred_pca, "Midges")+
-    scale_x_continuous(limits = c(-5, 5))+
-    scale_y_continuous(limits = c(-5, 5))
+    scale_x_continuous(limits = c(-3, 5))+
+    scale_y_continuous(limits = c(-3, 5))+
+    theme(legend.position = c(0.8,0.8))
 
 # plot time effect
 biplot_fn(pred_pca, "Time")+
-    scale_x_continuous(limits = c(-5, 5))+
-    scale_y_continuous(limits = c(-5, 5))
+    scale_x_continuous(limits = c(-3, 5))+
+    scale_y_continuous(limits = c(-3, 5))+
+    theme(legend.position = c(0.8,0.8))
 
 # plot distance effect
 biplot_fn(pred_pca, "Distance")+
-    scale_x_continuous(limits = c(-5, 5))+
-    scale_y_continuous(limits = c(-5, 5))
+    scale_x_continuous(limits = c(-3, 5))+
+    scale_y_continuous(limits = c(-3, 5))+
+    theme(legend.position = c(0.8,0.8))
 
-
-# correlation between predictors and pc axes
-lapply(c("midges_z","time_z","dist_z"), function(x){
-    pred_pca$axes %>%
-        select(id, midges_z, time_z, dist_z, PC1, PC2, PC3) %>%
-        gather(pc, val, PC1, PC2, PC3) %>%
-        select(x, pc, val) %>%
-        split(.$pc) %>%
-        lapply(function(y){
-            unique(y) %>% {tibble(var = x, pc = unique(.$pc), cor = cor(.[,1], .[,3]) %>% round(2))}
-        }) %>%
-        bind_rows()
-}) %>%
-    bind_rows() %>%
-    spread(pc, cor)
 
 # variance partition of PC axes by predictors
-lapply(c("PC1","PC2","PC3"), function(x){
+var_part <- lapply(c("PC1","PC2","PC3"), function(x){
     y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
     tibble(var = c("midges_z", "time_z", "dist_z"),
            pc = x,
@@ -233,4 +221,7 @@ lapply(c("PC1","PC2","PC3"), function(x){
 }) %>%
     bind_rows() %>%
     spread(pc, cont)
+
+var_part2 <- as.matrix(var_part[1:3,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
+row.names(var_part2) <- var_part$var
 
