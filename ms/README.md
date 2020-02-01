@@ -1,11 +1,11 @@
 
 For the most recently compiled PDF version of the manuscript, go to
-<https://uwmadison.box.com/s/bso8x3z16x2hvybho6296njf2tqxwsgi>
+<https://uwmadison.box.com/s/sbupbphpmbng7wn0eavo1qq883g1ckh4>
 
 
 ## File descriptions:
 
-- `___ms_make.command`: This file compiles the LaTeX document. This is the only way
+- `__make.command`: This file compiles the LaTeX document. This is the only way
   users should compile it, since clicking "Compile PDF" in RStudio won't complete all
   the necessary steps and will leave around extraneous files.
   Just click on it (on a mac) to use it.

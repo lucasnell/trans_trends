@@ -20,9 +20,9 @@ rm -Rf *.aux *.bbl *.bcf *.blg *.log *.out *.run.xml *.synctex.gz
 ## If the proper directory exists, copy the new manuscript to a folder on Box
 ## so that it can be shared:
 
-[ -d ~/"Box Sync/2020/trans_trends/" ] && \
-  cp __ms.pdf ~/"Box Sync/2020/trans_trends/" && \
-  mv ~/"Box Sync/2020/trans_trends/__ms.pdf" ~/"Box Sync/2020/trans_trends/manuscript.pdf"
+[ -d ~/"Box Sync/trans_trends/" ] && \
+  cp __ms.pdf ~/"Box Sync/trans_trends/" && \
+  mv ~/"Box Sync/trans_trends/__ms.pdf" ~/"Box Sync/trans_trends/manuscript.pdf"
 
 
 exit
