@@ -12,6 +12,13 @@
 \titleformat{\subsubsection}[block]{\large\itshape}{\thesubsubsection}{1em}{}
 \titleformat{\paragraph}[runin]{\itshape}{\theparagraph}{1em}{}[. ]\renewcommand{\refname}{Literature Cited}
 
+% For Icelandic ð symbol:
+\DeclareTextSymbolDefault{\dh}{T1}
+% Increased spacing in math mode:
+\medmuskip=8mu % by default it is equal to 4 mu
+\thickmuskip=10mu % by default it is equal to 5 mu
+
+
 %%%%%%%%%%%%%%%%%%%%%
 % Line numbering
 %%%%%%%%%%%%%%%%%%%%%
@@ -60,7 +67,7 @@ Jamieson C. Botsch$^{1}$}
 
 \noindent{} 1. Department of Integrative Biology, University of Wisconsin, Madison, Wisconsin 53706 USA
 
-\noindent{} 2. Department of Aquaculture and Fish Biology, Hólar University, Skagafjörður 551 Iceland
+\noindent{} 2. Department of Aquaculture and Fish Biology, H\'{o}lar University, Skagafj\"{o}r{\dh}ur 551 Iceland
 
 \noindent{} 3. E-mail: josephsmphillips@gmail.com
 

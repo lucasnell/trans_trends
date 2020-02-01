@@ -2,123 +2,192 @@
 
 \section*{Methods}
 
-We defined a vector $\mathbf{Y}$ consiting of the transformed abundances for each taxon in each plot through time. Because
-population counts are multiplicative, we took the log-transform of the abundances, adding one to all values to accomodate
-zeros. We then z-scored (subtracted mean and divided by standard deviation) the transformed abundances within taxa, to give the
-responses of different taxa on comparable scales. The rows of $\mathbf{Y}$ were grouped as individual time series (i.e. taxon-plot
-combinations), with observations within each group ordered according to time. From this vector, we defined two additional vectors:
-(1) $\mathbf{y}$ omitting the first observation from each time-series and (2) $\mathbf{y\sp{\prime}}$ omitting the final observation
-and therefore lagged by one time step (for each time series) relative $\mathbf{y}$. This allowed us to specify an autoregressive model for the $i$th observation of $\mathbf{y}$ as
+We defined a vector $\mathbf{Y}$ consiting of the transformed abundances for each taxon
+in each plot through time.
+Because population counts are multiplicative, we took the log-transform of the abundances,
+adding one to all values to accomodate zeros.
+We then z-scored (subtracted mean and divided by standard deviation) the transformed
+abundances within taxa, to give the responses of different taxa on comparable scales.
+The rows of $\mathbf{Y}$ were grouped as individual time series (i.e. taxon-plot
+combinations), with observations within each group ordered according to time.
+From this vector, we defined two additional vectors:
+(1) $\mathbf{y}$ omitting the first observation from each time-series and
+(2) $\mathbf{y\sp{\prime}}$ omitting the final observation
+and therefore lagged by one time step (for each time series) relative $\mathbf{y}$.
+This allowed us to specify an autoregressive model for the $i$th observation of
+$\mathbf{y}$ as
 
 \begin{equation} \label{eq:y-i}
-\begin{gathered}
-y_i~=~\mathbf{x}_i~{\boldsymbol\beta}_i~+~\left[\phi_{\text{taxon}[i]}\right]^{\text{time}_i-\text{time}\sp{\prime}_i}~
-        y\sp{\prime}_i~+~\epsilon_i \\
-\epsilon_i~\sim~\mathcal{N}\left(0,~\sigma_{\text{residual}}\right),
-\end{gathered}
+\begin{split}
+    y_i &= \mathbf{x}_i {\boldsymbol\beta}_i +
+        \left[ \phi_{\text{taxon}[i]} \right]^{\text{time}_i - \text{time}\sp{\prime}_i}
+        y\sp{\prime}_i + \epsilon_i \\
+    \epsilon_i &\sim \mathcal{N} \left(0, \; \sigma_{\text{residual}} \right)
+    \text{,}
+\end{split}
 \end{equation}
 
-\noindent where $\mathbf{x}_i$ is a row vector of predictor values for the $i$th observation, ${\boldsymbol\beta}_i$ is a column
-vector of coefficients, $\phi_{\text{taxon}[i]$ is the taxon-specific autoregressive (AR) parameter, $\text{time}_i$ is the current
-time, $\text{time}\sp{\prime}_i$ is the lagged time (defined as for  $\mathbf{y\sp{\prime}}$), and $\epsilon_i$  is the Gaussian
-residual error with standard deviation $\sigma_{\text{residual}}$. Because $y_i$ consists of log-transformed abundances, equation
-\ref{eq:y-i} is essentially a log-linear model of population dynamics, with intrinsic growth rate $\mathbf{x}_i{\boldsymbol\beta
-}_i$ and density-dependence $\phi_{\text{taxon}[i]}$ (values closer to zero indicate stronger regulation). The exponentiation of
-$\phi_{\text{taxon}[i]}$ by the change in time allows the model to accomodate unequal time steps. The primary difference between
-equation \ref{eq:y-i} and a more traditional AR model is the use of separate values of the AR paramter for different groups (in this
-case, different taxa). This is an important extension, as it allows different members of a community with different dynamics (and
-likely different levels of autocorrelation) to be included in a single model. We parameterized the model with the predictors giving
-the change in $y_i$, rather than the mean of the stationary distribution as is commonly done, because this reduced the correlation
-between the estimates of temporal trends (characterized by ${\boldsymbol\beta}_i$) and AR parameters.
+\noindent where $\mathbf{x}_i$ is a row vector of predictor values for the $i$th
+observation, ${\boldsymbol\beta}_i$ is a column vector of coefficients,
+$\phi_{\text{taxon}[i]}$ is the taxon-specific autoregressive (AR) parameter,
+$\text{time}_i$ is the current time, $\text{time}\sp{\prime}_i$ is the lagged time
+(defined as for  $\mathbf{y\sp{\prime}}$), and $\epsilon_i$  is the Gaussian residual
+error with standard deviation $\sigma_{\text{residual}}$.
+Because $y_i$ consists of log-transformed abundances, equation \ref{eq:y-i} is
+essentially a log-linear model of population dynamics, with intrinsic growth rate
+$\mathbf{x}_i{\boldsymbol\beta}_i$ and density-dependence $\phi_{\text{taxon}[i]}$
+(values closer to zero indicate stronger regulation).
+The exponentiation of $\phi_{\text{taxon}[i]}$ by the change in time allows the model
+to accomodate unequal time steps.
+The primary difference between equation \ref{eq:y-i} and a more traditional AR model
+is the use of separate values of the AR paramter for different groups (in this case,
+different taxa).
+This is an important extension, as it allows different members of a community with
+different dynamics (and likely different levels of autocorrelation) to be included
+in a single model.
+We parameterized the model with the predictors giving the change in $y_i$,
+rather than the mean of the stationary distribution as is commonly done,
+because this reduced the correlation between the estimates of temporal trends
+(characterized by ${\boldsymbol\beta}_i$) and AR parameters.
 
-We were interested in characterizing the response of the predatory arthropod community to midge depositon, while also
-accounting for potential trends through time and space due to other factors. Therefore, we defined the vector of predictor
-values for the $i$th observation of $\mathbf{y}$ as
+We were interested in characterizing the response of the predatory arthropod
+community to midge depositon, while also accounting for potential trends through
+time and space due to other factors.
+Therefore, we defined the vector of predictor values for the $i$th observation
+of $\mathbf{y}$ as
 
 \begin{equation} \label{eq:x-vec}
-\mathbf{x}_i~=~\begin{bmatrix} 1 & \text{midge}_i & \text{time}_i & \text{dist}_i \end{bmatrix},
+    \mathbf{x}_i = \begin{bmatrix}
+        1 & \text{midge}_i & \text{time}_i & \text{dist}_i
+    \end{bmatrix}\text{,}
 \end{equation}
 
-\noindent with $1$'s corresponding to intercepts, $\text{midge}_i$ and $\text{dist}_i$ log-transformed, and all three predictors
-z-scored. We defined a vector of corresponding coefficients defined as
+\noindent with $1$'s corresponding to intercepts,
+$\text{midge}_i$ and $\text{dist}_i$ log-transformed, and all three predictors
+z-scored.
+We defined a vector of corresponding coefficients defined as
 
 \begin{equation} \label{eq:beta-vec}
-{\boldsymbol\beta}_i~=~\begin{bmatrix} {}^1\hspace*{-1pt}\beta_i \\ {}^\text{midge}\hspace*{-1pt}\beta_i \\
-    {}^\text{time}\hspace*{-1pt}\beta_i \\ {}^\text{dist}\hspace*{-1pt}\beta_i \end{bmatrix}.
+{\boldsymbol\beta}_i = \begin{bmatrix}
+    {}^1\hspace*{-1pt}\beta_i \\
+    {}^\text{midge}\hspace*{-1pt}\beta_i \\
+    {}^\text{time}\hspace*{-1pt}\beta_i \\
+    {}^\text{dist}\hspace*{-1pt}\beta_i
+    \end{bmatrix}\text{.}
 \end{equation}
 
 \noindent We modeled the coefficients hierarchically as
 
 \begin{equation} \label{eq:betas}
-\begin{gathered}
-{}^1\hspace*{-1pt}\hspace*{-1pt}\beta_i~=~{}^1\hspace*{-1pt}\alpha~+~{}^1\hspace*{-1pt}\zeta_{\text{taxon}[i]}~+~
-        {}^1\hspace*{-1pt}\zeta_{\text{trans}[i]}~+~{}^1\hspace*{-1pt}\zeta_{\text{plot}[i]} \\
-{}^\text{midge}\hspace*{-1pt}\beta_i~=~{}^\text{midge}\hspace*{-1pt}\alpha~+~
-        {}^\text{midge}\hspace*{-1pt}\zeta_{\text{taxon}[i]} \\
-{}^\text{time}\hspace*{-1pt}\beta_i~=~{}^\text{time}\hspace*{-1pt}\alpha~+~
-        {}^\text{time}\hspace*{-1pt}\zeta_{\text{taxon}[i]} \\
-{}^\text{dist}\hspace*{-1pt}\beta_i~=~{}^\text{dist}\hspace*{-1pt}\alpha~+~
-        {}^\text{dist}\hspace*{-1pt}\zeta_{\text{taxon}[i]}
-\end{gathered}
+\begin{split}
+    {}^1\hspace*{-2pt}\beta_i &= {}^1\hspace*{-1pt}\alpha +
+        {}^1\hspace*{-1pt}\zeta_{\text{taxon}[i]} +
+        {}^1\hspace*{-1pt}\zeta_{\text{trans}[i]} +
+        {}^1\hspace*{-1pt}\zeta_{\text{plot}[i]} \\
+    {}^\text{midge}\hspace*{-1pt}\beta_i &= {}^\text{midge}\hspace*{-1pt}\alpha +
+            {}^\text{midge}\hspace*{-1pt}\zeta_{\text{taxon}[i]} \\
+    {}^\text{time}\hspace*{-1pt}\beta_i &= {}^\text{time}\hspace*{-1pt}\alpha +
+            {}^\text{time}\hspace*{-1pt}\zeta_{\text{taxon}[i]} \\
+    {}^\text{dist}\hspace*{-1pt}\beta_i &= {}^\text{dist}\hspace*{-1pt}\alpha +
+            {}^\text{dist}\hspace*{-1pt}\zeta_{\text{taxon}[i]}
+\end{split}
 \end{equation}
 
-\noindent with fixed effects ${}^k\hspace*{-1pt}\alpha$ and random effects ${}^k\hspace*{-1pt}\zeta_{\text{g}[j]}$ for predictor $k$
-(e.g. midges) and the $j$th level of grouping variable $g$ (e.g. taxon). The random effects where modeled with Gaussian
-distributions with standard error $\sigma_g$:
+\noindent with fixed effects ${}^k\hspace*{-1pt}\alpha$ and random effects
+${}^k\hspace*{-1pt}\zeta_{\text{g}[j]}$ for predictor $k$ (e.g. midges)
+and the $j$th level of grouping variable $g$ (e.g. taxon).
+The random effects where modeled with Gaussian distributions with
+standard error $\sigma_g$:
 
 \begin{equation} \label{eq:zetas}
-{}^k\hspace*{-1pt}\zeta_{g[j]}~\sim~\mathcal{N}\left(0,~{}^k\hspace*{-1pt}\sigma_g\right)
+    {}^k\hspace*{-1pt}\zeta_{g[j]} \sim
+        \mathcal{N}\left(0, \; {}^k\hspace*{-1pt}\sigma_g \right)
 \end{equation}
 
-Using conventional mixed model terminology, this model includes random intercepts grouped by taxon, transect (notated
-``trans"), and plot, and random slopes for midges, time, and distance grouped by taxon. The fixed slopes give the overall
-response across taxa to the predictor variables, while the corresponding random effects give the deviation for each taxon from
-this overall response. The overall response of each taxon is the sum of the fixed and random components.
-Characterizing the responses for each taxon in a single model using random effects allows for ``partial pooling" of the
-taxon-specific responses towards the mean response, which reduces the noisiness of individual estimates and ameliorates issues
-related to multiple comparisons when comparing the taxon specific responses (either to each other or to 0).
+Using conventional mixed model terminology, this model includes random intercepts
+grouped by taxon, transect (notated ``trans"), and plot, and random slopes for midges,
+time, and distance grouped by taxon.
+The fixed slopes give the overall response across taxa to the predictor variables,
+while the corresponding random effects give the deviation for each taxon from
+this overall response.
+The overall response of each taxon is the sum of the fixed and random components.
+Characterizing the responses for each taxon in a single model using random effects
+allows for ``partial pooling" of the taxon-specific responses towards the mean response,
+which reduces the noisiness of individual estimates and ameliorates issues
+related to multiple comparisons when comparing the taxon specific responses
+(either to each other or to 0).
 
-Variation in community composition per se arises from variation in the taxon-specific responses, and the magnitude of this
-variation for predictor $k$ is given by ${}^k\hspace*{-1pt}\sigma_\text{taxon}$. Therefore, the model characterizes both
-taxon-level and community-level responses to the predictors. To make the community responses more explicit, we
-generated predicted values $\hat{\mathbf{y}}$ due to variation in midges, time, and distance as
+Variation in community composition per se arises from variation in the taxon-specific
+responses, and the magnitude of this
+variation for predictor $k$ is given by ${}^k\hspace*{-1pt}\sigma_\text{taxon}$.
+Therefore, the model characterizes both
+taxon-level and community-level responses to the predictors.
+To make the community responses more explicit, we generated predicted values
+$\hat{\mathbf{y}}$ due to variation in midges, time, and distance as
 
 \begin{equation} \label{eq:preds}
-\hat{y}_r~=~\hat{\mathbf{x}}_r~\hat{{\boldsymbol\beta}}_r
+    \hat{y}_r = \hat{\mathbf{x}}_r \hat{{\boldsymbol\beta}}_r
 \end{equation}
 
-\noindent where $\hat{\mathbf{x}}_r$ is the $r$th row from a data frame defined analagously to equation \ref{eq:x-vec} but with
-values evenly spaced across the observed range of predictors, and $\hat{{\boldsymbol\beta}}_r$ is a corresponding vector of
-coefficients using the estimated fixed and random effects as in equation \ref{eq:betas} but excluding the random intercepts grouped
-by transect and plot. We then converted these predicted values into a ``replicate-by-taxon" matrix (analagous to a ``site-by
--species" matrix) and performed a Principle Components Analysis (PCA) to generate orthogonal axes characterizating the expected
-variation in the community due to the predictors. Finally, we projected the observed data onto these axes. This allowed us to
-visualize variation in the community, both in terms of composition per se and overall abundance, along axes of variation most
-strongly associated with the predictor variables of the model (i.e. midges, time, and distance). This is analagous to more
-conventional ordination approaches (e.g. RDA), but makes explicit the connection to taxon-specific responses. Furthermore, it takes
-advantage  of the statisitcal machinery of regression-type models, which allows for the formal accounting of temporal
-autocorrelation that is important for valid statistical inference when using time-series data. As specified above, our approach
-includes both changes in composition per se (the typical focus of ordination analyses) and the overall community response. This is a
-strength, as it is difficult to assess the relevance of variation in composition per se without the context of the overall response.
-However, the method can be modified to only include changes in composition per se by excluding the fixed effects from the generation
-of model predictions in equation \ref{eq:preds}, while retaining in the fixed effects in the model fitting.
+\noindent where $\hat{\mathbf{x}}_r$ is the $r$th row from a data frame defined
+analagously to equation \ref{eq:x-vec} but with values evenly spaced across the
+observed range of predictors, and $\hat{{\boldsymbol\beta}}_r$ is a
+corresponding vector of coefficients using the estimated fixed and random effects
+as in equation \ref{eq:betas} but excluding the random intercepts grouped
+by transect and plot. We then converted these predicted values into a
+``replicate-by-taxon" matrix (analagous to a ``site-by
+-species" matrix) and performed a Principle Components Analysis (PCA) to
+generate orthogonal axes characterizating the expected
+variation in the community due to the predictors.
+Finally, we projected the observed data onto these axes.
+This allowed us to visualize variation in the community, both in terms of
+composition per se and overall abundance, along axes of variation most
+strongly associated with the predictor variables of the model
+(i.e. midges, time, and distance).
+This is analagous to more conventional ordination approaches (e.g. RDA),
+but makes explicit the connection to taxon-specific responses.
+Furthermore, it takes advantage  of the statisitcal machinery of
+regression-type models, which allows for the formal accounting of temporal
+autocorrelation that is important for valid statistical inference when using
+time-series data.
+As specified above, our approach includes both changes in composition per se
+(the typical focus of ordination analyses) and the overall community response.
+This is a strength, as it is difficult to assess the relevance of variation in
+composition per se without the context of the overall response.
+However, the method can be modified to only include changes in composition
+per se by excluding the fixed effects from the generation of model predictions
+in equation \ref{eq:preds}, while retaining in the fixed effects in the model fitting.
 
-We fit the models in a Bayesian framework using Stan, although this method could be readily adapted to other model fitting software
-increasingly used by ecologists such as WinBUGS, JAGS, and AD Model Builder. We used Gaussian distributions with mean 0 and standard
-deviation 1 as weakly-informative priors for fixed effects, random effects, and standard deviations, with the latter truncated as 0
-as standard deviations must be positive. We used a similar prior for the AR parameter, but with standard deviation 0.5 to aid with
-convergence towards stationarity (i.e. $|\phi_{\text{taxon}[i]}|<1$) without providing an explicit upper bound. However, we did
-truncate the lower bound of the prior at 0 to prevent negative values that would give quasi-cyclic behviors. We assessed convergence
-using the standard diagnostics provided by Stan, including effective sample size of the Markov chain, number of divergent
+We fit the models in a Bayesian framework using Stan, although this method could be
+readily adapted to other model fitting software increasingly used by ecologists
+such as WinBUGS, JAGS, and AD Model Builder.
+We used Gaussian distributions with mean 0 and standard deviation 1 as
+weakly-informative priors for fixed effects, random effects, and standard deviations,
+with the latter truncated as 0 as standard deviations must be positive.
+We used a similar prior for the AR parameter, but with standard deviation 0.5 to aid with
+convergence towards stationarity (i.e. $|\phi_{\text{taxon}[i]}|<1$) without
+providing an explicit upper bound.
+However, we did truncate the lower bound of the prior at 0 to prevent negative
+values that would give quasi-cyclic behviors.
+We assessed convergence using the standard diagnostics provided by Stan,
+including effective sample size of the Markov chain, number of divergent
 transitions, and potential scale reduction factor.
 
-After fitting the full model to the observed data, we compared it to reduced models to evaluate the strength of evidence for
-community responses to midges, time, and distance. We specified the reduced models by excluding coefficients associated with the
-predictors in two ways: (1) excluding the taxon-specific deviations from the mean response (i.e. random effects) and (2) excluding
-the overall response across the full community (i.e. fixed and random effects). Becuase the goal was to provide inference on the
-full model, rather than identify an ``optimal" model, we only compared the full model to reduced models excluding terms associated
-with a single predictor. We compared models using an approxmation to Leave-One-Out cross validation, based on the posterior
-distribution of log-likelihoods for each model. We report twice the difference in the ``estimated log predictive density" between
-the full and reduced models (with standard errors), which is in units of deviance and can interpreted in a manner similar to the
-difference in the Akaike Information Critera between model pairs (i.e. $\Delta$AIC) as commonly used in frequentist settings.
+After fitting the full model to the observed data, we compared it to reduced models
+to evaluate the strength of evidence for community responses to midges, time,
+and distance.
+We specified the reduced models by excluding coefficients associated with the
+predictors in two ways: (1) excluding the taxon-specific deviations from the mean
+response (i.e. random effects) and (2) excluding the overall response across the
+full community (i.e. fixed and random effects).
+Because the goal was to provide inference on the full model, rather than identify
+an ``optimal" model, we only compared the full model to reduced models
+excluding terms associated with a single predictor.
+We compared models using an approxmation to Leave-One-Out cross validation,
+based on the posterior distribution of log-likelihoods for each model.
+We report twice the difference in the ``estimated log predictive density" between
+the full and reduced models (with standard errors), which is in units of
+deviance and can interpreted in a manner similar to the difference in the
+Akaike Information Critera between model pairs (i.e. $\Delta$AIC) as
+commonly used in frequentist settings.
 
