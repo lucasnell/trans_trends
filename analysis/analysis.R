@@ -113,7 +113,7 @@ coef_sum$beta %>%
     geom_point(size = 3)+
     geom_errorbar(aes(ymin = lo, ymax = hi), width = 0)+
     scale_y_continuous("Effect size (response SD)", breaks = c(-0.5, 0, 0.5),
-                       limits = c(-0.55, 0.55))+
+                       limits = c(-0.6, 0.6))+
     scale_x_continuous("Taxon",breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
                                   "Harvestman","Ground beetles","Rove beetles"),
@@ -154,7 +154,7 @@ coef_sum$ar %>%
     scale_x_continuous("Taxon",breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
                                   "Harvestman","Ground beetles","Rove beetles"),
-                       limits = c(0.5, 7.5))+
+                       limits = c(0.5, 6.5))+
     coord_flip()
 
 
@@ -189,14 +189,14 @@ biplot_fn <- function(pred_pca_, var_) {
         if(var_ == "Distance") return(pred_pca_$obs_rot$dist_z)
     }
     pred_pca_$obs_rot %>%
-        ggplot(aes(PC1, PC2))+
+        ggplot(aes(PC1, -PC2))+
         geom_point(aes(color = var_fn(var_)), alpha = 0.6, size = 3)+
         geom_segment(data = pred_pca_$taxon_vec,
-                     aes(x = 0, xend = 3.5*PC1, y = 0, yend = 3.5*PC2, group = taxon),
+                     aes(x = 0, xend = 3.5*PC1, y = 0, yend = -3.5*PC2, group = taxon),
                      arrow = arrow(length = unit(0.5, "cm")),
                      size = 0.8, color = "black")+
         geom_text(data = pred_pca_$taxon_vec,
-                  aes(label = taxon, group = taxon, x = 3.8*PC1, y = 3.8*PC2),
+                  aes(label = taxon, group = taxon, x = 3.8*PC1, y = -3.8*PC2),
                   size = 4, color = "black")+
         scale_colour_gradient2(var_,low =  "firebrick", mid = "gray70", high = "royalblue",
                                midpoint = -0.5, limits  = c(-3,2), breaks = c(-3,-0.5,2))+
@@ -204,22 +204,13 @@ biplot_fn <- function(pred_pca_, var_) {
 }
 
 # plot midge effect
-biplot_fn(pred_pca, "Midges")+
-    scale_x_continuous(limits = c(-3, 5))+
-    scale_y_continuous(limits = c(-3, 5))+
-    theme(legend.position = c(0.8,0.8))
+biplot_fn(pred_pca, "Midges")
 
 # plot time effect
-biplot_fn(pred_pca, "Time")+
-    scale_x_continuous(limits = c(-3, 5))+
-    scale_y_continuous(limits = c(-3, 5))+
-    theme(legend.position = c(0.8,0.8))
+biplot_fn(pred_pca, "Time")
 
 # plot distance effect
-biplot_fn(pred_pca, "Distance")+
-    scale_x_continuous(limits = c(-3, 5))+
-    scale_y_continuous(limits = c(-3, 5))+
-    theme(legend.position = c(0.8,0.8))
+biplot_fn(pred_pca, "Distance")
 
 
 # variance partition of PC axes by predictors
