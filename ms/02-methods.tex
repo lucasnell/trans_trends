@@ -11,7 +11,7 @@ abundances within taxa,
 to give the responses of different taxa on comparable scales \citep{Jackson2012}.
 The rows of $\mathbf{y}$ were grouped as individual time series
 (i.e. taxon-plot combinations),
-with observations within each group ordered according to time.
+with observations within each group ordered through to time.
 From this vector,
 we constructed a lagged vector $\mathbf{y\sp{\prime}}$,
 where the first element for each time series was zero
@@ -162,9 +162,10 @@ However, the method can be modified to only include changes in composition
 per se by excluding the fixed effects from the generation of model predictions
 in equation \ref{eq:preds}, while retaining in the fixed effects in the model fitting.
 
-We fit the models in a Bayesian framework using Stan, although this method could be
-readily adapted to other model fitting software increasingly used by ecologists
-such as WinBUGS, JAGS, and AD Model Builder.
+We fit the models in a Bayesian framework using Stan \citep{Carpenter2017}
+implemented using the rstan \citep{Stan2018} package in R,
+although this method could be readily adapted to other model fitting software
+increasingly used by ecologists such as WinBUGS, JAGS, and AD Model Builder.
 We used Gaussian distributions with mean 0 and standard deviation 1 as
 weakly-informative priors \citep{Gelman2017}
 for fixed effects, random effects, and standard deviations,
