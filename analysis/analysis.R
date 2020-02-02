@@ -27,7 +27,8 @@ theme_set(theme_bw() %+replace%
                     legend.text = element_text(size=12),
                     legend.title = element_text(size=14),
                     axis.text = element_text(size=12, color="black"),
-                    axis.title.y = element_text(size=14,angle = 90 ,margin=margin(0,15,0,0)),
+                    axis.title.y = element_text(size=14,angle = 90,
+                                                margin=margin(0,15,0,0)),
                     axis.title.x = element_text(size=14,margin=margin(15,0,0,0)),
                     strip.text.x = element_text(margin=margin(0,0,10,0)),
                     strip.text.y = element_text(margin=margin(0,0,0,10), angle=270),
@@ -56,11 +57,13 @@ data_fit %>%
                                 group_by(Taxon, year) %>%
                                 summarize(y = mean(y)) %>%
                                 mutate(type  = "Mean activity-density")) %>%
-                  mutate(type = factor(type, levels = c("Midge catch", "Mean activity-density"))),
+                  mutate(type = factor(type,
+                                       levels = c("Midge catch", "Mean activity-density"))),
               aes(color = type), size = 1)+
     scale_color_manual("",values = c("red","blue"))+
     scale_x_continuous("Year", breaks = c(2008,2012,2016), limits = c(2007,2018))+
-    scale_y_continuous("Standardized activity-density", limits = c(-4.5,4.5), breaks = c(-3,0,3))+
+    scale_y_continuous("Standardized activity-density",
+                       limits = c(-4.5,4.5), breaks = c(-3,0,3))+
     theme(legend.position = "top")
 
 # distance
@@ -77,11 +80,14 @@ data_fit %>%
                                 group_by(Taxon, distance) %>%
                                 summarize(y = mean(y)) %>%
                                 mutate(type  = "Mean activity-density")) %>%
-                  mutate(type = factor(type, levels = c("Midge catch", "Mean activity-density"))),
+                  mutate(type = factor(type,
+                                       levels = c("Midge catch",
+                                                  "Mean activity-density"))),
               aes(color = type), size = 1)+
     scale_color_manual("",values = c("red","blue"))+
     scale_x_continuous("Distance", trans = "log", breaks = c(5,50,500))+
-    scale_y_continuous("Standardized activity-density", limits = c(-4.5,4.5), breaks = c(-3,0,3))+
+    scale_y_continuous("Standardized activity-density", limits = c(-4.5,4.5),
+                       breaks = c(-3,0,3))+
     theme(legend.position = "top")
 
 
@@ -95,7 +101,8 @@ data_fit %>%
 # taxon-specific slopes
 coef_sum$beta %>%
     filter(coef != "int") %>%
-    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap")))) %>%
+    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet",
+                                                    "opil","cara","stap")))) %>%
     ggplot(aes(tx, mi))+
     facet_wrap(~coef, nrow = 3)+
     geom_rect(data = coef_sum$alpha%>%
@@ -105,7 +112,8 @@ coef_sum$beta %>%
     geom_hline(yintercept = 0, color = "gray50")+
     geom_point(size = 3)+
     geom_errorbar(aes(ymin = lo, ymax = hi), width = 0)+
-    scale_y_continuous("Effect size (response SD)", breaks = c(-0.5, 0, 0.5), limits = c(-0.55, 0.55))+
+    scale_y_continuous("Effect size (response SD)", breaks = c(-0.5, 0, 0.5),
+                       limits = c(-0.55, 0.55))+
     scale_x_continuous("Taxon",breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
                                   "Harvestman","Ground beetles","Rove beetles"),
@@ -118,7 +126,8 @@ coef_sum$beta %>%
     as_tibble() %>%
     gather() %>%
     mutate(coef = factor(key, levels = c("V1","V2","V3","V4","V5","V6"),
-                         labels = c("int_tax","int_plot","int_trans","midges","time","dist"))) %>%
+                         labels = c("int_tax","int_plot","int_trans","midges"
+                                    ,"time","dist"))) %>%
     filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
     ggplot(aes(value, fill = coef))+
     geom_vline(xintercept = 0,  color = "gray50")+
@@ -135,11 +144,13 @@ coef_sum$beta %>%
 
 # ar
 coef_sum$ar %>%
-    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap")))) %>%
+    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil",
+                                                    "cara","stap")))) %>%
     ggplot(aes(tx, mi))+
     geom_point(size = 3)+
     geom_errorbar(aes(ymin = lo, ymax = hi), width = 0)+
-    scale_y_continuous("Autoregressive parameter",  limits = c(0, 1), breaks = c(0, 0.5, 1))+
+    scale_y_continuous("Autoregressive parameter",  limits = c(0, 1),
+                       breaks = c(0, 0.5, 1))+
     scale_x_continuous("Taxon",breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
                                   "Harvestman","Ground beetles","Rove beetles"),
@@ -216,7 +227,8 @@ var_part <- lapply(c("PC1","PC2","PC3"), function(x){
     y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
     tibble(var = c("midges_z", "time_z", "dist_z"),
            pc = x,
-           cont = anova(lm(y, data = pred_pca$axes))[,2] %>% {.[1:3]/sum(.[1:3])} %>% round(3)
+           cont = anova(lm(y, data = pred_pca$axes))[,2] %>% {.[1:3]/sum(.[1:3])} %>%
+               round(3)
     )
 }) %>%
     bind_rows() %>%

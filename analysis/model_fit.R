@@ -20,7 +20,8 @@ theme_set(theme_bw() %+replace%
                     legend.text = element_text(size=12),
                     legend.title = element_text(size=14),
                     axis.text = element_text(size=12, color="black"),
-                    axis.title.y = element_text(size=14,angle = 90 ,margin=margin(0,15,0,0)),
+                    axis.title.y = element_text(size=14,angle = 90,
+                                                margin=margin(0,15,0,0)),
                     axis.title.x = element_text(size=14,margin=margin(15,0,0,0)),
                     strip.text.x = element_text(margin=margin(0,0,10,0)),
                     strip.text.y = element_text(margin=margin(0,0,0,10), angle=270),
@@ -76,7 +77,8 @@ data_fit <- myv_arth %>%
 #            y_scale = NULL,
 #            hmc = T,
 #            change = T,
-#            rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.9)))
+#            rstan_control = list(iter = 2000, chains = 4,
+#                               control = list(adapt_delta = 0.9)))
 
 # export fit
 # saveRDS(fit, "analysis/output/fit.rds")
@@ -125,7 +127,8 @@ beta <- fit_sum %>%
     filter(str_detect(fit_sum$var, "beta"), !str_detect(fit_sum$var, "sig")) %>%
     mutate(id = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
            coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[3])),
-           coef = factor(coef, levels = c(1:4), labels = c("int","midges","time","dist"))) %>%
+           coef = factor(coef, levels = c(1:4),
+                         labels = c("int","midges","time","dist"))) %>%
     full_join(taxa_long) %>%
     filter(coef != "int") %>%
     group_by(coef, taxon) %>%
@@ -138,7 +141,8 @@ int_full <- fit_sum %>%
     filter(str_detect(fit_sum$var, "beta"), !str_detect(fit_sum$var, "sig")) %>%
     mutate(id = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
            coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[3])),
-           coef = factor(coef, levels = c(1:4), labels = c("int","midges","time","dist"))) %>%
+           coef = factor(coef, levels = c(1:4),
+                         labels = c("int","midges","time","dist"))) %>%
     full_join(taxa_long) %>%
     filter(coef == "int")
 
@@ -154,14 +158,16 @@ int_taxon <- int_full %>%
 alpha <- fit_sum %>%
     filter(str_detect(fit_sum$var, "alpha")) %>%
     mutate(coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
-           coef = factor(coef, levels = c(1:4), labels = c("int","midges","time","dist")))
+           coef = factor(coef, levels = c(1:4),
+                         labels = c("int","midges","time","dist")))
 
 # sigmas
 sig_beta <- fit_sum %>%
     filter(str_detect(fit_sum$var, "sig_beta")) %>%
     mutate(coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
            coef = factor(coef, levels = c(1:6),
-                         labels = c("int_tax","int_plot","int_trans","midges","time","dist")))
+                         labels = c("int_tax","int_plot","int_trans",
+                                    "midges","time","dist")))
 
 coef_sum <- list(ar = ar, beta = beta, int_full = int_full, int_taxon = int_taxon,
                       alpha = alpha, sig_beta = sig_beta)
@@ -209,7 +215,8 @@ red_re <- c("y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
 #           y_scale = NULL,
 #           hmc = T,
 #           change = T,
-#           rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.8)))
+#           rstan_control = list(iter = 2000, chains = 4,
+                # control = list(adapt_delta = 0.8)))
 # })
 
 # append full model
@@ -268,7 +275,8 @@ red_fere <- c("y ~ time_z + dist_z + (1 | taxon + plot + trans) +
 #             y_scale = NULL,
 #             hmc = T,
 #             change = T,
-#             rstan_control = list(iter = 2000, chains = 4, control = list(adapt_delta = 0.8)))
+#             rstan_control = list(iter = 2000, chains = 4,
+                                    # control = list(adapt_delta = 0.8)))
 # })
 
 red_fere_names <- c("midges_z","time_z","dist_z","full")
