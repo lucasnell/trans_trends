@@ -2,18 +2,21 @@
 
 \section*{Methods}
 
-We defined a vector $\mathbf{Y}$ consiting of the transformed abundances for each taxon
+We defined a vector $\mathbf{y}$ consiting of the transformed abundances for each taxon
 in each plot through time.
 Because population counts are multiplicative, we took the log-transform of the abundances,
 adding one to all values to accomodate zeros.
 We then z-scored (subtracted mean and divided by standard deviation) the transformed
-abundances within taxa, to give the responses of different taxa on comparable scales.
-The rows of $\mathbf{Y}$ were grouped as individual time series (i.e. taxon-plot
-combinations), with observations within each group ordered according to time.
-From this vector, we defined two additional vectors:
-(1) $\mathbf{y}$ omitting the first observation from each time-series and
-(2) $\mathbf{y\sp{\prime}}$ omitting the final observation
-and therefore lagged by one time step (for each time series) relative $\mathbf{y}$.
+abundances within taxa,
+to give the responses of different taxa on comparable scales (\cite{Jackson2012}).
+The rows of $\mathbf{y}$ were grouped as individual time series
+(i.e. taxon-plot combinations),
+with observations within each group ordered according to time.
+From this vector,
+we constructed a lagged vector $\mathbf{y\sp{\prime}}$,
+where the first element for each time series was zero
+followed by first through the
+penultimate observtions for that time series (\cite{Ives2006}).
 This allowed us to specify an autoregressive model for the $i$th observation of
 $\mathbf{y}$ as
 
@@ -46,9 +49,10 @@ This is an important extension, as it allows different members of a community wi
 different dynamics (and likely different levels of autocorrelation) to be included
 in a single model.
 We parameterized the model with the predictors giving the change in $y_i$,
-rather than the mean of the stationary distribution as is commonly done,
+rather than the mean of the stationary distribution as is conventionally done
+(\cite{Harvey1990, Ives2006}),
 because this reduced the correlation between the estimates of temporal trends
-(characterized by ${\boldsymbol\beta}_i$) and AR parameters.
+(contained by ${\boldsymbol\beta}_i$; see below) and AR parameters.
 
 We were interested in characterizing the response of the predatory arthropod
 community to midge depositon, while also accounting for potential trends through
@@ -76,7 +80,7 @@ We defined a vector of corresponding coefficients defined as
     \end{bmatrix}\text{.}
 \end{equation}
 
-\noindent We modeled the coefficients hierarchically as
+\noindent We modeled the coefficients hierarchically (following \cite{Jackson2012}) as
 
 \begin{equation} \label{eq:betas}
 \begin{split}
@@ -109,13 +113,13 @@ grouped by taxon, transect (notated ``trans"), and plot, and random slopes for m
 time, and distance grouped by taxon.
 The fixed slopes give the overall response across taxa to the predictor variables,
 while the corresponding random effects give the deviation for each taxon from
-this overall response.
+this overall response (\cite{Jackson2012}).
 The overall response of each taxon is the sum of the fixed and random components.
 Characterizing the responses for each taxon in a single model using random effects
 allows for ``partial pooling" of the taxon-specific responses towards the mean response,
-which reduces the noisiness of individual estimates and ameliorates issues
-related to multiple comparisons when comparing the taxon specific responses
-(either to each other or to 0).
+which reduces the noisiness of individual estimates and ameleriates concerns of
+multiple comparisons (\cite{Gelman2012}) that have sometimes been raised
+when responses of many taxa simultaneously.
 
 Variation in community composition per se arises from variation in the taxon-specific
 responses, and the magnitude of this
@@ -138,7 +142,7 @@ by transect and plot. We then converted these predicted values into a
 ``replicate-by-taxon" matrix (analagous to a ``site-by
 -species" matrix) and performed a Principle Components Analysis (PCA) to
 generate orthogonal axes characterizating the expected
-variation in the community due to the predictors.
+variation in the community due to the predictors (similar to \cite{Jackson2012}).
 Finally, we projected the observed data onto these axes.
 This allowed us to visualize variation in the community, both in terms of
 composition per se and overall abundance, along axes of variation most
@@ -149,7 +153,7 @@ but makes explicit the connection to taxon-specific responses.
 Furthermore, it takes advantage  of the statisitcal machinery of
 regression-type models, which allows for the formal accounting of temporal
 autocorrelation that is important for valid statistical inference when using
-time-series data.
+time-series data (\cite{Ives2006}).
 As specified above, our approach includes both changes in composition per se
 (the typical focus of ordination analyses) and the overall community response.
 This is a strength, as it is difficult to assess the relevance of variation in
@@ -162,7 +166,8 @@ We fit the models in a Bayesian framework using Stan, although this method could
 readily adapted to other model fitting software increasingly used by ecologists
 such as WinBUGS, JAGS, and AD Model Builder.
 We used Gaussian distributions with mean 0 and standard deviation 1 as
-weakly-informative priors for fixed effects, random effects, and standard deviations,
+weakly-informative priors (\cite{Gelman2017})
+for fixed effects, random effects, and standard deviations,
 with the latter truncated as 0 as standard deviations must be positive.
 We used a similar prior for the AR parameter, but with standard deviation 0.5 to aid with
 convergence towards stationarity (i.e. $|\phi_{\text{taxon}[i]}|<1$) without
@@ -183,10 +188,11 @@ full community (i.e. fixed and random effects).
 Because the goal was to provide inference on the full model, rather than identify
 an ``optimal" model, we only compared the full model to reduced models
 excluding terms associated with a single predictor.
-We compared models using an approxmation to Leave-One-Out cross validation,
-based on the posterior distribution of log-likelihoods for each model.
+We compared models using an approxmation to Leave-One-Out (LOO) cross validation,
+based on the posterior distribution of log-likelihoods for each model
+(\cite{Vehtari2017}).
 We report twice the difference in the ``estimated log predictive density" between
-the full and reduced models (with standard errors), which is in units of
+the full and reduced models (hereafter ``LOO deviance"), which is in units of
 deviance and can interpreted in a manner similar to the difference in the
 Akaike Information Critera between model pairs (i.e. $\Delta$AIC) as
 commonly used in frequentist settings.
