@@ -10,7 +10,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
 pdflatex -interaction=nonstopmode ${name}
-biber ${name}
+bibtex ${name}
 pdflatex -interaction=nonstopmode ${name}
 pdflatex -interaction=nonstopmode ${name}
 rm -Rf *.aux *.bbl *.bcf *.blg *.log *.out *.run.xml *.synctex.gz
