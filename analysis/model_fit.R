@@ -77,7 +77,7 @@ data_fit <- myv_arth %>%
 #            y_scale = NULL,
 #            hmc = T,
 #            change = T,
-#            rstan_control = list(iter = 2000, chains = 4,
+#            rstan_control = list(iter = 2000, chains = 4, seed = 3e3,
 #                               control = list(adapt_delta = 0.9)))
 
 # export fit
@@ -216,7 +216,7 @@ red_re <- c("y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
 #           hmc = T,
 #           change = T,
 #           rstan_control = list(iter = 2000, chains = 4,
-                # control = list(adapt_delta = 0.8)))
+# control = list(adapt_delta = 0.8)))
 # })
 
 # append full model
