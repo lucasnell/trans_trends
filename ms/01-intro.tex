@@ -4,17 +4,46 @@
 
 
 A central goal of ecology is to understand how communities vary through time, and
-how this variation relates to environmental variables.
+how this variability is shaped by the environment.
+Time series data are increasingly being used to assess temporal trends in communities.
+Because environmental variables also change through time, time series data provide
+additionally valuable information for how communities change in response to the
+environment.
+
+
+However, community time series present some statistical challenges.
+First, these datasets often contain complicated correlation structures.
+Correlations in community time series could be due to
+autocorrelation between successive points in time,
+interactions among taxa,
+or physical/chemical relationships between environmental variables.
+
+
+Communities are also high-dimensional in nature.
 Typical methods for analyzing community patterns use aggregate measures (e.g., PCA, NMDS)
 that reduce the dimensionality of the dataset.
-These methods are of little use in understanding the taxon-specific responses
+Although these methods help in understanding changes in community composition,
+they are of little use in understanding the taxon-specific responses
 that most ecologists are likely to be interested in.
 Fitting separate regression models for each taxon addresses this problem but
 is difficult to use for among-taxa comparisons.
 A more recent method uses a mixed-effects model to estimate both
-community- and taxon-level responses to environmental variables.
-However, these methods do not account for temporal autocorrelation so cannot be used
-for time series data.
+community- and taxon-level responses to environmental variables \citep{Jackson2012}.
+However, these methods do not account for temporal autocorrelation.
+
+
+% Probably should explain more about the model here.
+Here, we show how an autoregressive mixed model describes both community- and
+taxon-level responses to predictors.
+% =======================================================================================
+We analyze a dataset
+\ldots
+<JAMIE>
+\ldots
+% =======================================================================================
+
+
+
 
 
 
