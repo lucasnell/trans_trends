@@ -18,24 +18,24 @@ for temporal autocorrelation in the abundance of members of the community.
 While some time-series methods have been developed for analyzing ecological communities,
 these have generally focused on inferring interactions between species and therefore
 require very long time series. In contrast, community time series are often short but
-contain replication through space (or experimental replicates), with the goal of inferring
-the responses of the community to some external driver or experimental manipulation.
+contain replication through space or across experimental units, with the goal of inferring
+the responses of communities to external drivers or experimental manipulations.
 
 Here, we show linear mixed models with temporal autocorrelation structures
-(hereafter "autoregressive mixed  models") can be be used to infer taxon- and
-community-level responses to multiple predictor variables from time series data. The
+(hereafter "autoregressive mixed models") can be be used to infer taxon- and
+community-level responses to predictor variables from time series data. The
 approach is based on the method of \cite{Jackson2012}, which models variation in
 taxon-specific responses to predictors as random effects. These taxon-specific responses
 can then be translated to the community level, thereby providing a unified statistical
 framework for understanding the ecological responses to environmental drivers at multiple
-organizational scales. We extend this approach by showing how linear mixed model can be
-formulated with separate temporal autocorrelation structures for each taxon,
-accounting for the fact that different taxa are likely to be characterized by
+organizational scales. We extend this approach by showing how linear mixed models can be
+formulated with separate temporal autocorrelation structures for different groupings
+(i.e. taxa), accounting for the fact that different taxa are likely to be characterized by
 different dynamics.
 
 We illustrate the utility of this approach by analyzing the responses of predatory
 arthropods to spatiotemporal variation in allothchonous resources
-at Lake M\`{y}vatn in northern Iceland. M\`{y}vatn has large emergences of midges
+at Lake M\`{y}vatn in northern Iceland. M\'{y}vatn has large emergences of midges
 (Diptera: Chironomidae) that serve as food for the terrestrial arthropods.
 The midges have large interannual fluctuations and decline in deposition
 with distance from the lakeshore, and we were interested in separating the response
