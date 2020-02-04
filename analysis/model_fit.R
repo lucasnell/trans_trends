@@ -78,7 +78,7 @@ data_fit <- myv_arth %>%
 #            hmc = T,
 #            change = T,
 #            rstan_control = list(iter = 2000, chains = 4, seed = 3e3,
-#                               control = list(adapt_delta = 0.9)))
+#                                 control = list(adapt_delta = 0.95)))
 
 # export fit
 # saveRDS(fit, "analysis/output/fit.rds")
@@ -215,11 +215,11 @@ red_re <- c("y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
 #           y_scale = NULL,
 #           hmc = T,
 #           change = T,
-#           rstan_control = list(iter = 2000, chains = 4,
-# control = list(adapt_delta = 0.8)))
+#           rstan_control = list(iter = 2000, chains = 4, seed = 3e3,
+#                                control = list(adapt_delta = 0.95)))
 # })
 
-# append full model
+# extract stan output
 red_re_stan <- lapply(red_re_fits, function(x){x$stan})
 names(red_re_stan) <- c("midges_z","time_z","dist_z")
 
@@ -275,13 +275,13 @@ red_fere <- c("y ~ time_z + dist_z + (1 | taxon + plot + trans) +
 #             y_scale = NULL,
 #             hmc = T,
 #             change = T,
-#             rstan_control = list(iter = 2000, chains = 4,
-                                    # control = list(adapt_delta = 0.8)))
+#             rstan_control = list(iter = 2000, chains = 4, seed = 3e3,
+#                                 control = list(adapt_delta = 0.95)))
 # })
 
 red_fere_names <- c("midges_z","time_z","dist_z","full")
 
-# append full model
+# extract stan output
 red_fere_stan = lapply(red_fere_fits, function(x){x$stan})
 names(red_fere_stan) <- c("midges_z","time_z","dist_z")
 
