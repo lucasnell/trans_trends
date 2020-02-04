@@ -19,7 +19,8 @@ interactions among taxa,
 or physical/chemical relationships between environmental variables.
 
 
-Communities are also high-dimensional in nature.
+Second, community data are necessarily high-dimensional, as observations for each taxon
+represent a separate variable.
 Typical methods for analyzing community patterns use aggregate measures (e.g., PCA, NMDS)
 that reduce the dimensionality of the dataset.
 Although these methods help in understanding changes in community composition,
@@ -29,18 +30,26 @@ Fitting separate regression models for each taxon addresses this problem but
 is difficult to use for among-taxa comparisons.
 A more recent method uses a mixed-effects model to estimate both
 community- and taxon-level responses to environmental variables \citep{Jackson2012}.
-However, these methods do not account for temporal autocorrelation.
+However, this does not account for the autocorrelation between observations through time.
 
 
-% Probably should explain more about the model here.
-Here, we show how an autoregressive mixed model describes both community- and
-taxon-level responses to predictors.
+Here, we extend previous mixed-effects methods to account for temporal autocorrelation.
+We use an autoregressive mixed model to assess the effects of environmental variables
+on both individual taxa and an entire community, as well as how they change through time.
+Autoregressive parameters are estimated for each taxon, as are the coefficients
+associated with each environmental variable.
+We then illustrate how the model can be used to visualize community composition in
+a way that is analogous to ordination.
+The advantage of this approach is that it accounts for the time series structure and
+makes explicit the connection between the taxa and the community as a whole.
 % =======================================================================================
 We analyze a dataset
 \ldots
 <JAMIE>
 \ldots
 % =======================================================================================
+We use this dataset to illustrate the additional insights that can be gained
+by using an autoregressive mixed model to analyze community time series.
 
 
 
