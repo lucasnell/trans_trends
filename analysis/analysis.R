@@ -7,6 +7,12 @@ library(lizard)
 library(tidyverse)
 options(mc.cores = parallel::detectCores()-2)
 
+if (Sys.info()[["sysname"]] == "Darwin") {
+    options("device" = "quartz")
+    grDevices::graphics.off()
+}
+
+
 # load data
 data_fit <- read_csv("analysis/data_fit.csv") %>%
     mutate(Taxon = factor(taxon,
@@ -22,17 +28,17 @@ coef_sum <- readRDS("analysis/output/coef_sum.rds")
 theme_set(theme_bw() %+replace%
               theme(panel.grid = element_blank(),
                     strip.background = element_blank(),
-                    legend.margin = margin(0,0,0,0),
-                    strip.text = element_text(size=12),
-                    legend.text = element_text(size=12),
-                    legend.title = element_text(size=14),
-                    axis.text = element_text(size=12, color="black"),
-                    axis.title.y = element_text(size=14,angle = 90,
-                                                margin=margin(0,15,0,0)),
-                    axis.title.x = element_text(size=14,margin=margin(15,0,0,0)),
-                    strip.text.x = element_text(margin=margin(0,0,10,0)),
-                    strip.text.y = element_text(margin=margin(0,0,0,10), angle=270),
-                    axis.title = element_text(size=14)))
+                    legend.margin = margin(0, 0, 0, 0),
+                    strip.text = element_text(size = 12),
+                    legend.text = element_text(size = 12),
+                    legend.title = element_text(size = 14),
+                    axis.text = element_text(size = 12, color = "black"),
+                    axis.title.y = element_text(size = 14, angle = 90,
+                                                margin = margin(0,15,0,0)),
+                    axis.title.x = element_text(size = 14, margin = margin(15,0,0,0)),
+                    strip.text.x = element_text(margin = margin(b = 2, t = 6), vjust = 0),
+                    strip.text.y = element_text(margin = margin(0,0,0,10), angle = 270),
+                    axis.title = element_text(size = 14)))
 
 
 
