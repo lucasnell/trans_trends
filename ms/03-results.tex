@@ -3,18 +3,15 @@
 \section*{Results}
 
 On average, the predatory arthropod community responded positively to midge deposition,
-with ground spiders having the largest
-response, followed by ground beetles, wolf spiders, and rove beetles.
-In contrast, sheet  weavers and harvestman had responses very close to zero.
-Excluding variation in taxon-specific responses to midges provided a substantially
-worse fit to the data according to the LOO deviance (on same scale as $\Delta$AIC).
-However, the standard error on the LOO deviance for taxon-specific responses to midges was
-large, suggesting that evidence for improved model fit when including variation among
-taxa was somewhat equivocal when accounting for uncertainty in the parameter estimates.
-In contrast, the LOO deviance provided fairly strong evidence for an overall
-community response to midges.
+with ground spiders having the largest response,
+followed by ground beetles, rove beetles, wolf spiders, and harvestman.
+In contrast, the response of sheet weavers was very close to zero.
+According to the LOO deviance (on same scale as $\Delta$AIC),
+there was substantial evidence for an overall community response to midges,
+while only modest evidence for variation among taxa. This is consistent with
+most of the taxon-specific reponses being close to the mean response across taxa.
 
-In contrast to the response to midges, the average linear trends through
+In contrast to the responses to midges, the average linear trends through
 time and space were close to zero while the variation among taxa was quite large.
 This was especially true for distance, with rove beetles being most abundant near
 the lake while wolf and ground spiders were most abundant far from the lake.
@@ -23,26 +20,34 @@ deposition, which declined with distance from the lake.
 The inferred increase in ground spiders (for example) with distance
 would likely have been weaker in the absence of accounting for the response to midges,
 and visa versa.
-The LOO deviance for taxon-specific variation (i.e. random effects) in responses to time
-and distance was quite strong.
-Furthermore, those deviances were nearly identical to those for the overall community
+The LOO deviances indicated strong support for taxon-specific variation
+(i.e. random effects) in responses to time and distance.
+Furthermore, those deviances were very close to those for the overall community
 responses to time and distance (respectively), which indicates that most of the
 improvement in model fit from including those predictors was due to taxon-specific
 variation.
 
+The AR coefficients (for yearly time steps) were generally simliar across taxa
+and of modest magnitude, indicating moderate levels of temoral autocorrelation.
+Ground spiders were an exception,
+with an AR coefficient near zero indicating limited interannual autocorrelation.
+The relatively low autocorrleation is apparent from the time series,
+where ground spiders appear more tightly constrianed to their mean abundance.
+
 The first three PC axes (which explained virtually all of the variation in the
-predicted values), collectively accounted for ~66\% of the observed community variation.
+predicted values), collectively accounted for ~68\% of the observed community variation.
 Therefore, over half of the variation in community abundance and composition was
 associated with linear responses to midge deposition, time, and distance.
-Variation in PC1 was primarily due to distance, while PC2 was primarily due midges.
+Variation in PC1 was almost entirely due to distance, while PC2 was primarily due midges,
+although with a substantial contribution from time.
 This can be seen in figure X, where points shaded by midge deposition (panel X)
 largely separate along the vertical axis, while points shaded by distance (panel X)
 separate along the horizontal.
 Time was most stronlgy associated with PC3, such that community patterns in time were
 not apparent from the plot of PC2 against PC1 (panel X).
 Overall, linear association with distance from the lake accounted for
-28\% of the variation in community a abundance and composition,
-followed by asscotions with midge deposition at 20\% and time at 19\%.
+34\% of the variation in community a abundance and composition,
+followed by asscotions with time at 19\% and midge deposition at 14\%.
 
 The taxon-response vectors provides information on the variation in overall
 abundance versus composition per se, with vectors of similar direction and magnitude
@@ -50,11 +55,11 @@ implying strongly associated responses across taxa (i.e. overall abundance),
 while vectors of either different direction or magnitude implying
 variation in composition.
 The direction of the taxon vectors was largely similar along PC2 (all positive
-except for sheet weavers), reflecting the fact that there was a strong overall
+except for sheet weavers), reflecting the fact the overall
 response of the community to midge deposition.
-In contrast, direction of the taxon-vectors along PC1 was quite heterogeneous,
+In contrast, the direction of the taxon-vectors along PC1 was quite heterogeneous,
 reflecting the fact that there was large variation in composition per se with
 distance from the lake.
 These community-level results were a direct result of the taxon-specific responses
 to the predictors (figure X),
-illustrating the link between the two organizational scales
+illustrating the link between the two organizational scales.
