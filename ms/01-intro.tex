@@ -8,49 +8,40 @@ how this variability is shaped by the environment.
 Time series data are increasingly being used to assess temporal trends in communities.
 Because environmental variables also change through time, time series data provide
 additionally valuable information for how communities change in response to the
-environment.
+environment. For example...
 
+The response of ecological communities to environmental predictors is often analyzed using
+ordination methods (e.g.), which map variation in abundance or occurnace onto orthogonal
+axes that provide synoptic assessments of community variation. However, these methods
+are generally inapporpriate for time series data, as they do not appropriately account
+for temporal autocorrelation in the abundance of members of the community.
+While some time-series methods have been developed for analyzing ecological communities,
+these have generally focused on inferring interactions between species and therefore
+require very long time series. In contrast, community time series are often short but
+contain replication through space (or experimental replicates), with the goal of inferring
+the responses of the community to some external driver or experimental manipulation.
 
-However, community time series present some statistical challenges.
-First, these datasets often contain complicated correlation structures.
-Correlations in community time series could be due to
-autocorrelation between successive points in time,
-interactions among taxa,
-or physical/chemical relationships between environmental variables.
+Here, we show linear mixed models with temporal autocorrelation structures
+(hereafter "autoregressive mixed  models") can be be used to infer taxon- and
+community-level responses to multiple predictor variables from time series data. The
+approach is based on the method of \cite{Jackson2012}, which models variation in
+taxon-specific responses to predictors as random effects. These taxon-specific responses
+can then be translated to the community level, thereby providing a unified statistical
+framework for understanding the ecological responses to environmental drivers at multiple
+organizational scales. We extend this approach by showing how linear mixed model can be
+formulated with separate temporal autocorrelation structures for each taxon,
+accounting for the fact that different taxa are likely to be characterized by
+different dynamics.
 
-
-Second, community data are necessarily high-dimensional, as observations for each taxon
-represent a separate variable.
-Typical methods for analyzing community patterns use aggregate measures (e.g., PCA, NMDS)
-that reduce the dimensionality of the dataset.
-Although these methods help in understanding changes in community composition,
-they are of little use in understanding the taxon-specific responses
-that most ecologists are likely to be interested in.
-Fitting separate regression models for each taxon addresses this problem but
-is difficult to use for among-taxa comparisons.
-A more recent method uses a mixed-effects model to estimate both
-community- and taxon-level responses to environmental variables \citep{Jackson2012}.
-However, this does not account for the autocorrelation between observations through time.
-
-
-Here, we extend previous mixed-effects methods to account for temporal autocorrelation.
-We use an autoregressive mixed model to assess the effects of environmental variables
-on both individual taxa and an entire community, as well as how they change through time.
-Autoregressive parameters are estimated for each taxon, as are the coefficients
-associated with each environmental variable.
-We then illustrate how the model can be used to visualize community composition in
-a way that is analogous to ordination.
-The advantage of this approach is that it accounts for the time series structure and
-makes explicit the connection between the taxa and the community as a whole.
-% =======================================================================================
-We analyze a dataset
-\ldots
-<JAMIE>
-\ldots
-% =======================================================================================
-We use this dataset to illustrate the additional insights that can be gained
-by using an autoregressive mixed model to analyze community time series.
-
+We illustrate the utility of this approach by analyzing the responses of predatory
+arthropods to spatiotemporal variation in allothchonous resources
+at Lake M\`{y}vatn in northern Iceland. M\`{y}vatn has large emergences of midges
+(Diptera: Chironomidae) that serve as food for the terrestrial arthropods.
+The midges have large interannual fluctuations and decline in deposition
+with distance from the lakeshore, and we were interested in separating the response
+of the community to midge deposition from variation in time and space.
+This study shows how autoregressive mixed models can be used to dissentangle
+taxon- and community-level responses to multiple predictors from time-series data.
 
 
 

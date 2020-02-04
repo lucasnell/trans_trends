@@ -2,6 +2,22 @@
 
 \section*{Methods}
 
+Lake M\`{y}vatn is located in northern Iceland with a tundra-subarctic climate,
+and the landscape surroudning the lake is dominated by heathland and grassland vegetation.
+Arthropod samples were collected approximately every two weeks from five sites around the
+shoreline of M\`{y}vatn from May to August in 2008 through 2019.
+Each site included three to four plots at various distances
+(5m, 50m, 150m, and 500m) along a transect perpendicular to the lakeshore.
+Midge deposition was estimated at each site using aerial infall cups,
+and activity-density of ground-dwelling arthropods was sampled using pitfall cups.
+For this analysis, we used the total annual catch of predatory arthropods,
+comprising harvestmen (Opiliones),
+wolf spiders (Araneae: Lycosidae),
+ground spiders (Araneae: Gnaphosidae),
+sheet-weaving spiders (Aranea: Linyphiidae),
+ground beetles (Coleoptera: Carabidae),
+and rove beetles (Coleoptera: Staphylinidae).
+
 We defined a vector $\mathbf{y}$ consiting of the transformed abundances for each taxon
 in each plot through time.
 Because population counts are multiplicative, we took the log-transform of the abundances,
@@ -90,7 +106,7 @@ We defined a vector of corresponding coefficients defined as
 \begin{split}
     {}^\text{int}\hspace*{-2pt}\beta_i &= {}^\text{int}\hspace*{-1pt}\alpha +
         {}^\text{int}\hspace*{-1pt}\zeta_{\text{taxon}[i]} +
-        {}^\text{int}\hspace*{-1pt}\zeta_{\text{trans}[i]} +
+        {}^\text{int}\hspace*{-1pt}\zeta_{\text{site}[i]} +
         {}^\text{int}\hspace*{-1pt}\zeta_{\text{plot}[i]} \\
     {}^\text{midge}\hspace*{-1pt}\beta_i &= {}^\text{midge}\hspace*{-1pt}\alpha +
             {}^\text{midge}\hspace*{-1pt}\zeta_{\text{taxon}[i]} \\
@@ -113,7 +129,7 @@ standard error $\sigma_g$:
 \end{equation}
 
 Using conventional mixed model terminology, this model includes random intercepts
-grouped by taxon, transect (notated ``trans"), and plot, and random slopes for midges,
+grouped by taxon, site, and plot, and random slopes for midges,
 time, and distance grouped by taxon.
 The fixed slopes give the overall response across taxa to the predictor variables,
 while the corresponding random effects give the deviation for each taxon from
