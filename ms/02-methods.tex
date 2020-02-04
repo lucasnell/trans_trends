@@ -15,7 +15,7 @@ with observations within each group ordered through to time.
 From this vector,
 we constructed a lagged vector $\mathbf{y\sp{\prime}}$,
 where the first element for each time series was zero
-(such that the intial abundance was estimated by the random intercepts, as specified below)
+(the intial abundance was estimated by the random intercepts, as specified below)
 followed by the first through
 penultimate observtions for that time series \citep{Ives2006}.
 This allowed us to specify an autoregressive model for the $i$th observation of
@@ -45,9 +45,9 @@ $\mathbf{x}_i{\boldsymbol\beta}_i$ and density-dependence $\phi_{\text{taxon}[i]
 (values closer to zero indicate stronger regulation).
 The exponentiation of $\phi_{\text{taxon}[i]}$ by the change in time allows the model
 to accomodate unequal time steps.
-The primary difference between equation \ref{eq:y-i} and a more traditional AR model
-is the use of separate values of the AR paramter for different groups (in this case,
-different taxa).
+The primary difference between the present approach and more traditional linear models
+with AR structures \citep[e.g ][]{Zuur2009} is the use of separate values of the AR
+parameter for different groups (i.e. taxa).
 This is an important extension, as it allows different members of a community with
 different dynamics (and likely different levels of autocorrelation) to be included
 in a single model.
@@ -55,7 +55,7 @@ We parameterized the model with the predictors giving the change in $y_i$,
 rather than the mean of the stationary distribution as is conventionally done
 \citep{Harvey1990, Ives2006},
 because this reduced the correlation between the estimates of temporal trends
-(contained by ${\boldsymbol\beta}_i$; see below) and AR parameters.
+(contained in ${\boldsymbol\beta}_i$; see below) and AR parameters.
 
 We were interested in characterizing the response of the predatory arthropod
 community to midge depositon, while also accounting for potential trends through
@@ -70,14 +70,14 @@ of $\mathbf{y}$ as
     \end{bmatrix}\text{,}
 \end{equation}
 
-\noindent with $1$'s corresponding to intercepts,
+\noindent with $1$'s corresponding to intercepts (hereafter denoted ``int"),
 ${}^z\hspace*{-1pt}\text{midge}_i$ and ${}^z\hspace*{-1pt}\text{dist}_i$ log-transformed,
 and all predictors (excluding the intercept) z-scored.
 We defined a vector of corresponding coefficients defined as
 
 \begin{equation} \label{eq:beta-vec}
 {\boldsymbol\beta}_i = \begin{bmatrix}
-    {}^1\hspace*{-1pt}\beta_i \\
+    {}^\text{int}\hspace*{-1pt}\beta_i \\
     {}^\text{midge}\hspace*{-1pt}\beta_i \\
     {}^\text{time}\hspace*{-1pt}\beta_i \\
     {}^\text{dist}\hspace*{-1pt}\beta_i
@@ -88,10 +88,10 @@ We defined a vector of corresponding coefficients defined as
 
 \begin{equation} \label{eq:betas}
 \begin{split}
-    {}^1\hspace*{-2pt}\beta_i &= {}^1\hspace*{-1pt}\alpha +
-        {}^1\hspace*{-1pt}\zeta_{\text{taxon}[i]} +
-        {}^1\hspace*{-1pt}\zeta_{\text{trans}[i]} +
-        {}^1\hspace*{-1pt}\zeta_{\text{plot}[i]} \\
+    {}^\text{int}\hspace*{-2pt}\beta_i &= {}^\text{int}\hspace*{-1pt}\alpha +
+        {}^\text{int}\hspace*{-1pt}\zeta_{\text{taxon}[i]} +
+        {}^\text{int}\hspace*{-1pt}\zeta_{\text{trans}[i]} +
+        {}^\text{int}\hspace*{-1pt}\zeta_{\text{plot}[i]} \\
     {}^\text{midge}\hspace*{-1pt}\beta_i &= {}^\text{midge}\hspace*{-1pt}\alpha +
             {}^\text{midge}\hspace*{-1pt}\zeta_{\text{taxon}[i]} \\
     {}^\text{time}\hspace*{-1pt}\beta_i &= {}^\text{time}\hspace*{-1pt}\alpha +
@@ -102,13 +102,13 @@ We defined a vector of corresponding coefficients defined as
 \end{equation}
 
 \noindent with fixed effects ${}^k\hspace*{-1pt}\alpha$ and random effects
-${}^k\hspace*{-1pt}\zeta_{\text{g}[j]}$ for predictor $k$ (e.g. midges)
-and the $j$th level of grouping variable $g$ (e.g. taxon).
+${}^k\hspace*{-1pt}\zeta_{\text{g}[i]}$ for predictor $k$ (e.g. midges)
+and the level of grouping variable $g$ (e.g. taxon) associated  with the $i$th observation.
 The random effects where modeled with Gaussian distributions with
 standard error $\sigma_g$:
 
 \begin{equation} \label{eq:zetas}
-    {}^k\hspace*{-1pt}\zeta_{g[j]} \sim
+    {}^k\hspace*{-1pt}\zeta_{g[i]} \sim
         \mathcal{N}\left(0, \; {}^k\hspace*{-1pt}\sigma_g \right)
 \end{equation}
 
@@ -152,7 +152,7 @@ This allowed us to visualize variation in the community, both in terms of
 composition per se and overall abundance, along axes of variation most
 strongly associated with the predictor variables of the model
 (i.e. midges, time, and distance).
-This is analagous to more conventional ordination approaches (e.g. RDA),
+This is analagous to more conventional ordination approaches \citep{Mcgarigal2013},
 but makes explicit the connection to taxon-specific responses.
 Furthermore, it takes advantage  of the statisitcal machinery of
 regression-type models, which allows for the formal accounting of temporal
