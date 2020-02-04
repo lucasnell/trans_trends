@@ -45,7 +45,7 @@ theme_set(theme_bw() %+replace%
 
 
 #==========
-#========== Observed data
+#========== Observed data (Combine 'time' and 'distance' into Figure 1)
 #==========
 
 # time
@@ -101,7 +101,7 @@ data_fit %>%
 
 
 #==========
-#========== Plot coefficients
+#========== Plot coefficients (Use `taxon-specicific-slopes` for Figure 2)
 #==========
 
 # taxon-specific slopes
@@ -126,7 +126,7 @@ coef_sum$beta %>%
                        limits = c(0.5, 6.5))+
     coord_flip()
 
-# sigmas
+# sigmas (extra)
 {fit$stan %>% rstan::extract(pars = "sig_beta")}[[1]] %>%
     as.matrix() %>%
     as_tibble() %>%
@@ -148,7 +148,7 @@ coef_sum$beta %>%
     theme(legend.position = c(0.8,0.8))
 
 
-# ar
+# ar (extra)
 coef_sum$ar %>%
     mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil",
                                                     "cara","stap")))) %>%
@@ -169,7 +169,7 @@ coef_sum$ar %>%
 
 
 #==========
-#========== PCA
+#========== PCA (Combine biplots for `midge effect`, `time effect`, and `distance` for Fig 3
 #==========
 
 source("analysis/pca_funs.R")
@@ -184,7 +184,7 @@ pred_pca$taxon_vec %>%
 # variance explained in predicted values (first three axes must explain everything)
 summary(pred_pca$pca)
 
-# variance explained in observed values
+# variance explained in observed values (For Results)
 pred_pca$obs_exp
 
 # biplot function
@@ -219,7 +219,7 @@ biplot_fn(pred_pca, "Time")
 biplot_fn(pred_pca, "Distance")
 
 
-# variance partition of PC axes by predictors
+# variance partition of PC axes by predictors (for Table I)
 var_part <- lapply(c("PC1","PC2","PC3"), function(x){
     y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
     tibble(var = c("midges_z", "time_z", "dist_z"),
@@ -231,6 +231,7 @@ var_part <- lapply(c("PC1","PC2","PC3"), function(x){
     bind_rows() %>%
     spread(pc, cont)
 
-var_part2 <- as.matrix(var_part[1:3,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
-row.names(var_part2) <- var_part$var
+# overall variance accounted for by predictors (for Table I)
+overall_part <- as.matrix(var_part[1:3,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
+row.names(overall_part) <- var_part$var
 
