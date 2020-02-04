@@ -6,8 +6,8 @@ We defined a vector $\mathbf{y}$ consiting of the transformed abundances for eac
 in each plot through time.
 Because population counts are multiplicative, we took the log-transform of the abundances,
 adding one to all values to accomodate zeros.
-We then z-scored (subtracted mean and divided by standard deviation) the transformed
-abundances within taxa,
+We then z-scored (subtracted the mean and divided by the standard deviation)
+the transformed abundances within each taxon
 to give the responses of different taxa on comparable scales \citep{Jackson2012}.
 The rows of $\mathbf{y}$ were grouped as individual time series
 (i.e. taxon-plot combinations),
@@ -15,7 +15,8 @@ with observations within each group ordered through to time.
 From this vector,
 we constructed a lagged vector $\mathbf{y\sp{\prime}}$,
 where the first element for each time series was zero
-followed by first through the
+(such that the intial abundance was estimated by the random intercepts, as specified below)
+followed by the first through
 penultimate observtions for that time series \citep{Ives2006}.
 This allowed us to specify an autoregressive model for the $i$th observation of
 $\mathbf{y}$ as
@@ -31,10 +32,12 @@ $\mathbf{y}$ as
 \end{equation}
 
 \noindent where $\mathbf{x}_i$ is a row vector of predictor values for the $i$th
-observation, ${\boldsymbol\beta}_i$ is a column vector of coefficients,
+observation,
+${\boldsymbol\beta}_i$ is a column vector of coefficients,
 $\phi_{\text{taxon}[i]}$ is the taxon-specific autoregressive (AR) parameter,
-$\text{time}_i$ is the current time, $\text{time}\sp{\prime}_i$ is the lagged time
-(defined as for  $\mathbf{y\sp{\prime}}$), and $\epsilon_i$  is the Gaussian residual
+$\text{time}_i$ is the current time (in years),
+$\text{time}\sp{\prime}_i$ is the lagged time (defined as for  $\mathbf{y\sp{\prime}}$),
+and $\epsilon_i$  is the Gaussian residual
 error with standard deviation $\sigma_{\text{residual}}$.
 Because $y_i$ consists of log-transformed abundances, equation \ref{eq:y-i} is
 essentially a log-linear model of population dynamics, with intrinsic growth rate
@@ -62,13 +65,14 @@ of $\mathbf{y}$ as
 
 \begin{equation} \label{eq:x-vec}
     \mathbf{x}_i = \begin{bmatrix}
-        1 & \text{midge}_i & \text{time}_i & \text{dist}_i
+        1 & {}^z\hspace*{-1pt}\text{midge}_i &
+        {}^z\hspace*{-1pt}\text{time}_i & {}^z\hspace*{-1pt}\text{dist}_i
     \end{bmatrix}\text{,}
 \end{equation}
 
 \noindent with $1$'s corresponding to intercepts,
-$\text{midge}_i$ and $\text{dist}_i$ log-transformed, and all three predictors
-z-scored.
+${}^z\hspace*{-1pt}\text{midge}_i$ and ${}^z\hspace*{-1pt}\text{dist}_i$ log-transformed,
+and all predictors (excluding the intercept) z-scored.
 We defined a vector of corresponding coefficients defined as
 
 \begin{equation} \label{eq:beta-vec}
@@ -117,9 +121,9 @@ this overall response \citep{Jackson2012}.
 The overall response of each taxon is the sum of the fixed and random components.
 Characterizing the responses for each taxon in a single model using random effects
 allows for ``partial pooling" of the taxon-specific responses towards the mean response,
-which reduces the noisiness of individual estimates and ameleriates concerns of
-multiple comparisons \citep{Gelman2012} that have sometimes been raised
-when responses of many taxa simultaneously.
+which reduces the noisiness of individual estimates and amerliorates concerns of
+multiple comparisons \citep{Gelman2012} that have been raised
+for the examination of responses for many taxa simultaneously \citep{Mcgarigal2013}.
 
 Variation in community composition per se arises from variation in the taxon-specific
 responses, and the magnitude of this
@@ -139,10 +143,10 @@ observed range of predictors, and $\hat{{\boldsymbol\beta}}_r$ is a
 corresponding vector of coefficients using the estimated fixed and random effects
 as in equation \ref{eq:betas} but excluding the random intercepts grouped
 by transect and plot. We then converted these predicted values into a
-``replicate-by-taxon" matrix (analagous to a ``site-by
--species" matrix) and performed a Principle Components Analysis (PCA) to
+``replicate-by-taxon" matrix (analagous to a ``site-by-species" matrix)
+and performed a Principle Components Analysis (PCA) to
 generate orthogonal axes characterizating the expected
-variation in the community due to the predictors \citep[similar to]{Jackson2012}).
+variation in the community due to the predictors \citep[similar to][]{Jackson2012}.
 Finally, we projected the observed data onto these axes.
 This allowed us to visualize variation in the community, both in terms of
 composition per se and overall abundance, along axes of variation most
@@ -154,7 +158,7 @@ Furthermore, it takes advantage  of the statisitcal machinery of
 regression-type models, which allows for the formal accounting of temporal
 autocorrelation that is important for valid statistical inference when using
 time-series data \citep{Ives2006}.
-As specified above, our approach includes both changes in composition per se
+As specified above, this approach includes both changes in composition per se
 (the typical focus of ordination analyses) and the overall community response.
 This is a strength, as it is difficult to assess the relevance of variation in
 composition per se without the context of the overall response.
