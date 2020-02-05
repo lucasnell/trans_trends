@@ -1,6 +1,6 @@
-#==========
-#========== Preliminaries
-#==========
+#==========*
+#========== Preliminaries ----
+#==========*
 
 # load packages
 library(lizard)
@@ -30,17 +30,17 @@ coef_sum <- readRDS("analysis/output/coef_sum.rds")
 coef_sum$beta <- coef_sum$beta %>%
     ungroup() %>%
     mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "midges", "dist")),
+                         levels = c("time", "dist", "midges")),
            tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet",
                                                     "opil","cara","stap"))))
 coef_sum$alpha <- coef_sum$alpha %>%
     filter(coef != "int") %>%
     mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "midges", "dist")))
+                         levels = c("time", "dist", "midges")))
 coef_sum$sig_beta <- coef_sum$sig_beta %>%
     filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
     mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "midges", "dist")))
+                         levels = c("time", "dist", "midges")))
 coef_sum$ar <- coef_sum$ar %>%
     mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil",
                                                     "cara","stap"))))
@@ -61,7 +61,7 @@ theme_set(theme_bw() %+replace%
                     legend.margin = margin(0, 0, 0, 0),
                     legend.text = element_text(size = 10),
                     legend.title = element_text(size = 12),
-                    axis.text = element_text(size = 10, color = "black"),
+                    axis.text = element_text(size = 9, color = "black"),
                     axis.title.y = element_text(size = 12, angle = 90,
                                                 margin = margin(0,0,0,r=6)),
                     axis.title.x = element_text(size = 12, margin = margin(0,0,0,t=6)),
@@ -70,12 +70,18 @@ theme_set(theme_bw() %+replace%
                     strip.text.y = element_text(margin = margin(0,0,0,10), angle = 270)))
 
 
+# cairo_pdf embeds fonts by default
+save_file <- function(x, fn, ...) {
+    cairo_pdf(paste0("analysis/output/", gsub(".pdf$", "", fn), ".pdf"), ...)
+    print(x)
+    dev.off()
+}
 
 
 
-#==========
-#========== Observed data (Combine 'time' and 'distance' into Figure 1)
-#==========
+#==========*
+#========== Observed data (Combine 'time' and 'distance' into Figure 1) ----
+#==========*
 
 # time
 time_p <- data_fit %>%
@@ -83,7 +89,7 @@ time_p <- data_fit %>%
     facet_wrap(~Taxon, nrow = 4)+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_line(aes(group = plot), size = 0.2, color = "gray70")+
-    geom_point(aes(group = plot), size = 1.5, alpha = 0.5)+
+    # geom_point(aes(group = plot), size = 1.5, alpha = 0.5)+
     geom_line(data = data_fit %>%
                   group_by(Taxon, year) %>%
                   summarize(y = mean(midges_z)) %>%
@@ -93,8 +99,9 @@ time_p <- data_fit %>%
                                 summarize(y = mean(y)) %>%
                                 mutate(type  = "Mean activity-density")) %>%
                   mutate(type = factor(type,
-                                       levels = c("Midge catch", "Mean activity-density"))),
-              aes(color = type), size = 1)+
+                                       levels = c("Midge catch",
+                                                  "Mean activity-density"))),
+              aes(color = type), size = 0.75)+
     scale_color_manual(NULL, values = c("firebrick","dodgerblue"))+
     scale_x_continuous("Year", breaks = c(2008,2012,2016), limits = c(2007,2018))+
     scale_y_continuous("Standardized activity-density",
@@ -107,7 +114,7 @@ dist_p <- data_fit %>%
     ggplot(aes(distance, y))+
     facet_wrap(~Taxon, nrow = 4)+
     geom_hline(yintercept = 0, color = "gray50")+
-    geom_jitter(aes(group = plot), size = 1.5, alpha = 0.5, width = 0.1)+
+    geom_jitter(aes(group = plot), size = 1, alpha = 0.5, width = 0.1, shape = 1)+
     geom_line(data = data_fit %>%
                   group_by(Taxon, distance) %>%
                   summarize(y = mean(midges_z)) %>%
@@ -119,10 +126,9 @@ dist_p <- data_fit %>%
                   mutate(type = factor(type,
                                        levels = c("Midge catch",
                                                   "Mean activity-density"))),
-              aes(color = type), size = 1)+
-    scale_color_manual(NULL, values = c("firebrick","dodgerblue"))+
+              aes(color = type), size = 0.75)+
+    scale_color_manual(NULL, values = c("firebrick", "dodgerblue"))+
     scale_x_continuous("Distance (m)", trans = "log", breaks = c(5,50,500))+
-    # scale_y_continuous("Standardized activity-density", limits = c(-4.5,4.5),
     scale_y_continuous(NULL, limits = c(-4.5,4.5),
                        breaks = c(-3,0,3)) +
     NULL
@@ -140,32 +146,33 @@ prow <- plot_grid(time_p + theme(legend.position = "none"),
                   labels = c("A", "B"),
                   align = "vh")
 
-# cairo_pdf("analysis/output/fig1.pdf", width = 6, height = 6)
-# plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
-# dev.off()
+fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 
 
+save_file(fig1, "fig1", width = 6, height = 4)
 
-#==========
-#========== Plot coefficients (Use `taxon-specicific-slopes` for Figure 2)
-#==========
+
+#==========*
+#========== Plot coefficients (Use `taxon-specicific-slopes` for Figure 2) ----
+#==========*
 
 
 
 # taxon-specific slopes
 slope_p <- coef_sum$beta %>%
     ggplot()+
-    facet_wrap(~coef, nrow = 1)+
+    # facet_wrap(~coef, nrow = 1)+
+    facet_wrap(~coef, ncol = 1)+
     geom_rect(data = coef_sum$alpha,
               aes(xmin = 0.5, xmax = 6.5, ymin = lo, ymax = hi, fill = coef),
               alpha = 0.5, linetype =  0)+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_point(aes(tx, mi), size = 1.5)+
     geom_linerange(aes(tx, ymin = lo, ymax = hi))+
-    # geom_text(data = tibble(tx = 0.5, mi = -0.6,
-    #                         coef = factor(c("time", "midges", "dist"))),
-    #           aes(tx, mi, label = coef), size = 10/2.83465,
-    #           hjust = 0, vjust = 1, fontface = "bold") +
+    geom_text(data = tibble(tx = 0.5, mi = -0.6,
+                            coef = factor(c("time", "dist", "midges"))),
+              aes(tx, mi, label = coef), size = 10/2.83465,
+              hjust = 0, vjust = 1, fontface = "bold") +
     scale_y_continuous(expression("Effect size" ~ ({}^{k} * beta[taxon])),
                        breaks = c(-0.5, 0, 0.5), limits = c(-0.6, 0.6))+
     scale_x_continuous(NULL, breaks = 1:6,
@@ -175,7 +182,7 @@ slope_p <- coef_sum$beta %>%
     scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
     scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
     coord_flip() +
-    theme(#strip.text.x = element_blank(),
+    theme(strip.text.x = element_blank(),
           axis.title.x = element_text(margin=margin(0,0,0,0))) +
     NULL
 
@@ -216,7 +223,7 @@ effect_sigmas_p <- fit$stan %>%
                                     "time","dist"))) %>%
     filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
     mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "midges", "dist"))) %>%
+                         levels = c("time", "dist", "midges"))) %>%
     ggplot(aes(value, fill = coef))+
     geom_vline(xintercept = 0,  color = "gray50")+
     geom_rect(data  = coef_sum$sig_beta,
@@ -239,7 +246,7 @@ effect_mean_p <- fit$stan %>%
     gather() %>%
     filter(key != "V1") %>%  # intercept not necessary
     mutate(coef = factor(key, levels = c("V3","V2","V4"),
-                         labels = c("time", "midges", "dist"))) %>%
+                         labels = c("time", "dist", "midges"))) %>%
     ggplot(aes(value, fill = coef))+
     geom_vline(xintercept = 0,  color = "gray50")+
     geom_rect(data  = coef_sum$alpha,
@@ -248,7 +255,7 @@ effect_mean_p <- fit$stan %>%
     geom_density(linetype = 0, alpha = 0.7)+
     scale_fill_manual("", values = coef_palette)+
     scale_y_continuous("Density", limits = c(0, 8), breaks = 0:4 * 2)+
-    scale_x_continuous(expression("Mean response (" * {}^{k} * alpha * ")")) +
+    scale_x_continuous(expression("Response mean (" * {}^{k} * alpha * ")")) +
     theme(legend.position = "none") +
     small_labels +
     NULL
@@ -303,9 +310,9 @@ dev.off()
 
 
 
-#==========
-#========== PCA (Combine biplots for `midge effect`, `time effect`, and `distance` for Fig 3
-#==========
+#==========*
+#========== PCA (Combine biplots for `midge effect`, `time effect`, and `distance` for Fig 3 ----
+#==========*
 
 source("analysis/pca_funs.R")
 
@@ -335,39 +342,72 @@ var_part <- lapply(c("PC1","PC2","PC3"), function(x){
     bind_rows() %>%
     spread(pc, cont)
 
+
 # overall variance accounted for by predictors (for Table I)
-overall_part <- as.matrix(var_part[1:3,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
+overall_part <- as.matrix(var_part[,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
 row.names(overall_part) <- var_part$var
 
-# predictor vectors (example for midges)
-pred_pca$axes %>%
-    filter(midges_z == min(midges_z)|midges_z == max(midges_z)) %>%
-    group_by(midges_z) %>%
-    summarize(PC1 = mean(PC1), PC2 = mean(PC2), PC3 = mean(PC3)) %>%
-    rename(val = midges_z) %>%
-    arrange(val) %>%
-    mutate(var = "midges_z")  %>%
-    mutate(PC1 = PC1 - PC1[1],
-           PC2 = PC2 - PC2[1],
-           PC3 = PC3 - PC3[1])
+# predictor vectors
+pred_vec_fun <- function(pred_) {
+
+    sym_ <- sym(paste0(pred_, "_z"))
+
+    pred_pca$axes %>%
+        filter(!!sym_ %in% range(!!sym_)) %>%
+        group_by(!!sym_) %>%
+        summarize(PC1 = mean(PC1), PC2 = mean(PC2), PC3 = mean(PC3)) %>%
+        rename(val = !!sym_) %>%
+        arrange(val) %>%
+        mutate(var = pred_)  %>%
+        mutate(PC1 = PC1 - PC1[1],
+               PC2 = PC2 - PC2[1],
+               PC3 = PC3 - PC3[1]) %>%
+        filter(PC1 != 0 | PC2 != 0 | PC3 != 0) %>%
+        select(var, starts_with("PC"))
+}
+pred_vec <- map_dfr(c("time", "dist", "midges"), pred_vec_fun)
+
+
+# Which PC axes are most associated with each variable?
+pc_vars <- var_part[,2:4] %>%
+    as.matrix() %>%
+    `*`(matrix(as.numeric(pred_pca$obs_exp[1,2:4]), 3, 3, byrow=TRUE)) %>%
+    as.data.frame() %>%
+    as_tibble() %>%
+    set_names(paste0("PC", 1:3)) %>%
+    mutate(var = var_part$var) %>%
+    select(var, everything())
+
+
 
 # biplot function
-biplot_fn <- function(pred_pca_, var_) {
+biplot_fn <- function(var_, pred_pca_ = pred_pca, pc_vars_ = pc_vars, .mult = 2) {
 
     var_ <- match.arg(var_, c("midges", "time", "dist"))
 
+    var_ <- paste0(var_, "_z")
+
+    # pc_axes <- pc_vars_ %>%
+    #     filter(var == var_) %>%
+    #     .[,2:4] %>%
+    #     as.numeric() %>%
+    #     rank() %>%
+    #     {paste0("-PC", c(which(. == 3), which(. == 2)))}
+    # Only doing PC 1 and 2 for main text
+    pc_axes <- paste0("-PC", 1:2)
+
     pred_pca_$obs_rot %>%
-        ggplot(aes(PC1, -PC2))+
-        geom_point(aes(color = pred_pca_$obs_rot[[paste0(var_,"_z")]]),
-                   alpha = 0.6, size = 3)+
-        ggtitle(var_) +
-        # geom_segment(data = pred_pca_$taxon_vec,
-        #              aes(x = 0, xend = 3.5*PC1, y = 0, yend = -3.5*PC2, group = taxon),
-        #              arrow = arrow(length = unit(0.5, "cm")),
-        #              size = 0.8, color = "black")+
-        # geom_text(data = pred_pca_$taxon_vec,
-        #           aes(label = taxon, group = taxon, x = 3.8*PC1, y = -3.8*PC2),
-        #           size = 4, color = "black")+
+        # Uncomment below if you want darker spots in front
+        # I currently don't think we should do it
+        ## arrange(desc(!!sym(var_))) %>%
+        ggplot(aes_string(x = pc_axes[1], y = pc_axes[2]))+
+        geom_point(aes_string(color = var_),
+                   alpha = 0.25, size = 2)+
+        ggtitle(gsub("_z$", "", var_)) +
+        geom_segment(data = pred_vec %>% filter(var == gsub("_z$", "", var_)),
+                     aes(x = 0, xend = -.mult*PC1, y = 0, yend = -.mult*PC2),
+                     arrow = arrow(length = unit(6, "pt")),
+                     size = 0.8, color = "black")+
         scale_colour_gradient2("value", low =  pca_palette[1],
                                mid = pca_palette[2],
                                high = pca_palette[3],
@@ -382,51 +422,61 @@ biplot_fn <- function(pred_pca_, var_) {
 
 
 fig3a <- pred_pca$taxon_vec %>%
-    mutate(PC1_lab = 5*PC1, PC2_lab = -5*PC2,
-           PC2_lab = ifelse(taxon == "gnap", PC2_lab * 0.8, PC2_lab),
-           PC2_lab = ifelse(taxon == "opil", 0.5, PC2_lab),
-           PC1_lab = ifelse(taxon == "opil", 1, PC1_lab)) %>%
+    mutate(taxon = factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap"),
+                          labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
+                                     "harvestman","ground\nbeetles","rove\nbeetles"))) %>%
+    arrange(taxon) %>%
+    mutate(PC1_lab = -5*PC1 + c(1.2, 0.2, 1, 0.5, -0.8, 0.4),
+           PC2_lab = -5*PC2 + c(-0.4, -0.8, -0.5, 1.7, 0.7, -0.9),
+           ang = c(rep(0,3), 73.5, 0, 0)) %>%
+    arrange(desc(taxon)) %>%
     ggplot()+
-    geom_segment(aes(x = 0, xend = 3.5*PC1, y = 0, yend = -3.5*PC2, group = taxon),
+    geom_segment(aes(x = 0, xend = -5*PC1, y = 0, yend = -5*PC2, group = taxon,
+                     color = taxon),
                  arrow = arrow(length = unit(6, "pt")),
-                 size = 0.5, color = "black")+
-    geom_text(aes(label = taxon, group = taxon, x = PC1_lab, y = PC2_lab),
-              size = 9 / 2.83465, color = "black")+
-    xlab("PC1") +
+                 size = 1)+
+    geom_text(aes(label = taxon, x = PC1_lab, y = PC2_lab,
+                  color = taxon, angle = ang),
+              size = 9 / 2.83465, lineheight = 0.75)+
+    xlab("-PC1") +
     ylab("-PC2") +
     coord_equal(xlim = c(-4.1, 4.1), ylim = c(-4.1, 4.1)) +
+    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1:4, 6:5)],
+                       guide = FALSE) +
     theme(plot.margin = margin(0,0,0,0))
 
-# plot midge effect
-fig3b <- biplot_fn(pred_pca, "midges")
 # plot time effect
-fig3c <- biplot_fn(pred_pca, "time")
+fig3b <- biplot_fn("time")
 # plot distance effect
-fig3d <- biplot_fn(pred_pca, "dist")
+fig3c <- biplot_fn("dist")
+# plot midge effect
+fig3d <- biplot_fn("midges")
 
 
 pca_legend <- get_legend(fig3b + theme(legend.title = element_blank()))
 
 
 
-fig3 <- plot_grid(plot_grid(fig3a,
-                            NULL,
-                            fig3b + theme(legend.position = "none"),
-                            NULL, NULL, NULL,
+fig3 <- plot_grid(plot_grid(fig3a + theme(axis.text.x = element_blank(),
+                                          axis.title.x = element_blank()),
+                            fig3b + theme(legend.position = "none",
+                                          axis.text.y = element_blank(),
+                                          axis.title.y = element_blank(),
+                                          axis.text.x = element_blank(),
+                                          axis.title.x = element_blank()),
                             fig3c + theme(legend.position = "none"),
-                            NULL,
-                            fig3d + theme(legend.position = "none"),
-                            labels = c("A", "", "B",
-                                       "", "", "",
-                                       "C", "", "D"),
-                            nrow = 3, align = "vh",
-                            rel_widths = c(1, 0.1, 1), rel_heights = c(1, 0.1, 1)),
+                            fig3d + theme(legend.position = "none",
+                                          axis.text.y = element_blank(),
+                                          axis.title.y = element_blank()),
+                            labels = LETTERS[1:4],
+                            nrow = 2, align = "vh"),
                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
-
-
-
-# cairo_pdf("analysis/output/fig3.pdf", width = 6, height = 5)
 # fig3
-# dev.off()
+
+
+save_file(fig3, "fig3", width = 6, height = 5)
+
+
+
 
 
