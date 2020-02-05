@@ -339,7 +339,17 @@ var_part <- lapply(c("PC1","PC2","PC3"), function(x){
 overall_part <- as.matrix(var_part[1:3,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
 row.names(overall_part) <- var_part$var
 
-
+# predictor vectors (example for midges)
+pred_pca$axes %>%
+    filter(midges_z == min(midges_z)|midges_z == max(midges_z)) %>%
+    group_by(midges_z) %>%
+    summarize(PC1 = mean(PC1), PC2 = mean(PC2), PC3 = mean(PC3)) %>%
+    rename(val = midges_z) %>%
+    arrange(val) %>%
+    mutate(var = "midges_z")  %>%
+    mutate(PC1 = PC1 - PC1[1],
+           PC2 = PC2 - PC2[1],
+           PC3 = PC3 - PC3[1])
 
 # biplot function
 biplot_fn <- function(pred_pca_, var_) {
