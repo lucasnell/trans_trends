@@ -10,7 +10,7 @@ Each site included three to four plots at various distances
 (5m, 50m, 150m, and 500m) along a transect perpendicular to the lakeshore.
 Midge deposition was estimated at each site using aerial infall cups \citep{Dreyer2015},
 and activity-density of ground-dwelling arthropods was sampled using pitfall cups
-\cite{Southwood2009}.
+\citep{Southwood2009}.
 For this analysis, we used the cumulative annual catch of predatory and
 detritivorous arthropods,
 inlcuding harvestmen (Opiliones),
@@ -35,7 +35,7 @@ we constructed a lagged vector $\mathbf{y\sp{\prime}}$,
 where the first element for each time series was zero
 (the intial abundance was estimated by the random intercepts, as specified below)
 followed by the first through
-penultimate observtions for that time series \citep{Ives2006}.
+penultimate observations for that time series \citep{Ives2006}.
 This allowed us to specify an autoregressive model for the $i$th observation of
 $\mathbf{y}$ as
 
@@ -62,7 +62,7 @@ essentially a log-linear model of population dynamics, with intrinsic growth rat
 $\mathbf{x}_i{\boldsymbol\beta}_i$ and density-dependence $\phi_{\text{taxon}[i]}$
 (values closer to zero indicate stronger regulation).
 The exponentiation of $\phi_{\text{taxon}[i]}$ by the change in time allows the model
-to accomodate unequal time steps.
+to accommodate unequal time steps.
 The primary difference between the present approach and more traditional linear models
 with AR structures \citep[e.g ][]{Zuur2009} is the use of separate values of the AR
 parameter for different groups (i.e. taxa).
@@ -120,9 +120,9 @@ We defined a vector of corresponding coefficients defined as
 \end{equation}
 
 \noindent with fixed effects ${}^k\hspace*{-1pt}\alpha$ and random effects
-${}^k\hspace*{-1pt}\zeta_{\text{g}[i]}$ for predictor $k$ (e.g. midges)
-and the level of grouping variable $g$ (e.g. taxon) associated  with the $i$th observation.
-The random effects where modeled with Gaussian distributions with
+${}^k\hspace*{-1pt}\zeta_{\text{g}[i]}$ for predictor $k$ (e.g., midges)
+and the level of grouping variable $g$ (e.g., taxon) associated  with the $i$th observation.
+The random effects were modeled with Gaussian distributions with
 standard error $\sigma_g$:
 
 \begin{equation} \label{eq:zetas}
