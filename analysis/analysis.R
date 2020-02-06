@@ -70,11 +70,26 @@ theme_set(theme_bw() %+replace%
                     strip.text.y = element_text(margin = margin(0,0,0,10), angle = 270)))
 
 
+
 # cairo_pdf embeds fonts by default
 save_file <- function(x, fn, ...) {
     cairo_pdf(paste0("analysis/output/", gsub(".pdf$", "", fn), ".pdf"), ...)
     print(x)
     dev.off()
+}
+
+no_x <- function(p) {
+    p + theme(axis.title.x = element_blank(), axis.text.x = element_blank())
+}
+no_y <- function(p) {
+    p + theme(axis.title.y = element_blank(), axis.text.y = element_blank())
+}
+no_xy <- function(p) {
+    p + theme(axis.title.x = element_blank(), axis.text.x = element_blank(),
+              axis.title.y = element_blank(), axis.text.y = element_blank())
+}
+no_leg <- function(p) {
+    p + theme(legend.position = "none")
 }
 
 
@@ -141,8 +156,8 @@ time_dist_legend <- get_legend(
 )
 
 
-prow <- plot_grid(time_p + theme(legend.position = "none"),
-                  dist_p + theme(legend.position = "none"),
+prow <- plot_grid(time_p %>% no_leg(),
+                  dist_p  %>% no_leg(),
                   labels = c("A", "B"),
                   align = "vh")
 
@@ -457,17 +472,10 @@ pca_legend <- get_legend(fig3b + theme(legend.title = element_blank()))
 
 
 
-fig3 <- plot_grid(plot_grid(fig3a + theme(axis.text.x = element_blank(),
-                                          axis.title.x = element_blank()),
-                            fig3b + theme(legend.position = "none",
-                                          axis.text.y = element_blank(),
-                                          axis.title.y = element_blank(),
-                                          axis.text.x = element_blank(),
-                                          axis.title.x = element_blank()),
-                            fig3c + theme(legend.position = "none"),
-                            fig3d + theme(legend.position = "none",
-                                          axis.text.y = element_blank(),
-                                          axis.title.y = element_blank()),
+fig3 <- plot_grid(plot_grid(fig3a %>% no_x(),
+                            fig3b %>% no_leg() %>% no_xy(),
+                            fig3c %>% no_leg(),
+                            fig3d %>% no_leg() %>% no_y(),
                             labels = LETTERS[1:4],
                             nrow = 2, align = "vh"),
                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
