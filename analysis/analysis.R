@@ -70,6 +70,8 @@ theme_set(theme_bw() %+replace%
                     strip.text.x = element_text(margin = margin(b = 2, t = 6), vjust = 0),
                     strip.text.y = element_text(margin = margin(0,0,0,10), angle = 270)))
 
+# empty plot
+EMPTY <- ggplot() + geom_blank() + theme_void()
 
 
 # cairo_pdf embeds fonts by default
@@ -179,7 +181,7 @@ fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 # taxon-specific slopes
 slope_p <- coef_sum$beta %>%
     ggplot()+
-    facet_wrap(~coef, nrow = 1)+
+    facet_wrap(~coef, ncol= 1)+
     geom_rect(data = coef_sum$alpha,
               aes(xmin = 0.5, xmax = 6.5, ymin = lo, ymax = hi, fill = coef),
               alpha = 0.5, linetype =  0)+
@@ -194,16 +196,18 @@ slope_p <- coef_sum$beta %>%
                        trans = "reverse", limits = c(6.5, 0.5)) +
     scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
     scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
-    coord_flip() +
-    theme(axis.title.x = element_text(margin=margin(0,0,0,0)),
-          plot.margin = margin(0,0,0,r=4)) +
+    theme(axis.title.y = element_text(size = 11, margin=margin(0,0,0,0)),
+          axis.title.x = element_text(size = 12),
+          axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1, size = 8),
+          axis.text.y = element_text(size = 8),
+          plot.margin = margin(r=0,l=0)) +
     NULL
 
-small_labels <- theme(axis.title.y = element_text(size = 10, angle = 90,
-                                                  margin = margin(0,0,0,r=2)),
-                      axis.title.x = element_text(size = 10, margin = margin(0,0,0,t=2)),
+small_labels <- theme(axis.title.y = element_text(size = 9, angle = 90,
+                                                  margin = margin(0,0,0,0)),
+                      axis.title.x = element_text(size = 9, margin = margin(0,0,0,0)),
                       axis.text = element_text(size = 8, color = "black"),
-                      plot.margin = margin(0,0,0,r=4))
+                      plot.margin = margin(0,0,0,0))
 
 
 # ar (extra)
@@ -211,6 +215,7 @@ ar_p <- coef_sum$ar %>%
     ggplot(aes(tx, mi))+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_point(size = 1.5)+
+    ggtitle(" ") +
     geom_linerange(aes(ymin = lo, ymax = hi))+
     scale_y_continuous(expression("AR parameter" ~ (phi)),  limits = c(0, 1),
                        breaks = c(0, 0.5, 1))+
@@ -218,15 +223,20 @@ ar_p <- coef_sum$ar %>%
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
                                   "Harvestman","Ground beetles","Rove beetles"),
                        trans = "reverse", limits = c(6.5, 0.5))+
-    coord_flip() +
     small_labels +
+    theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1)) +
     NULL
 
 
 
 density_theme <- small_labels +
-    theme(axis.text.y = element_blank(),
-          axis.ticks.y = element_blank())
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          legend.text = element_text(size = 8, lineheight = 0.75),
+          legend.key.height = unit(0.75, "lines"),
+          legend.key.width = unit(0.75, "lines"),
+          legend.position = "top",
+          legend.direction = "vertical")
 
 # sigmas (extra)
 effect_sigmas_p <- fit$stan %>%
@@ -252,6 +262,7 @@ effect_sigmas_p <- fit$stan %>%
     scale_y_continuous("Density", limits = c(0, 8), breaks = 0:4 * 2)+
     scale_x_continuous(expression("Response SD" ~ ({}^{k} * sigma[g]))) +
     density_theme +
+    coord_flip() +
     NULL
 
 
@@ -273,51 +284,39 @@ effect_mean_p <- fit$stan %>%
     scale_fill_manual("", values = coef_palette)+
     scale_y_continuous("Density", limits = c(0, 8), breaks = 0:4 * 2)+
     scale_x_continuous(expression("Response mean (" * {}^{k} * alpha * ")")) +
-    theme(legend.position = "none") +
     density_theme +
+    theme(legend.position = "none") +
+    coord_flip() +
     NULL
 
 
+effect_legend <- get_legend(effect_sigmas_p)
 
 
-# fig2 <- plot_grid(NULL,
-#                   slope_p,
-#                   plot_grid(NULL, NULL, NULL, labels = c("B", "C", "D"),
-#                             rel_heights = c(1.2, 1, 1), ncol = 1),
-#                   plot_grid(ar_p + theme(axis.text.y = element_blank()),
-#                             effect_sigmas_p +
-#                                 theme(legend.position = c(0.7,0.5),
-#                                       plot.margin = margin(t=0,r=4,b=10,l=0)),
-#                             effect_mean_p +
-#                                 theme(plot.margin = margin(t=0,r=4,b=10,l=0)),
-#                             rel_heights = c(1.2, 1, 1),
-#                             ncol = 1, align = "h", axis = "t"),
-#                   labels = c("A", "", "", ""), rel_widths = c(0.08, 1, 0.08, 0.6),
-#                   nrow = 1)
-#
-#
-# cairo_pdf("analysis/output/fig2-A.pdf", width = 6, height = 5)
-# fig2
-# dev.off()
+
+fig2 <- plot_grid(slope_p,
+                  plot_grid(EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+                            rel_heights = c(1.47, 0.075, 0.4, 0.075, 1, 0.05, 1),
+                            labels = c("B", "", "", "", "C", "", "D"),
+                            label_x = 0.25,
+                            ncol = 1),
+                  plot_grid(ar_p,
+                            EMPTY,
+                            effect_legend,
+                            EMPTY,
+                            effect_sigmas_p %>% no_x() %>% no_leg(),
+                            EMPTY,
+                            effect_mean_p,
+                            rel_heights = c(1.47, 0.075, 0.4, 0.075, 1, 0.05, 1),
+                            # labels = c("B", "", "", "", "C", "", "D"),
+                            ncol = 1),
+                  rel_widths = c(1, 0.2, 0.7),
+                  # rel_widths = c(1, 0.7),
+                  labels = c("A", "", ""),
+                  nrow = 1)
 
 
-fig2 <- plot_grid(NULL, slope_p,
-                  NULL, NULL,
-                  NULL, plot_grid(ar_p,
-                                  NULL,
-                                  effect_sigmas_p +
-                                      theme(legend.position = c(0.7,0.6)),
-                                  NULL,
-                                  effect_mean_p,
-                                  rel_widths = c(1.2, 0.15, 1.1, 0.15, 1),
-                                  labels = c("", "C", "", "D", ""),
-                                  nrow = 1),
-                  labels = c("A", "", "B", ""), rel_widths = c(0.05, 1),
-                  rel_heights = c(1.5, 0.1, 1),
-                  ncol = 2)
-
-
-# save_file(fig2, "fig2-B", width = 6, height = 3)
+# save_file(fig2, "fig2", width = 3, height = 6)
 
 
 
