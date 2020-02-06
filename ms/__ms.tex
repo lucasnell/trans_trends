@@ -18,6 +18,9 @@
 \medmuskip=8mu % by default it is equal to 4 mu
 \thickmuskip=10mu % by default it is equal to 5 mu
 
+% Figures
+\usepackage{graphicx}
+
 
 %%%%%%%%%%%%%%%%%%%%%
 % Line numbering
@@ -61,6 +64,9 @@ Jamieson C. Botsch$^{1}$}
 \date{}
 
 \begin{document}
+
+\raggedright
+\setlength\parindent{0.25in}
 
 \maketitle
 
@@ -201,5 +207,49 @@ M\'{y}vatn; time-series analysis; tundra arthropods
 \bibliographystyle{ecology.bst}
 \newpage{}
 \bibliography{refs.bib}
+
+
+\clearpage
+
+\begin{figure}
+\centering
+\includegraphics{../analysis/output/fig1.pdf}
+\caption{\label{fig:obs-data}
+Community time series data for 6 predatory arthropod taxa at Lake M\'{y}vatn
+(A) Standardized activity-density of arthropods through time.
+Narrow gray lines are time series grouped by site and distance.
+(B) Standardized activity-density of arthropods across distance from the lake.
+Thick red lines are midge catch averaged by (A) year or (B) distance.
+Thick blue lines are standardized activity-density averaged by taxon and
+(A) year or (B) distance.
+}
+\end{figure}
+
+
+
+
+\clearpage
+
+\begin{figure}
+\centering
+\includegraphics{../analysis/output/fig2-B.pdf}
+\caption{\label{fig:coefs}
+Coefficient figure.
+}
+\end{figure}
+
+
+
+\clearpage
+
+\begin{figure}
+\centering
+\includegraphics{../analysis/output/fig3.pdf}
+\caption{\label{fig:pca}
+PCA figure.
+}
+\end{figure}
+
+
 
 \end{document}
