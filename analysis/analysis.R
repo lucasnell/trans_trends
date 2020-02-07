@@ -526,7 +526,7 @@ pc_vars <- var_part[,2:4] %>%
 
 coef_order <- c("time", "dist", "midges")
 
-fmt <- function(x, .f = "%.3f") sprintf(.f,x)
+fmt <- function(x, .f = "%.2f") sprintf(.f,x)
 
 tbl1_order <- function(x, .col = NULL, .coef_order = c("time", "dist", "midges")) {
     if (inherits(x, "matrix")) {
@@ -543,16 +543,18 @@ tbl1_order <- function(x, .col = NULL, .coef_order = c("time", "dist", "midges")
 }
 
 tibble(`coef` = c("", "time", "distance", "midges"),
-       `Taxon-variation` = c("(random)", tbl1_order(loo_dev,"dev_re") %>% fmt()),
-       `Overall` = c("(fixed + random)", tbl1_order(loo_dev,"dev_fere") %>% fmt()),
+       `Taxon-variation` = c("(random)", tbl1_order(loo_dev,"dev_re") %>% fmt("%.0f")),
+       `Overall` = c("(fixed + random)", tbl1_order(loo_dev,"dev_fere") %>% fmt("%.0f")),
        `EXTRA` = rep("", 4),
-       PC1 = c({100*pred_pca$obs_exp[["PC1"]][1]} %>% fmt("(%.1f%%)"),
+       PC1 = c(pred_pca$obs_exp[["PC1"]][1] %>% fmt("(%.2f)"),
                tbl1_order(var_part, "PC1") %>% fmt()),
-       PC2 = c({100*pred_pca$obs_exp[["PC2"]][1]} %>% fmt("(%.1f%%)"),
+       PC2 = c(pred_pca$obs_exp[["PC2"]][1] %>% fmt("(%.2f)"),
                tbl1_order(var_part, "PC2") %>% fmt()),
-       PC3 = c({100*pred_pca$obs_exp[["PC3"]][1]} %>% fmt("(%.1f%%)"),
+       PC3 = c(pred_pca$obs_exp[["PC3"]][1] %>% fmt("(%.2f)"),
                tbl1_order(var_part, "PC3") %>% fmt()),
-       Total = c("", fmt(overall_part[coef_order,]))) %>%
+       Total = c(pred_pca$obs_exp[1,paste0("PC", 1:3)] %>% sum() %>% fmt("(%.2f)"),
+                 fmt(overall_part[coef_order,]))) %>%
     knitr::kable(format = "latex")
+
 
 
