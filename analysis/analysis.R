@@ -345,11 +345,30 @@ var_part <- lapply(c("PC1","PC2","PC3"), function(x){
 }) %>%
     bind_rows() %>%
     spread(pc, cont)
-
+var_part$var <- gsub("_z$", "", var_part$var)
 
 # overall variance accounted for by predictors (for Table I)
 overall_part <- as.matrix(var_part[,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
 row.names(overall_part) <- var_part$var
+
+# Reorder both:
+overall_part <- overall_part[c("time", "dist", "midges"),]
+var_part <- var_part[match(c("time", "dist", "midges"), var_part$var),]
+
+
+tibble(`coef` = c("", "time", "distance", "midges"),
+       `Taxon-variation` = c("(random)", 0,0,0),
+       `Overall` = c("(fixed + random)", sprintf("%.3f", overall_part)),
+       PC1 = c(sprintf("(%.1f%%)", 100*pred_pca$obs_exp[["PC1"]][1]),
+               sprintf("%.3f", var_part$PC1)),
+       PC2 = c(sprintf("(%.1f%%)", 100*pred_pca$obs_exp[["PC2"]][1]),
+               sprintf("%.3f", var_part$PC2)),
+       PC3 = c(sprintf("(%.1f%%)", 100*pred_pca$obs_exp[["PC3"]][1]),
+               sprintf("%.3f", var_part$PC3))) %>%
+    knitr::kable(format = "latex")
+
+
+
 
 # predictor vectors
 pred_vec_fun <- function(pred_) {
