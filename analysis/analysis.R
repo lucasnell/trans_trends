@@ -334,41 +334,6 @@ summary(pred_pca$pca)
 pred_pca$obs_exp
 
 
-# variance partition of PC axes by predictors (for Table I)
-var_part <- lapply(c("PC1","PC2","PC3"), function(x){
-    y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
-    tibble(var = c("midges_z", "time_z", "dist_z"),
-           pc = x,
-           cont = anova(lm(y, data = pred_pca$axes))[,2] %>% {.[1:3]/sum(.[1:3])} %>%
-               round(3)
-    )
-}) %>%
-    bind_rows() %>%
-    spread(pc, cont)
-var_part$var <- gsub("_z$", "", var_part$var)
-
-# overall variance accounted for by predictors (for Table I)
-overall_part <- as.matrix(var_part[,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
-row.names(overall_part) <- var_part$var
-
-# Reorder both:
-overall_part <- overall_part[c("time", "dist", "midges"),]
-var_part <- var_part[match(c("time", "dist", "midges"), var_part$var),]
-
-
-tibble(`coef` = c("", "time", "distance", "midges"),
-       `Taxon-variation` = c("(random)", 0,0,0),
-       `Overall` = c("(fixed + random)", sprintf("%.3f", overall_part)),
-       PC1 = c(sprintf("(%.1f%%)", 100*pred_pca$obs_exp[["PC1"]][1]),
-               sprintf("%.3f", var_part$PC1)),
-       PC2 = c(sprintf("(%.1f%%)", 100*pred_pca$obs_exp[["PC2"]][1]),
-               sprintf("%.3f", var_part$PC2)),
-       PC3 = c(sprintf("(%.1f%%)", 100*pred_pca$obs_exp[["PC3"]][1]),
-               sprintf("%.3f", var_part$PC3))) %>%
-    knitr::kable(format = "latex")
-
-
-
 
 # predictor vectors
 pred_vec_fun <- function(pred_) {
@@ -393,15 +358,6 @@ pred_vec_fun <- function(pred_) {
 pred_vec <- map_dfr(c("time", "distance", "midges"), pred_vec_fun)
 
 
-# Which PC axes are most associated with each variable?
-pc_vars <- var_part[,2:4] %>%
-    as.matrix() %>%
-    `*`(matrix(as.numeric(pred_pca$obs_exp[1,2:4]), 3, 3, byrow=TRUE)) %>%
-    as.data.frame() %>%
-    as_tibble() %>%
-    set_names(paste0("PC", 1:3)) %>%
-    mutate(var = var_part$var) %>%
-    select(var, everything())
 
 
 
@@ -409,18 +365,12 @@ pc_axis_lim <- 4.1
 
 
 # biplot function
-biplot_fn <- function(var_, pred_pca_ = pred_pca, pc_vars_ = pc_vars, .mult = 2) {
+biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = 2) {
 
     var_ <- match.arg(var_, c("midges", "time", "distance"))
 
     var_z_ <- paste0(gsub("^distance$", "dist", var_), "_z")
 
-    # pc_axes <- pc_vars_ %>%
-    #     filter(var == var_z_) %>%
-    #     .[,2:4] %>%
-    #     as.numeric() %>%
-    #     rank() %>%
-    #     {paste0("-PC", c(which(. == 3), which(. == 2)))}
     # Only doing PC 1 and 2 for main text
     pc_axes <- paste0("-PC", 1:2)
 
@@ -511,5 +461,98 @@ fig3
 
 
 
+
+
+
+# ===============*
+# Table I ----
+# ===============*
+
+
+#---------*
+# * LOO deviance ----
+#---------*
+
+# Table I (exclude standard errors)
+loo_dev <- read_csv("analysis/output/dev_re.csv", col_types = cols()) %>%
+    mutate(dev = 2*abs(elpd_diff),
+           dev_se = 2*se_diff) %>%
+    select(var, dev, dev_se) %>%
+    rename( dev_re = dev, dev_re_se = dev_se) %>%
+    full_join(read_csv("analysis/output/dev_fere.csv", col_types = cols()) %>%
+                  mutate(dev = 2*abs(elpd_diff),
+                         dev_se = 2*se_diff) %>%
+                  select(var,dev, dev_se) %>%
+                  rename(dev_fere = dev, dev_fere_se = dev_se),
+              by = "var") %>%
+    filter(var != "full") %>%
+    mutate(var = gsub("_z$", "", var))
+
+
+
+#---------*
+# * Variance partitioning ----
+#---------*
+
+
+# variance partition of PC axes by predictors (for Table I)
+var_part <- lapply(c("PC1","PC2","PC3"), function(x){
+    y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
+    tibble(var = c("midges_z", "time_z", "dist_z"),
+           pc = x,
+           cont = anova(lm(y, data = pred_pca$axes))[,2] %>% {.[1:3]/sum(.[1:3])} %>%
+               round(3)
+    )
+}) %>%
+    bind_rows() %>%
+    spread(pc, cont) %>%
+    mutate(var = gsub("_z$", "", var))
+
+# overall variance accounted for by predictors (for Table I)
+overall_part <- as.matrix(var_part[,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
+row.names(overall_part) <- var_part$var
+
+
+# Which PC axes are most associated with each variable?
+pc_vars <- var_part[,2:4] %>%
+    as.matrix() %>%
+    `*`(matrix(as.numeric(pred_pca$obs_exp[1,2:4]), 3, 3, byrow=TRUE)) %>%
+    as.data.frame() %>%
+    as_tibble() %>%
+    set_names(paste0("PC", 1:3)) %>%
+    mutate(var = var_part$var) %>%
+    select(var, everything())
+
+
+coef_order <- c("time", "dist", "midges")
+
+fmt <- function(x, .f = "%.3f") sprintf(.f,x)
+
+tbl1_order <- function(x, .col = NULL, .coef_order = c("time", "dist", "midges")) {
+    if (inherits(x, "matrix")) {
+        stopifnot(!is.null(rownames(x)))
+        if (is.null(.col)) .col <- 1
+        x <- as.numeric(x[.coef_order,1])
+    } else if (inherits(x, "data.frame")) {
+        stopifnot(!is.null(.col) && (is.numeric(.col) || is.character(.col)) &&
+                      length(.col) == 1)
+        stopifnot("var" %in% colnames(x))
+        x <- as.numeric(x[match(.coef_order, x$var),][[.col]])
+    } else stop("x must be data frame or matrix")
+    return(x)
+}
+
+tibble(`coef` = c("", "time", "distance", "midges"),
+       `Taxon-variation` = c("(random)", tbl1_order(loo_dev,"dev_re") %>% fmt()),
+       `Overall` = c("(fixed + random)", tbl1_order(loo_dev,"dev_fere") %>% fmt()),
+       `EXTRA` = rep("", 4),
+       PC1 = c({100*pred_pca$obs_exp[["PC1"]][1]} %>% fmt("(%.1f%%)"),
+               tbl1_order(var_part, "PC1") %>% fmt()),
+       PC2 = c({100*pred_pca$obs_exp[["PC2"]][1]} %>% fmt("(%.1f%%)"),
+               tbl1_order(var_part, "PC2") %>% fmt()),
+       PC3 = c({100*pred_pca$obs_exp[["PC3"]][1]} %>% fmt("(%.1f%%)"),
+               tbl1_order(var_part, "PC3") %>% fmt()),
+       Total = c("", fmt(overall_part[coef_order,]))) %>%
+    knitr::kable(format = "latex")
 
 

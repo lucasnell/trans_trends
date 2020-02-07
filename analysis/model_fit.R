@@ -303,27 +303,6 @@ dev_fere <- c("midges_z","time_z","dist_z") %>%
 
 
 
-#==========
-#========== Comparison to reduced models (combined)
-#==========
-
-# Import for Table I:
-# dev_re <- read_csv("analysis/output/dev_re.csv")
-# dev_fere <- read_csv("analysis/output/dev_fere.csv")
-
-
-# Table I (exclude standard errors)
-dev <- dev_re %>%
-    mutate(dev = 2*abs(elpd_diff),
-           dev_se = 2*se_diff) %>%
-    select(var, dev, dev_se) %>%
-    rename( dev_re = dev, dev_re_se = dev_se) %>%
-    full_join(dev_fere %>%
-                  mutate(dev = 2*abs(elpd_diff),
-                         dev_se = 2*se_diff) %>%
-                  select(var,dev, dev_se) %>%
-                  rename(dev_fere = dev, dev_fere_se = dev_se)) %>%
-    filter(var != "full")
 
 
 
