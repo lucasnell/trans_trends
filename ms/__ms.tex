@@ -209,14 +209,15 @@ M\'{y}vatn; time-series analysis; tundra arthropods
 
 
 \bibliographystyle{ecology.bst}
-\newpage{}
+\clearpage
+
 \bibliography{refs.bib}
 
 
 \clearpage
 
 \begin{table}
-\caption{\label{fig:obs-data}Model summary.}
+\caption{\label{tab:model-summary}Model inference.}
 \begin{tabular}{rrrrrrrr}
 \toprule
  & \multicolumn{2}{c}{LOO deviance} & & \multicolumn{4}{c}{Variance partitioning} \\
@@ -228,9 +229,9 @@ M\'{y}vatn; time-series analysis; tundra arthropods
     \multicolumn{1}{c}{(0.34)} & \multicolumn{1}{c}{(0.17)} &
     \multicolumn{1}{c}{(0.17)} & \multicolumn{1}{c}{(0.68)} \\
 \midrule
-time & 37 & 34 &  & 0.00 & 0.28 & 0.84 & 0.19\\
-distance & 64 & 64 &  & 0.99 & 0.04 & 0.01 & 0.34\\
-midges & 4 & 15 &  & 0.01 & 0.67 & 0.15 & 0.14\\
+time & 37 & 34 &  & 0.00 & 0.28 & 0.84 & (0.19)\\
+distance & 64 & 64 &  & 0.99 & 0.04 & 0.01 & (0.34)\\
+midges & 4 & 15 &  & 0.01 & 0.67 & 0.15 & (0.14)\\
 \bottomrule
 \end{tabular}
 \end{table}
