@@ -239,7 +239,7 @@ ar_p <- coef_sum$ar %>%
 
 
 
-density_theme <- small_labels +
+effect_p_theme <- small_labels +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           legend.position = "none")
@@ -252,7 +252,7 @@ effect_mean_p <- fit$stan %>%
     as_tibble(.name_repair = "universal") %>%
     gather() %>%
     filter(key != "...1") %>%  # intercept not necessary
-    mutate(coef = factor(key, levels = c("...3","...2","...4"),
+    mutate(coef = factor(key, levels = c("...3","...4","...2"),
                          labels = c("time", "distance", "midges"))) %>%
     ggplot(aes(value, fill = coef))+
     geom_vline(xintercept = 0,  color = "gray50")+
@@ -260,7 +260,7 @@ effect_mean_p <- fit$stan %>%
     scale_fill_manual("", values = coef_palette)+
     scale_y_continuous("Density", limits = c(0, 7), breaks = 0:4 * 2)+
     scale_x_continuous(expression("Response mean (" * {}^{k} * alpha * ")")) +
-    density_theme +
+    effect_p_theme +
     NULL
 
 
@@ -285,7 +285,7 @@ effect_sigmas_p <- fit$stan %>%
     guides(fill = guide_legend(keywidth = 0.75, keyheight = 0.75)) +
     scale_y_continuous("Density", limits = c(0, 7), breaks = 0:4 * 2)+
     scale_x_continuous(expression("Response SD" ~ ({}^{k} * sigma[g]))) +
-    density_theme +
+    effect_p_theme +
     NULL
 
 
@@ -383,7 +383,6 @@ pc_vars <- var_part[,2:4] %>%
     set_names(paste0("PC", 1:3)) %>%
     mutate(var = var_part$var) %>%
     select(var, everything())
-
 
 
 
