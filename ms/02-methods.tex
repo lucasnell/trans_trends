@@ -38,7 +38,7 @@ followed by the first through
 penultimate observations for that time series \citep{Ives2006}.
 This allowed us to specify an autoregressive model for the $i$th observation of
 $\mathbf{y}$ as
-
+%
 \begin{equation} \label{eq:y-i}
 \begin{split}
     y_i &= \mathbf{x}_i {\boldsymbol\beta}_i +
@@ -48,7 +48,7 @@ $\mathbf{y}$ as
     \text{,}
 \end{split}
 \end{equation}
-
+%
 \noindent where $\mathbf{x}_i$ is a row vector of predictor values for the $i$th
 observation,
 ${\boldsymbol\beta}_i$ is a column vector of coefficients,
@@ -80,19 +80,19 @@ community to midge depositon, while also accounting for potential trends through
 time and space due to other factors.
 Therefore, we defined the vector of predictor values for the $i$th observation
 of $\mathbf{y}$ as
-
+%
 \begin{equation} \label{eq:x-vec}
     \mathbf{x}_i = \begin{bmatrix}
         1 & {}^z\hspace*{-1pt}\text{midge}_i &
         {}^z\hspace*{-1pt}\text{time}_i & {}^z\hspace*{-1pt}\text{dist}_i
     \end{bmatrix}\text{,}
 \end{equation}
-
+%
 \noindent with $1$'s corresponding to intercepts (hereafter denoted ``int"),
 ${}^z\hspace*{-1pt}\text{midge}_i$ and ${}^z\hspace*{-1pt}\text{dist}_i$ log-transformed,
 and all predictors (excluding the intercept) z-scored.
 We defined a vector of corresponding coefficients defined as
-
+%
 \begin{equation} \label{eq:beta-vec}
 {\boldsymbol\beta}_i = \begin{bmatrix}
     {}^\text{int}\hspace*{-1pt}\beta_i \\
@@ -101,9 +101,9 @@ We defined a vector of corresponding coefficients defined as
     {}^\text{dist}\hspace*{-1pt}\beta_i
     \end{bmatrix}\text{.}
 \end{equation}
-
+%
 \noindent We modeled the coefficients hierarchically \citep[following][]{Jackson2012} as
-
+%
 \begin{equation} \label{eq:betas}
 \begin{split}
     {}^\text{int}\hspace*{-2pt}\beta_i &= {}^\text{int}\hspace*{-1pt}\alpha +
@@ -118,13 +118,13 @@ We defined a vector of corresponding coefficients defined as
             {}^\text{dist}\hspace*{-1pt}\zeta_{\text{taxon}[i]}
 \end{split}
 \end{equation}
-
+%
 \noindent with fixed effects ${}^k\hspace*{-1pt}\alpha$ and random effects
 ${}^k\hspace*{-1pt}\zeta_{\text{g}[i]}$ for predictor $k$ (e.g., midges)
 and the level of grouping variable $g$ (e.g., taxon) associated  with the $i$th observation.
 The random effects were modeled with Gaussian distributions with
 standard error $\sigma_g$:
-
+%
 \begin{equation} \label{eq:zetas}
     {}^k\hspace*{-1pt}\zeta_{g[i]} \sim
         \mathcal{N}\left(0, \; {}^k\hspace*{-1pt}\sigma_g \right)
@@ -150,11 +150,11 @@ Therefore, the model characterizes both
 taxon-level and community-level responses to the predictors.
 To make the community responses more explicit, we generated predicted values
 $\hat{\mathbf{y}}$ due to variation in midges, time, and distance as
-
+%
 \begin{equation} \label{eq:preds}
     \hat{y}_r = \hat{\mathbf{x}}_r \hat{{\boldsymbol\beta}}_r
 \end{equation}
-
+%
 \noindent where $\hat{\mathbf{x}}_r$ is the $r$th row from a data frame defined
 analagously to equation \ref{eq:x-vec} but with values evenly spaced across the
 observed range of predictors, and $\hat{{\boldsymbol\beta}}_r$ is a
