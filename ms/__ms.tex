@@ -20,6 +20,8 @@
 
 % Figures
 \usepackage{graphicx}
+% Table
+\usepackage{booktabs}
 
 
 %%%%%%%%%%%%%%%%%%%%%
@@ -207,6 +209,24 @@ M\'{y}vatn; time-series analysis; tundra arthropods
 \bibliographystyle{ecology.bst}
 \newpage{}
 \bibliography{refs.bib}
+
+
+\clearpage
+
+\begin{table}
+\caption{\label{fig:obs-data}Model summary.}
+\begin{tabular}{rrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{LOO deviance} & & \multicolumn{4}{c}{Variance Partitioning} \\ \cmidrule{2-3} \cmidrule{5-8}
+ & \multicolumn{1}{c}{Taxon-variation} & \multicolumn{1}{c}{Overall} & & \multicolumn{1}{c}{PC1} & \multicolumn{1}{c}{PC2} & \multicolumn{1}{c}{PC3} & \multicolumn{1}{c}{Total} \\
+& \multicolumn{1}{c}{(random)} & \multicolumn{1}{c}{(fixed + random)} & & \multicolumn{1}{c}{(34.0\%)} & \multicolumn{1}{c}{(16.9\%)} & \multicolumn{1}{c}{(17.2\%)} & \\
+\midrule
+time & 36.990 & 33.967 & & 0.000 & 0.284 & 0.841 & 0.192\\
+distance & 63.707 & 64.308 & & 0.989 & 0.045 & 0.006 & 0.345\\
+midges & 4.364 & 15.145 & & 0.011 & 0.671 & 0.154 & 0.143\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 
 \clearpage
