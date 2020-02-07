@@ -2,6 +2,17 @@ library(tidyverse)
 
 # predicted values from model
 pred_fn <- function(d_, beta_, int_) {
+    if ("dist" %in% beta_$coef) {
+        dd <- sym("dist")
+        if (!"dist" %in% colnames(d_)) {
+            stop("colnames in d_ and beta_$coef don't agree")
+        }
+    } else if ("distance" %in% beta_$coef) {
+        dd <- sym("distance")
+        if (!"distance" %in% colnames(d_)) {
+            stop("colnames in d_ and beta_$coef don't agree")
+        }
+    } else stop("Neither dist nor distance found in `pred_fn`")
     d_ %>%
         expand(taxon,
                midges_z = seq(min(midges_z), max(midges_z), 1),
@@ -11,7 +22,7 @@ pred_fn <- function(d_, beta_, int_) {
                       select(taxon, coef, mi) %>%
                       spread(coef, mi)) %>%
         full_join(int_ %>% select(taxon, mi) %>% rename(int = mi)) %>%
-        mutate(y = int + midges*midges_z + time*time_z + dist*dist_z) %>%
+        mutate(y = int + midges*midges_z + time*time_z + !!dd*dist_z) %>%
         group_by(taxon) %>%
         mutate(id = row_number()) %>%
         ungroup()

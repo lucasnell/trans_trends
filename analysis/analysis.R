@@ -16,6 +16,10 @@ if (Sys.info()[["sysname"]] == "Darwin" && .Platform$GUI == "RStudio") {
 }
 
 
+
+
+
+
 # load data
 data_fit <- read_csv("analysis/data_fit.csv") %>%
     mutate(Taxon = factor(taxon,
@@ -30,17 +34,20 @@ coef_sum <- readRDS("analysis/output/coef_sum.rds")
 coef_sum$beta <- coef_sum$beta %>%
     ungroup() %>%
     mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "dist", "midges")),
+                         levels = c("time", "dist", "midges"),
+                         labels = c("time", "distance", "midges")),
            tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet",
                                                     "opil","cara","stap"))))
 coef_sum$alpha <- coef_sum$alpha %>%
     filter(coef != "int") %>%
     mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "dist", "midges")))
+                         levels = c("time", "dist", "midges"),
+                         labels = c("time", "distance", "midges")))
 coef_sum$sig_beta <- coef_sum$sig_beta %>%
     filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
     mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "dist", "midges")))
+                         levels = c("time", "dist", "midges"),
+                         labels = c("time", "distance", "midges")))
 coef_sum$ar <- coef_sum$ar %>%
     mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil",
                                                     "cara","stap"))))
@@ -184,11 +191,15 @@ slope_p <- coef_sum$beta %>%
     facet_wrap(~coef, ncol= 1)+
     geom_rect(data = coef_sum$alpha,
               aes(xmin = 0.5, xmax = 6.5, ymin = lo, ymax = hi, fill = coef),
-              alpha = 0.5, linetype =  0)+
+              alpha = 0.25, linetype =  0)+
     geom_hline(yintercept = 0, color = "gray50")+
-    geom_point(aes(tx, mi), size = 1.5)+
-    geom_linerange(aes(tx, ymin = lo, ymax = hi))+
-    scale_y_continuous(expression("Effect size" ~ ({}^{k} * beta[taxon])),
+    geom_point(aes(tx, mi, color = coef), size = 1.5)+
+    geom_linerange(aes(tx, ymin = lo, ymax = hi, color = coef))+
+    geom_text(data = tibble(coef = sort(unique(coef_sum$beta[["coef"]])),
+                            x = 0.5, y = -0.6),
+              aes(x, y, label = coef),
+              size = 12 / 2.83465, hjust = 0, vjust = 1, color = "black") +
+    scale_y_continuous(expression("Response" ~ ({}^{k} * beta[taxon])),
                        breaks = c(-0.5, 0, 0.5), limits = c(-0.6, 0.6))+
     scale_x_continuous(NULL, breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
@@ -196,18 +207,16 @@ slope_p <- coef_sum$beta %>%
                        trans = "reverse", limits = c(6.5, 0.5)) +
     scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
     scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
-    theme(axis.title.y = element_text(size = 11, margin=margin(0,0,0,0)),
-          axis.title.x = element_text(size = 12),
-          axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1, size = 8),
-          axis.text.y = element_text(size = 8),
-          plot.margin = margin(r=0,l=0)) +
+    # theme(plot.margin = margin(r=0,l=0)) +
+    theme(plot.margin = margin(0,0,0,t=4), strip.text.x = element_blank()) +
+    coord_flip() +
     NULL
 
-small_labels <- theme(axis.title.y = element_text(size = 9, angle = 90,
+small_labels <- theme(axis.title.y = element_text(size = 10, angle = 90,
                                                   margin = margin(0,0,0,0)),
-                      axis.title.x = element_text(size = 9, margin = margin(0,0,0,0)),
-                      axis.text = element_text(size = 8, color = "black"),
-                      plot.margin = margin(0,0,0,0))
+                      axis.title.x = element_text(size = 10,
+                                                  margin = margin(0,0,0,0)),
+                      plot.margin = margin(4,4,0,0))
 
 
 # ar (extra)
@@ -215,7 +224,7 @@ ar_p <- coef_sum$ar %>%
     ggplot(aes(tx, mi))+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_point(size = 1.5)+
-    ggtitle(" ") +
+    # ggtitle(" ") +
     geom_linerange(aes(ymin = lo, ymax = hi))+
     scale_y_continuous(expression("AR parameter" ~ (phi)),  limits = c(0, 1),
                        breaks = c(0, 0.5, 1))+
@@ -224,99 +233,82 @@ ar_p <- coef_sum$ar %>%
                                   "Harvestman","Ground beetles","Rove beetles"),
                        trans = "reverse", limits = c(6.5, 0.5))+
     small_labels +
-    theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1)) +
+    coord_flip() +
+    theme(axis.text.y = element_blank()) +
     NULL
 
 
 
 density_theme <- small_labels +
-    theme(axis.text.x = element_blank(),
-          axis.ticks.x = element_blank(),
-          legend.text = element_text(size = 8, lineheight = 0.75),
-          legend.key.height = unit(0.75, "lines"),
-          legend.key.width = unit(0.75, "lines"),
-          legend.position = "top",
-          legend.direction = "vertical")
+    theme(axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          legend.position = "none")
+
+# alphas (extra)
+effect_mean_p <- fit$stan %>%
+    rstan::extract(pars = "alpha") %>%
+    .[[1]] %>%
+    as.matrix() %>%
+    as_tibble(.name_repair = "universal") %>%
+    gather() %>%
+    filter(key != "...1") %>%  # intercept not necessary
+    mutate(coef = factor(key, levels = c("...3","...2","...4"),
+                         labels = c("time", "distance", "midges"))) %>%
+    ggplot(aes(value, fill = coef))+
+    geom_vline(xintercept = 0,  color = "gray50")+
+    geom_density(linetype = 0, alpha = 0.7)+
+    scale_fill_manual("", values = coef_palette)+
+    scale_y_continuous("Density", limits = c(0, 7), breaks = 0:4 * 2)+
+    scale_x_continuous(expression("Response mean (" * {}^{k} * alpha * ")")) +
+    density_theme +
+    NULL
+
+
 
 # sigmas (extra)
 effect_sigmas_p <- fit$stan %>%
     rstan::extract(pars = "sig_beta") %>%
     .[[1]] %>%
     as.matrix() %>%
-    as_tibble() %>%
+    as_tibble(.name_repair = "universal") %>%
     gather() %>%
-    mutate(coef = factor(key, levels = c("V1","V2","V3","V4","V5","V6"),
+    mutate(coef = factor(key, levels = c("...1","...2","...3","...4","...5","...6"),
                          labels = c("int_tax","int_plot","int_trans","midges",
-                                    "time","dist"))) %>%
+                                    "time","distance"))) %>%
     filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
     mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "dist", "midges"))) %>%
+                         levels = c("time", "distance", "midges"))) %>%
     ggplot(aes(value, fill = coef))+
     geom_vline(xintercept = 0,  color = "gray50")+
-    geom_rect(data  = coef_sum$sig_beta,
-              aes(xmin = lo, xmax = hi, ymin = 0, ymax = 8, fill = coef), inherit.aes = F,
-              alpha = 0.3, linetype =  0)+
     geom_density(linetype = 0, alpha = 0.7)+
     scale_fill_manual(NULL, values = coef_palette)+
     guides(fill = guide_legend(keywidth = 0.75, keyheight = 0.75)) +
-    scale_y_continuous("Density", limits = c(0, 8), breaks = 0:4 * 2)+
+    scale_y_continuous("Density", limits = c(0, 7), breaks = 0:4 * 2)+
     scale_x_continuous(expression("Response SD" ~ ({}^{k} * sigma[g]))) +
     density_theme +
-    coord_flip() +
     NULL
 
 
-effect_mean_p <- fit$stan %>%
-    rstan::extract(pars = "alpha") %>%
-    .[[1]] %>%
-    as.matrix() %>%
-    as_tibble() %>%
-    gather() %>%
-    filter(key != "V1") %>%  # intercept not necessary
-    mutate(coef = factor(key, levels = c("V3","V2","V4"),
-                         labels = c("time", "dist", "midges"))) %>%
-    ggplot(aes(value, fill = coef))+
-    geom_vline(xintercept = 0,  color = "gray50")+
-    geom_rect(data  = coef_sum$alpha,
-              aes(xmin = lo, xmax = hi, ymin = 0, ymax = 8, fill = coef), inherit.aes = F,
-              alpha = 0.3, linetype =  0)+
-    geom_density(linetype = 0, alpha = 0.7)+
-    scale_fill_manual("", values = coef_palette)+
-    scale_y_continuous("Density", limits = c(0, 8), breaks = 0:4 * 2)+
-    scale_x_continuous(expression("Response mean (" * {}^{k} * alpha * ")")) +
-    density_theme +
-    theme(legend.position = "none") +
-    coord_flip() +
-    NULL
-
-
-effect_legend <- get_legend(effect_sigmas_p)
-
-
-
-fig2 <- plot_grid(slope_p,
-                  plot_grid(EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-                            rel_heights = c(1.47, 0.075, 0.4, 0.075, 1, 0.05, 1),
-                            labels = c("B", "", "", "", "C", "", "D"),
-                            label_x = 0.25,
-                            ncol = 1),
+fig2 <- plot_grid(EMPTY,
+                  slope_p,
+                  plot_grid(EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+                            labels = c("B", "", "C", "", "D"),
+                            rel_heights = c(1.265, 0.1, 1, 0.1, 1),
+                            ncol = 1, label_x = 0.25),
                   plot_grid(ar_p,
                             EMPTY,
-                            effect_legend,
-                            EMPTY,
-                            effect_sigmas_p %>% no_x() %>% no_leg(),
-                            EMPTY,
                             effect_mean_p,
-                            rel_heights = c(1.47, 0.075, 0.4, 0.075, 1, 0.05, 1),
-                            # labels = c("B", "", "", "", "C", "", "D"),
+                            EMPTY,
+                            effect_sigmas_p,
+                            rel_heights = c(1.265, 0.1, 1, 0.1, 1),
                             ncol = 1),
-                  rel_widths = c(1, 0.2, 0.7),
-                  # rel_widths = c(1, 0.7),
-                  labels = c("A", "", ""),
+                  labels = c("A", "", "", ""), rel_widths = c(0.08, 1, 0.12, 0.6),
                   nrow = 1)
 
+# fig2
 
-# save_file(fig2, "fig2", width = 3, height = 6)
+
+# save_file(fig2, "fig2", width = 6, height = 6)
 
 
 
@@ -362,6 +354,8 @@ row.names(overall_part) <- var_part$var
 # predictor vectors
 pred_vec_fun <- function(pred_) {
 
+    if (pred_ == "distance") pred_ <- "dist"
+
     sym_ <- sym(paste0(pred_, "_z"))
 
     pred_pca$axes %>%
@@ -377,7 +371,7 @@ pred_vec_fun <- function(pred_) {
         filter(PC1 != 0 | PC2 != 0 | PC3 != 0) %>%
         select(var, starts_with("PC"))
 }
-pred_vec <- map_dfr(c("time", "dist", "midges"), pred_vec_fun)
+pred_vec <- map_dfr(c("time", "distance", "midges"), pred_vec_fun)
 
 
 # Which PC axes are most associated with each variable?
@@ -392,15 +386,19 @@ pc_vars <- var_part[,2:4] %>%
 
 
 
+
+pc_axis_lim <- 4.1
+
+
 # biplot function
 biplot_fn <- function(var_, pred_pca_ = pred_pca, pc_vars_ = pc_vars, .mult = 2) {
 
-    var_ <- match.arg(var_, c("midges", "time", "dist"))
+    var_ <- match.arg(var_, c("midges", "time", "distance"))
 
-    var_ <- paste0(var_, "_z")
+    var_z_ <- paste0(gsub("^distance$", "dist", var_), "_z")
 
     # pc_axes <- pc_vars_ %>%
-    #     filter(var == var_) %>%
+    #     filter(var == var_z_) %>%
     #     .[,2:4] %>%
     #     as.numeric() %>%
     #     rank() %>%
@@ -411,21 +409,27 @@ biplot_fn <- function(var_, pred_pca_ = pred_pca, pc_vars_ = pc_vars, .mult = 2)
     pred_pca_$obs_rot %>%
         # Uncomment below if you want darker spots in front
         # I currently don't think we should do it
-        ## arrange(desc(!!sym(var_))) %>%
+        ## arrange(desc(!!sym(var_z_))) %>%
         ggplot(aes_string(x = pc_axes[1], y = pc_axes[2]))+
-        geom_point(aes_string(color = var_),
+        geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
+        geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
+        geom_point(aes_string(color = var_z_),
                    alpha = 0.25, size = 2)+
-        ggtitle(gsub("_z$", "", var_)) +
-        geom_segment(data = pred_vec %>% filter(var == gsub("_z$", "", var_)),
+        geom_segment(data = pred_vec %>% filter(var == gsub("_z$", "", var_z_)),
                      aes(x = 0, xend = -.mult*PC1, y = 0, yend = -.mult*PC2),
                      arrow = arrow(length = unit(6, "pt")),
-                     size = 0.8, color = "black")+
-        scale_colour_gradient2("value", low =  pca_palette[1],
+                     size = 0.8, color = "black") +
+        geom_text(data = tibble(PC1 = -pc_axis_lim - 0.2, PC2 = -pc_axis_lim - 0.2),
+                  label = var_, hjust = 1, vjust = 1, size = 12 / 2.83465) +
+        scale_colour_gradient2("Predictor\nvalue", low =  pca_palette[1],
                                mid = pca_palette[2],
                                high = pca_palette[3],
                                midpoint = -0.5, limits = c(-3,2),
                                breaks = c(-3,-0.5,2))+
-        coord_equal(xlim = c(-4.1, 4.1), ylim = c(-4.1, 4.1)) +
+        scale_x_continuous("PC1", breaks = 3*-1:1) +
+        scale_y_continuous("PC2", breaks = 3*-1:1) +
+        coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
+                    ylim = c(-pc_axis_lim, pc_axis_lim)) +
         theme(plot.title = element_text(size = 11, hjust = 0.5, vjust = 0,
                                         face = "plain"),
               plot.margin = margin(0,0,0,0))
@@ -443,6 +447,8 @@ fig3a <- pred_pca$taxon_vec %>%
            ang = c(rep(0,3), 73.5, 0, 0)) %>%
     arrange(desc(taxon)) %>%
     ggplot()+
+    geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
+    geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
     geom_segment(aes(x = 0, xend = -5*PC1, y = 0, yend = -5*PC2, group = taxon,
                      color = taxon),
                  arrow = arrow(length = unit(6, "pt")),
@@ -450,9 +456,10 @@ fig3a <- pred_pca$taxon_vec %>%
     geom_text(aes(label = taxon, x = PC1_lab, y = PC2_lab,
                   color = taxon, angle = ang),
               size = 9 / 2.83465, lineheight = 0.75)+
-    xlab("-PC1") +
-    ylab("-PC2") +
-    coord_equal(xlim = c(-4.1, 4.1), ylim = c(-4.1, 4.1)) +
+    scale_x_continuous("PC1", breaks = 3*-1:1) +
+    scale_y_continuous("PC2", breaks = 3*-1:1) +
+    coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
+                ylim = c(-pc_axis_lim, pc_axis_lim)) +
     scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1:4, 6:5)],
                        guide = FALSE) +
     theme(plot.margin = margin(0,0,0,0))
@@ -460,23 +467,26 @@ fig3a <- pred_pca$taxon_vec %>%
 # plot time effect
 fig3b <- biplot_fn("time")
 # plot distance effect
-fig3c <- biplot_fn("dist")
+fig3c <- biplot_fn("distance")
 # plot midge effect
 fig3d <- biplot_fn("midges")
 
 
-pca_legend <- get_legend(fig3b + theme(legend.title = element_blank()))
+pca_legend <- get_legend(fig3b + theme(legend.title.align = 0,
+                                       legend.title = element_text(size = 11)))
 
 
 
 fig3 <- plot_grid(plot_grid(fig3a %>% no_x(),
+                            EMPTY,
                             fig3b %>% no_leg() %>% no_xy(),
                             fig3c %>% no_leg(),
+                            EMPTY,
                             fig3d %>% no_leg() %>% no_y(),
-                            labels = LETTERS[1:4],
-                            nrow = 2, align = "vh"),
+                            labels = c("A", "", "B", "C", "", "D"),
+                            nrow = 2, align = "vh", rel_widths = c(1, 0.1, 1)),
                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
-# fig3
+fig3
 
 
 # save_file(fig3, "fig3", width = 6, height = 5)
