@@ -43,8 +43,8 @@ $\mathbf{y}$ as
 \begin{split}
     y_i &= \mathbf{x}_i {\boldsymbol\beta}_i +
         \left[ \phi_{\text{taxon}[i]} \right]^{\text{time}_i - \text{time}\sp{\prime}_i}
-        y\sp{\prime}_i + \epsilon_i \\
-    \epsilon_i &\sim \mathcal{N} \left(0, \; \sigma_{\text{residual}} \right)
+        y\sp{\prime}_i + \varepsilon_i \\
+    \varepsilon_i &\sim \mathcal{N} \left(0, \; \sigma_{\text{residual}} \right)
     \text{,}
 \end{split}
 \end{equation}
@@ -55,7 +55,7 @@ ${\boldsymbol\beta}_i$ is a column vector of coefficients,
 $\phi_{\text{taxon}[i]}$ is the taxon-specific autoregressive (AR) parameter,
 $\text{time}_i$ is the current time (in years),
 $\text{time}\sp{\prime}_i$ is the lagged time (defined as for  $\mathbf{y\sp{\prime}}$),
-and $\epsilon_i$  is the Gaussian residual
+and $\varepsilon_i$  is the Gaussian residual
 error with standard deviation $\sigma_{\text{residual}}$.
 Because $y_i$ consists of log-transformed abundances, equation \ref{eq:y-i} is
 essentially a log-linear model of population dynamics, with intrinsic growth rate
