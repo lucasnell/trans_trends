@@ -236,7 +236,7 @@ dev_re <- c("midges_z","time_z","dist_z") %>%
     unique()
 
 # write_csv(dev_re, "analysis/output/dev_re.csv")
-# dev_re <- read_csv("analysis/output/dev_re.csv")
+
 
 
 
@@ -298,7 +298,6 @@ dev_fere <- c("midges_z","time_z","dist_z") %>%
     unique()
 
 # write_csv(dev_fere, "analysis/output/dev_fere.csv")
-# dev_fere <- read_csv("analysis/output/dev_fere.csv")
 
 
 
@@ -308,6 +307,12 @@ dev_fere <- c("midges_z","time_z","dist_z") %>%
 #========== Comparison to reduced models (combined)
 #==========
 
+# Import for Table I:
+# dev_re <- read_csv("analysis/output/dev_re.csv")
+# dev_fere <- read_csv("analysis/output/dev_fere.csv")
+
+
+# Table I (exclude standard errors)
 dev <- dev_re %>%
     mutate(dev = 2*abs(elpd_diff),
            dev_se = 2*se_diff) %>%
