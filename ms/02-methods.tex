@@ -12,7 +12,7 @@ Midge deposition was estimated at each site using aerial infall cups \citep{Drey
 and activity-density of ground-dwelling arthropods was sampled using pitfall cups
 \citep{Southwood2009}.
 For this analysis, we used the cumulative annual catch of predatory and
-detritivorous arthropods,
+detritivorous arthropods (Figure \ref{fig:obs-data}),
 inlcuding harvestmen (Opiliones),
 wolf spiders (Lycosidae),
 ground spiders (Gnaphosidae),
@@ -196,10 +196,14 @@ We used a similar prior for the AR parameter, but with standard deviation 0.5 to
 convergence towards stationarity (i.e. $|\phi_{\text{taxon}[i]}|<1$) without
 providing an explicit upper bound.
 However, we did truncate the lower bound of the prior at 0 to prevent negative
-values that would give quasi-cyclic behviors.
+values that would give quasi-cyclic behviors (as is typically done when
+including temporal autocorrelation in mixed models; \citep{Zuur2009}).
 We assessed convergence using the standard diagnostics provided by Stan,
 including effective sample size of the Markov chain, number of divergent
-transitions, and potential scale reduction factor.
+transitions, and potential scale reduction factor. We used posterior medians as point
+estimates, and 16\% and 84\% quantiles
+for the bounds of 68\% uncertainty intervals (UI68\%),
+analogous to the coverage of standard errors.
 
 After fitting the full model to the observed data, we compared it to reduced models
 to evaluate the strength of evidence for community responses to midges, time,
@@ -214,8 +218,8 @@ excluding terms associated with a single predictor.
 We compared models using an approxmation to Leave-One-Out (LOO) cross validation,
 based on the posterior distribution of log-likelihoods for each model
 \citep{Vehtari2017}.
-We report twice the difference in the ``estimated log predictive density" between
-the full and reduced models (hereafter ``LOO deviance"), which is in units of
+We report twice the difference in the ``estimated log pointwise predictive density"
+between the full and reduced models (hereafter ``LOO deviance"), which is in units of
 deviance and can interpreted in a manner similar to the difference in the
 Akaike Information Critera between model pairs (i.e. $\Delta$AIC) as
 commonly used in frequentist settings.
