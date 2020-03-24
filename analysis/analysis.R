@@ -258,7 +258,7 @@ effect_mean_p <- fit$stan %>%
     geom_vline(xintercept = 0,  color = "gray50")+
     geom_density(linetype = 0, alpha = 0.7)+
     scale_fill_manual("", values = coef_palette)+
-    scale_y_continuous("Density", limits = c(0, 7), breaks = 0:4 * 2)+
+    scale_y_continuous("Posterior density", limits = c(0, 7), breaks = 0:4 * 2)+
     scale_x_continuous(expression("Response mean (" * {}^{k} * alpha * ")")) +
     effect_p_theme +
     NULL
@@ -283,7 +283,7 @@ effect_sigmas_p <- fit$stan %>%
     geom_density(linetype = 0, alpha = 0.7)+
     scale_fill_manual(NULL, values = coef_palette)+
     guides(fill = guide_legend(keywidth = 0.75, keyheight = 0.75)) +
-    scale_y_continuous("Density", limits = c(0, 7), breaks = 0:4 * 2)+
+    scale_y_continuous("Posterior density", limits = c(0, 7), breaks = 0:4 * 2)+
     scale_x_continuous(expression("Response SD" ~ ({}^{k} * sigma[g]))) +
     effect_p_theme +
     NULL
