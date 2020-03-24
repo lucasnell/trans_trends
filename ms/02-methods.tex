@@ -34,8 +34,6 @@ with observations within each group ordered through time.
 From this vector,
 we constructed a lagged vector $\mathbf{y\sp{\prime}}$,
 where the first element for each time series was zero
-(the intial abundance was implicitly estimated by the random intercepts,
-as specified below)
 followed by the first through
 penultimate observations for that time series \citep{Ives2006}.
 This allowed us to specify an autoregressive model for the $i$th observation of
@@ -60,7 +58,7 @@ $\text{time}\sp{\prime}_i$ is the lagged time (defined as for  $y\sp{\prime}$),
 and $\varepsilon_i$  is the Gaussian residual
 error with standard deviation $\sigma_{\text{residual}}$.
 Because $y_i$ consists of log-transformed abundances, equation \ref{eq:y-i} is
-essentially a log-linear model of population dynamics, with intrinsic growth rate
+essentially a log-linear model of population dynamics, with growth rate
 $\mathbf{x}_i^\text{T} {\boldsymbol\beta}_i$ and
 density-dependence $\phi_{\text{taxon}[i]}$
 where values closer to zero indicate stronger regulation \citep{Ives2010}.
@@ -79,7 +77,7 @@ because this reduced the correlation between the estimates of temporal trends
 (contained in ${\boldsymbol\beta}_i$; see below) and AR parameters.
 
 For our example application,
-were interested in characterizing the response of the predatory arthropod
+we were interested in characterizing the response of the predatory arthropod
 community to midge depositon, while also accounting for potential trends through
 time and space due to other factors.
 Therefore, we defined the transposed vector of predictor values for the $i$th observation
@@ -128,7 +126,7 @@ We defined a vector of corresponding coefficients defined as
 \noindent with fixed effects ${}^k\hspace*{-1pt}\alpha$ and random effects
 ${}^k\hspace*{-1pt}\zeta_{\text{g}[i]}$ for predictor $k$ (e.g., midges)
 and the level of grouping variable $g$ (e.g., taxon) associated  with the $i$th observation.
-The random effects were modeled with Gaussian distributions with
+The random effects were modeled as Gaussian distributions with
 standard error $\sigma_g$:
 %
 \begin{equation} \label{eq:zetas}
@@ -139,7 +137,7 @@ standard error $\sigma_g$:
 Using conventional mixed-model terminology, this model includes ``random intercepts''
 grouped by taxon, site, and plot, and ``random slopes'' for midges,
 time, and distance grouped by taxon.
-The fixed slopes give the overall response across taxa to the predictor variables,
+The fixed effects give the overall response across taxa to the predictor variables,
 while the corresponding random effects give the deviation for each taxon from
 this overall response \citep{Jackson2012}.
 The overall response of each taxon is the sum of the fixed and random components.
@@ -162,27 +160,27 @@ $\hat{\mathbf{y}}$ due to variation in midges, time, and distance as
 \end{equation}
 %
 \noindent where $\hat{\mathbf{x}}_r^\text{T}$ is the $r$th row from a matrix
-of predictor values evenly spaced across the observed range of predictors,
+of predictor values evenly spaced across the observed range of the predictors,
 and $\hat{{\boldsymbol\beta}}_r$ is a corresponding vector of coefficients
-using the estimated fixed and random effects as in equation \ref{eq:betas}
+using the fixed and random effects as in equation \ref{eq:betas}
 but excluding the random intercepts grouped
 by transect and plot.
-We then converted these predicted values into a ``event-by-taxon'' matrix
+We then converted these predicted values into an ``event-by-taxon'' matrix
 (analagous to a ``site-by-species'' matrix) \citep{Mcgarigal2013}
 and performed a Principle Components Analysis (PCA) to
-generate orthogonal axes characterizating the expected
+generate orthogonal axes characterizing the expected
 variation in the community due to the predictors \citep[similar to][]{Jackson2012}.
-Finally, we projected the observed data onto these axes.
+Variation in the PC axes was partitioned into contributions from the predictors
+using ANOVA.
+Finally, we projected the observed data onto the the PC axes,
+which allowed us to characterize the extent to which the PC axes
+(and therefore the effects of the predictors) accounted for variation in the observed data.
 
-This approach allowed us to visualize variation in the community, both in terms of
-composition per se and overall abundance, along axes of variation most
-strongly associated with the predictor variables of the model
+This approach allowed us to visualize variation in the community
+along axes of variation most strongly associated with the predictor variables of the model
 (i.e. midges, time, and distance).
 This is analagous to more conventional ordination approaches \citep{Mcgarigal2013},
 but makes explicit the connection to taxon-specific responses.
-Furthermore, it takes advantage  of the statisitcal machinery of
-regression-type models, which allows for the formal accounting of temporal
-autocorrelation in estimating responses to predictor variables \citep{Ives2006}.
 As formulated above, this approach includes both changes in composition per se
 (the typical focus of ordination analyses) and the overall community response.
 This is a strength, as it is difficult to assess the relevance of variation in
