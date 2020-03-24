@@ -85,7 +85,7 @@ Jamieson C. Botsch$^{1}$}
 
 \noindent{} 2. Department of Aquaculture and Fish Biology, H\'{o}lar University, Skagafj\"{o}r{\dh}ur 551 Iceland
 
-\noindent{} 3. E-mail: josephsmphillips@gmail.com
+\noindent{} 3. E-mail: joseph@holar.is
 
 \noindent{} 4. E-mail: lucas@lucasnell.com
 
@@ -95,9 +95,7 @@ Jamieson C. Botsch$^{1}$}
 
 \bigskip
 
-Running head: {
-
-}
+Running head: {Community responses from time series}
 
 % \textit{Manuscript elements}: %Figure~1, figure~2, table~1, online appendices~A and B (including $-- figure~A1 and figure~A2). Figure~2 is to print in color.
 
@@ -217,7 +215,18 @@ M\'{y}vatn; time-series analysis; tundra arthropods
 \clearpage
 
 \begin{table}
-\caption{\label{tab:model-summary}Model inference.}
+\caption{\label{tab:model-summary}
+Model inference.
+LOO deviance was calculated from the posterior distribution of log-likelihoods
+and compares the fit of the full model to a reduced model exluding either
+deviations in taxon-specific responses from the mean response or
+the overall response (including mean and taxon-specific components).
+The scale of LOO deviance is comparable to $\Delta$AIC.
+The variance partitioning was calculated using ANOVA,
+with the sum-of-squares for each component scaled by the total sum-of-squares.
+Paranthetical values show relative loadings for the PC axes.
+The `Total' column is calculated as the sum across PC axes for each row,
+with each axis weighted by the contribution of each predictor when relevant.}
 \begin{tabular}{rrrrrrrr}
 \toprule
  & \multicolumn{2}{c}{LOO deviance} & & \multicolumn{4}{c}{Variance partitioning} \\
@@ -262,7 +271,17 @@ Thick blue lines are standardized activity-density averaged by taxon and
 \centering
 \includegraphics{../analysis/output/fig2.pdf}
 \caption{\label{fig:coefs}
-Coefficient figure.
+Model estimates.
+Each panel shows parameter estimates from the autoregressive mixed model,
+with postior medians (points) and 68\% uncertainty intervals
+(errors bars) analogous to the coverage of standard errors.
+Gray vertical lines correspond to 0.
+Panel shows (A) taxon-specific responses to each predictor.
+The shaded region correspondes with the 68\% uncertainty interval
+for the mean response across taxa (i.e. fixed effects shown in panel C).
+Panel (B) shows the autoregressive coefficient for each taxon,
+while panels (C) and (D) show posterior distributions for
+the fixed effects and random effect standard deviations, respectively.
 }
 \end{figure}
 
