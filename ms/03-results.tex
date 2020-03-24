@@ -3,21 +3,20 @@
 \section*{Results}
 
 There was a positive overall response of predator activity-density to midge deposition,
-as indicated by both the estimated mean response
-(Figure \ref{fig:coefs}A,C)
-and the modestly large LOO deviance (Table \ref{tab:model-summary}).
-The variation among taxa in the reponses to midges was meaningfuly different from zero
-(Figure \ref{fig:coefs}D)
-but contributed relatively little to the
-model fit (Table \ref{tab:model-summary}).
+as indicated by both the coefficient estimates (Figure \ref{fig:coefs}A,C)
+and the modestly large contribution to the improved model fit
+relative to the reduced model (LOO deviance in Table \ref{tab:model-summary}).
+The response to midges was somewhat variable across taxa,
+as judged by the taxon-specific coefficients (Figure \ref{fig:coefs}A)
+and the posterior distribution
+for the random effect standard deviation (Figure \ref{fig:coefs}D).
+However, this variation among taxa made a relatively small contribution
+to the model fit (Table \ref{tab:model-summary}).
 In contrast to the response to midges,
 there was large variation among taxa in trends through time and space,
-and this taxon-variation dominated the contribution to the model fit.
-Some taxa with strongly positive responses to midges (e.g. ground spiders)
-increased with distance from the lake,
-despite the fact that midge deposition declined with distance.
-This underscores the value of including multiple predictors in a single model
-so that their respective effects can be disentangled.
+and this taxon-specific variation dominated the contribution to the model fit.
+Overall, the magnitudes of the taxon-specific responses to time and distance
+were larger than the respones to midges.
 
 The AR coefficients were generally simliar across taxa and of modest magnitude,
 indicating moderate levels of temporal autocorrelation across years.
@@ -33,30 +32,31 @@ suggesting that it was not a statistical artifact of limited identifiability.
 
 The first three PC axes contained all of the variation
 due to linear effects of the three predictors and
-collectively accounted for over half of the observed community variation
+collectively accounted for $\sim$ 68\% of the observed community variation
 in activity-density (Table \ref{tab:model-summary}).
 Distance made the largest overall contribution,
-followed time and then midges.
+followed time and midges.
 The effect of distance manifested almost exclusively through PC1,
 while the effects of midges and time where both split between PC2 and PC3.
 This indicates some degree of correspondence between linear respones of the community
-to midges and time, as can be seen in Figure \ref{fig:coefs}A.
-In constrast, the community variation with distance
-was largely uncorrelated with midges and time
+to midges and time, as can be seen in taxon-specific coefficients
+(Figure \ref{fig:coefs}A).
+In constrast, the community variation with respect to distance
+was largely uncorrelated with respect to midges and time.
 
 The taxon-response vectors (Figure \ref{fig:pca})
-provided information on the variation in overall abundance versus composition per se,
-with vectors of similar direction and magnitude
-implying strongly associated responses across taxa (i.e. overall abundance),
-while vectors of either different direction or magnitude implying
-variation in composition.
+provided information on the variation in overall abundance versus composition per se;
+vectors of similar direction and magnitude
+imply consistent responses across taxa (i.e. overall abundance),
+while vectors of either different direction or magnitude imply variation in composition.
 The direction of the taxon vectors was largely similar along PC2 (all positive
 except for sheet weavers), reflecting the consistent overall
 response of the community to midge deposition.
 In contrast, the direction and magnitude
 of the taxon-vectors along PC1 was quite heterogeneous,
-reflecting the fact that there was large variation in composition per se with
+reflecting the fact that there was large variation in composition with
 distance from the lake.
-These community-level results were a direct result of the taxon-specific responses
-to the predictors (Figure \ref{fig:coefs}A),
+This contrast between effects on overall abundance versus composition
+resulted directly from the relative magnitudes
+of fixed versus taxon-specific random effects (Figure \ref{fig:coefs}A),
 illustrating the link between the two organizational scales.
