@@ -276,11 +276,11 @@ Each panel shows parameter estimates from the autoregressive mixed model,
 with postior medians (points) and 68\% uncertainty intervals
 (errors bars) analogous to the coverage of standard errors.
 Gray vertical lines correspond to 0.
-Panel shows (A) taxon-specific responses to each predictor.
+Panel A shoows taxon-specific responses to each predictor.
 The shaded region correspondes with the 68\% uncertainty interval
 for the mean response across taxa (i.e. fixed effects shown in panel C).
-Panel (B) shows the autoregressive coefficient for each taxon,
-while panels (C) and (D) show posterior distributions for
+Panel B shows the autoregressive coefficient for each taxon,
+while panels C and D show posterior distributions for
 the fixed effects and random effect standard deviations, respectively.
 }
 \end{figure}
@@ -293,9 +293,16 @@ the fixed effects and random effect standard deviations, respectively.
 \centering
 \includegraphics{../analysis/output/fig3.pdf}
 \caption{\label{fig:pca}
-PCA figure.
-(A) PCs multiplied by 2.
-(B--D) PCs multiplied by 5.
+Principle components analysis (PCA) of community variation.
+The PCA is based on the taxon-specific responses to time, distance, and midges inferred
+from the model.
+Therefore, the PC axes are aligned to maximize variation associated with
+respoonses to the predictor variables, similar to ordination methoods
+such as "redundancy analysis".
+The observed data were then projected onto these axes so that variation accounted for
+by the model could be visualized in the context of the data (B-D).
+The taxon vector overlays in panel A are scaled relative to vectors in B-D
+for clarity of visualization.
 }
 \end{figure}
 
