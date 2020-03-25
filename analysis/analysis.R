@@ -18,14 +18,14 @@ if (Sys.info()[["sysname"]] == "Darwin" && .Platform$GUI == "RStudio") {
 
 
 
-
+taxa_order <- c(4:6, 1, 3, 2)
 
 # load data
 data_fit <- read_csv("analysis/data_fit.csv") %>%
     mutate(Taxon = factor(taxon,
-                          levels = c("gnap","lyco","sheet","opil","cara","stap"),
+                          levels = c("gnap","lyco","sheet","opil","cara","stap")[taxa_order],
                           labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                     "Harvestman","Ground beetles","Rove beetles")))
+                                     "Harvestman","Ground beetles","Rove beetles")[taxa_order]))
 fit <- readRDS("analysis/output/fit.rds")
 fit_sum <- read_csv("analysis/output/fit_sum.csv")
 coef_sum <- readRDS("analysis/output/coef_sum.rds")
@@ -37,7 +37,7 @@ coef_sum$beta <- coef_sum$beta %>%
                          levels = c("time", "dist", "midges"),
                          labels = c("time", "distance", "midges")),
            tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet",
-                                                    "opil","cara","stap"))))
+                                                    "opil","cara","stap")[taxa_order])))
 coef_sum$alpha <- coef_sum$alpha %>%
     filter(coef != "int") %>%
     mutate(coef = factor(coef %>% paste(),
@@ -50,7 +50,7 @@ coef_sum$sig_beta <- coef_sum$sig_beta %>%
                          labels = c("time", "distance", "midges")))
 coef_sum$ar <- coef_sum$ar %>%
     mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil",
-                                                    "cara","stap"))))
+                                                    "cara","stap")[taxa_order])))
 
 
 
@@ -118,18 +118,18 @@ time_p <- data_fit %>%
     geom_line(data = data_fit %>%
                   group_by(Taxon, year) %>%
                   summarize(y = mean(midges_z)) %>%
-                  mutate(type  = "Midge catch") %>%
+                  mutate(type  = "Midge abundance") %>%
                   bind_rows(data_fit %>%
                                 group_by(Taxon, year) %>%
                                 summarize(y = mean(y)) %>%
-                                mutate(type  = "Mean activity-density")) %>%
+                                mutate(type  = "Mean by date/distance")) %>%
                   mutate(type = factor(type,
-                                       levels = c("Midge catch",
-                                                  "Mean activity-density"))),
+                                       levels = c("Midge abundance",
+                                                  "Mean by date/distance"))),
               aes(color = type), size = 0.75)+
     scale_color_manual(NULL, values = c("firebrick","dodgerblue"))+
     scale_x_continuous("Year", breaks = c(2008,2012,2016), limits = c(2007,2018))+
-    scale_y_continuous("Standardized activity-density",
+    scale_y_continuous("Transformed abundance",
                        limits = c(-4.5,4.5), breaks = c(-3,0,3))+
     # theme(legend.position = "none") +
     NULL
@@ -143,14 +143,14 @@ dist_p <- data_fit %>%
     geom_line(data = data_fit %>%
                   group_by(Taxon, distance) %>%
                   summarize(y = mean(midges_z)) %>%
-                  mutate(type  = "Midge catch") %>%
+                  mutate(type  = "Midge abundance") %>%
                   bind_rows(data_fit %>%
                                 group_by(Taxon, distance) %>%
                                 summarize(y = mean(y)) %>%
-                                mutate(type  = "Mean activity-density")) %>%
+                                mutate(type  = "Mean by date/distance")) %>%
                   mutate(type = factor(type,
-                                       levels = c("Midge catch",
-                                                  "Mean activity-density"))),
+                                       levels = c("Midge abundance",
+                                                  "Mean by date/distance"))),
               aes(color = type), size = 0.75)+
     scale_color_manual(NULL, values = c("firebrick", "dodgerblue"))+
     scale_x_continuous("Distance (m)", trans = "log", breaks = c(5,50,500))+
@@ -203,7 +203,8 @@ slope_p <- coef_sum$beta %>%
                        breaks = c(-0.5, 0, 0.5), limits = c(-0.6, 0.6))+
     scale_x_continuous(NULL, breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                  "Harvestman","Ground beetles","Rove beetles"),
+                                  "Harvestman","Ground beetles",
+                                  "Rove beetles")[taxa_order],
                        trans = "reverse", limits = c(6.5, 0.5)) +
     scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
     scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
@@ -230,7 +231,7 @@ ar_p <- coef_sum$ar %>%
                        breaks = c(0, 0.5, 1))+
     scale_x_continuous(NULL, breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                  "Harvestman","Ground beetles","Rove beetles"),
+                                  "Harvestman","Ground beetles","Rove beetles")[taxa_order],
                        trans = "reverse", limits = c(6.5, 0.5))+
     small_labels +
     coord_flip() +
