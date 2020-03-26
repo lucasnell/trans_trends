@@ -8,5 +8,6 @@
 *.rds
 *.pdf
 *.docx
+*.png
 
 analysis/output/.Rapp.history
