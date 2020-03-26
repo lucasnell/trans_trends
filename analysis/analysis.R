@@ -18,7 +18,8 @@ if (Sys.info()[["sysname"]] == "Darwin" && .Platform$GUI == "RStudio") {
 
 
 
-taxa_order <- c(4:6, 1, 3, 2)
+taxa_order <- c(5:6, 4, 1, 3, 2)
+
 
 # load data
 data_fit <- read_csv("analysis/data_fit.csv") %>%
@@ -455,7 +456,7 @@ fig3 <- plot_grid(plot_grid(fig3a %>% no_x(),
                             labels = c("A", "", "B", "C", "", "D"),
                             nrow = 2, align = "vh", rel_widths = c(1, 0.1, 1)),
                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
-fig3
+# fig3
 
 
 # save_file(fig3, "fig3", width = 6, height = 5)
