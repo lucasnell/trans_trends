@@ -368,18 +368,22 @@ pc_axis_lim <- 4.1
 
 # biplot function
 # (Only doing PC 1 and 2 for main text)
-biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = 2, .PCs = 1:2) {
+biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = -2, .PCs = 1:2) {
 
     # var_ = "time"
     # pred_pca_ = pred_pca
-    # .mult = 2
+    # .mult = c(-2, 2)
     # .PCs = 2:3
+
+    if (length(.mult) == 1) .mult <- rep(.mult, 2)
+    .signs <- ifelse(.mult < 0, "-", "")
+    .sign_nums <- as.numeric(paste0(.signs, "1"))
 
     var_ <- match.arg(var_, c("midges", "time", "distance"))
 
     var_z_ <- paste0(gsub("^distance$", "dist", var_), "_z")
 
-    pc_axes <- paste0("-PC", .PCs)
+    pc_axes <- paste0(.signs, "PC", .PCs)
 
     pred_pca_$obs_rot %>%
         # Uncomment below if you want darker spots in front
@@ -392,12 +396,13 @@ biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = 2, .PCs = 1:2) {
                    alpha = 0.25, size = 2)+
         geom_segment(data = pred_vec %>% filter(var == gsub("_z$", "", var_z_)),
                      aes_string(x = 0,
-                                xend = paste0("-.mult*PC", .PCs[1]),
+                                xend = paste0(".mult[1]*PC", .PCs[1]),
                                 y = 0,
-                                yend = paste0("-.mult*PC", .PCs[2])),
+                                yend = paste0(".mult[2]*PC", .PCs[2])),
                      arrow = arrow(length = unit(6, "pt")),
                      size = 0.8, color = "black") +
-        geom_text(data = tibble(A = -pc_axis_lim - 0.2, B = -pc_axis_lim - 0.2) %>%
+        geom_text(data = tibble(A = .sign_nums[1] * (pc_axis_lim + 0.2),
+                                B = .sign_nums[2] * (pc_axis_lim + 0.2)) %>%
                       set_names(paste0("PC", .PCs)),
                   label = var_, hjust = 1, vjust = 1, size = 12 / 2.83465) +
         scale_colour_gradient2("Predictor\nvalue", low =  pca_palette[1],
@@ -482,16 +487,16 @@ figS1a <- pred_pca$taxon_vec %>%
                           labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
                                      "harvestman","ground\nbeetles","rove\nbeetles"))) %>%
     arrange(taxon) %>%
-    mutate(PC2_lab = -5*PC2 + c(-0.8, -1.4, -1.2,
+    mutate(PC2_lab = -5*PC2 + c(-0.8, -1.4, -1.4,
                                 1.0, 1.2, 1.2),
-           PC3_lab = -5*PC3 + c(0.8, 0.5, 0,
-                                -1.5, -0.5, 0.4),
-           ang = c(rep(0,3), 360 - (90 - 32.81922), 0, 0)) %>%
+           PC3_lab = 5*PC3 + c(-0.8, -0.5, 0,
+                                1.5, 0.5, -0.4),
+           ang = c(rep(0,3), 52.18151, 0, 0)) %>%
     arrange(desc(taxon)) %>%
     ggplot()+
     geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
     geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-    geom_segment(aes(x = 0, xend = -5*PC2, y = 0, yend = -5*PC3, group = taxon,
+    geom_segment(aes(x = 0, xend = -5*PC2, y = 0, yend = 5*PC3, group = taxon,
                      color = taxon),
                  arrow = arrow(length = unit(6, "pt")),
                  size = 1)+
@@ -507,11 +512,11 @@ figS1a <- pred_pca$taxon_vec %>%
     theme(plot.margin = margin(0,0,0,0))
 
 # plot time effect
-figS1b <- biplot_fn("time", .PCs = 2:3)
+figS1b <- biplot_fn("time", .PCs = 2:3, .mult = c(-2, 2))
 # plot distance effect
-figS1c <- biplot_fn("distance", .PCs = 2:3)
+figS1c <- biplot_fn("distance", .PCs = 2:3, .mult = c(-2, 2))
 # plot midge effect
-figS1d <- biplot_fn("midges", .PCs = 2:3)
+figS1d <- biplot_fn("midges", .PCs = 2:3, .mult = c(-2, 2))
 
 
 S1_pca_legend <- get_legend(figS1b + theme(legend.title.align = 0,
@@ -532,6 +537,73 @@ figS1 <- plot_grid(plot_grid(figS1a %>% no_x(),
 
 
 # save_file(figS1, "figS1", width = 6, height = 5)
+
+
+
+
+
+# -----*
+# With PCs 1 and 3 ----
+# (perhaps for the supplement)
+# -----*
+
+figS2a <- pred_pca$taxon_vec %>%
+    mutate(taxon = factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap"),
+                          labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
+                                     "harvestman","ground\nbeetles","rove\nbeetles"))) %>%
+    arrange(taxon) %>%
+    mutate(PC1_lab = -5*PC1 + c(0, 1.0, 1.0,
+                                -1.3, -1.2, 0.4),
+           PC3_lab = 5*PC3 + c(-0.8, -0.4, 0.8,
+                               1.2, 0.4, -0.8),
+           ang = c(rep(0, 3), -53.27706, rep(0, 2))) %>%
+    arrange(desc(taxon)) %>%
+    ggplot()+
+    geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
+    geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
+    geom_segment(aes(x = 0, xend = -5*PC1, y = 0, yend = 5*PC3, group = taxon,
+                     color = taxon),
+                 arrow = arrow(length = unit(6, "pt")),
+                 size = 1)+
+    geom_text(aes(label = taxon, x = PC1_lab, y = PC3_lab,
+                  color = taxon, angle = ang),
+              size = 9 / 2.83465, lineheight = 0.75)+
+    scale_x_continuous("PC1") +  ## , breaks = 3*-1:1) +
+    scale_y_continuous("PC3") +  ## , breaks = 3*-1:1) +
+    coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
+                ylim = c(-pc_axis_lim, pc_axis_lim)) +
+    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1:4, 6:5)],
+                       guide = FALSE) +
+    theme(plot.margin = margin(0,0,0,0))
+
+# plot time effect
+figS2b <- biplot_fn("time", .PCs = c(1,3), .mult = c(-2, 2))
+# plot distance effect
+figS2c <- biplot_fn("distance", .PCs = c(1,3), .mult = c(-2, 2))
+# plot midge effect
+figS2d <- biplot_fn("midges", .PCs = c(1,3), .mult = c(-2, 2))
+
+
+S2_pca_legend <- get_legend(figS2b + theme(legend.title.align = 0,
+                                           legend.title = element_text(size = 11)))
+
+
+
+figS2 <- plot_grid(plot_grid(figS2a %>% no_x(),
+                             EMPTY,
+                             figS2b %>% no_leg() %>% no_xy(),
+                             figS2c %>% no_leg(),
+                             EMPTY,
+                             figS2d %>% no_leg() %>% no_y(),
+                             labels = c("A", "", "B", "C", "", "D"),
+                             nrow = 2, align = "vh", rel_widths = c(1, 0.1, 1)),
+                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
+# figS2
+
+
+# save_file(figS2, "figS2", width = 6, height = 5)
+
+
 
 
 
