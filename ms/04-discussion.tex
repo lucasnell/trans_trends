@@ -2,64 +2,74 @@
 
 \section*{Discussion}
 
-In this study, we show how linear mixed models with temporal autocorrelation can be used
-to quantify community responses to environmental variation
-from replicated time series observations.
-Our approach is based on previous studies that used mixed models
-for estimating taxon- and community-level responses to environmental variation
-through space \citep{Jackson2012, Bartrons2015}.
-We extend this approach for community time series by incoporating temporal autocorrelation
-with group-specific values of the autoregressive parameter,
-which is important as populations with different dynamics
-likely have different degrees of autocorrelation.
-Furthermore, we show how predicted values from the model estimates can be combined with
-with principle components analysis \citep[following][]{Jackson2012} to visualize
-community composition along axes of variation most strongly associated with environmental
-variation.
-This analysis makes explicit the connections betweeon taxon- and community-level variation
-and provides a conceptual link between the mixed model approach
-and conventional ordination methods.
+Here, we show how linear mixed models with temporal autocorrelation can be used to
+quantify community responses to environmental variation from replicated time series
+observations.
+Our approach extends the previous use of mixed models for estimating taxon- and
+community-level responses to environmental variation through space
+\citep{Jackson2012, Bartrons2015}, by incorporating temporal autocorrelation with
+group-specific values for the autoregressive parameter.
+This is an important extension, as taxa populations with different natural histories
+likely have different degrees of autocorrelation in their population dynamics.
+Furthermore, we show how predicted values from the model estimates can be combined
+with principal components analysis \citep[following][]{Jackson2012} to visualize
+community composition along axes of variation most strongly associated with
+environmental variation.
+This analysis makes explicit the connections between taxon- and community-level
+variation and provides a conceptual link between the mixed model approach and
+conventional ordination methods.
 
 
-To illustrate its utility,
-we used autoregressive mixed models to quantify the response
-of a predatory arthropod community to spatiotemporal variation in allochthonous resources
-at Lake M\'{y}vatn in northern Iceland.
-We found a positive overall response of predator activity-density to midge deposition,
+A central feature of our approach is its formulation in terms of taxon-specific
+responses to environmental drivers, rather than aggregate measures of community
+composition.
+This stands in contrast to the previous approach of using some dimension-reduction
+technique (e.g. PCA) to generate indices of community variation to use as
+response variables in subsequent time-series analyses \citep{Simpson2009}.
+In such analyses, the temporal autocorrelation structure of the aggregate measure
+is a complex amalgamation of processes at lower levels of resolution.
+This may be reasonable when the aggregate measure is of interest in and of itself,
+for example when being used as a bioindicator of ecosystem status \citep{Bennion2015}.
+However, community dynamics are manifestations of the dynamics of constituent populations.
+Therefore, it will often be valuable to model the data in a fashion that preserves the
+autocorrelation structure of those populations the community comprises.
+The taxon-specific autoregressive parameter estimated by our approach has a
+clear population-dynamic interpretation as the rate at which the population returns
+to its central tendency, which in turn is closely tied to classical ecological
+concepts of population regulation \citep{Nicholson1933, Ziebarth2010}.
+This is a special case of a more general argument in favor of quantifying
+taxon-specific variation rather than aggregate measures of composition,
+following the motto that it is better to ‘analyze, then aggregate’ than it is to
+‘aggregate, then analyze’ \citep{Clark2011}.
+
+
+
+To illustrate its utility, we used our method to quantify the response of a predatory
+arthropod community to spatiotemporal variation in allochthonous resources at
+Lake M\'{y}vatn in northern Iceland.
+We found a positive overall response of predator abundance to midge deposition,
 which is consistent with previous studies at M\'{y}vatn
-\citep{Hoekman2011, Dreyer2012, Sanchez2018, Hoekman2019}
-and expected from studies of allochthonous subsidies in other systems
-\citep{}.
-However, the variation among taxa in their reponses to midges was fairly limited,
-which means that variation in midge deposition was primarily associated with
-changes in overall abundance in the community, rather than composition per se.
-In contrast, there was large variation in taxon-specific trends in activity-density
-through time and space,
+\citep{Hoekman2011, Hoekman2019, Dreyer2012, Sanchez2018} and
+expected from studies of allochthonous subsidies in other systems
+\citep{Murphy2012, Ostfeld2000, Yang2010}.
+However, the variation among taxa in their responses to midges was fairly limited,
+which means that variation in midge deposition was primarily associated with changes
+in overall abundance in the community, rather than composition per se.
+In contrast, trends in taxon abundance varied substantially across time and space,
 which manifested as spatiotemporal variation in community composition.
-
-We found that most of the predatory arthropods showed modest levels of temporal
-autocorrelation in activity density,
-except for ground spiders which showed very low autocorrelation.
-While we caution again strong conclusions regarding dynamic processes based on short
-time series,
-these results suggest that ground spiders returned more rapidly to their mean
-acitivyt-density,
-which in turn manifested ``faster'' flucutations through time \citep{}.
-This could reflect ecological differences between grounds spiders and the other taxa,
-for example in life history or in movement behavior.
-Temporal autocorrelation can also be influence by species interactions,
-which are not included in our model formulation.
-When long time series are available,
-explicit models of community dynamics can be used to infer species interactions
-and so are more approach than the approach presented here.
-Nonetheless, when the primary goal is to infer general responses environmental variation
-(as is often the case),
-our approach provides some additional insight into dynamic processes
-when interpreted with caution.
-
-[Final short paragraph to wrap things up?]
-
-
+Many of the factors determining the strength of pulsed allochthonous resources on
+recipient communities \citep[e.g. landscape features;][]{Polis1997} also directly
+affect the composition of the communities receiving those allochthonous inputs.
+The ability of our modeling approach to partition variance between the spatiotemporal
+patterns that affect both the community composition and the size of the allochthonous
+inputs on the abundance of community members allowed for important insights into the
+community dynamics of predators around Lake M\'{y}vatn.
+Furthermore, this approach allowed for the utilization of long-term observational
+data to gather the insights about the predatory arthropod community to natural
+variation in allochthonous inputs, which represents an important contribution to the
+allochthonous resource pulse literature \citep{Yang2008}.
+Covariation between different drivers of ecological communities is common,
+therefore this approach may have utility across many subdisciplines of community ecology.
 
 
 

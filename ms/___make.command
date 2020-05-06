@@ -6,7 +6,7 @@ echo Creating the LaTeX document...
 echo -e "\n~~~~~~~~~~~~~~~~~~\n"
 
 echo -e "\n\n\n"
-echo Should I update just locally? \(yes/no, defaults to no\)
+echo Should I also update remote file? \(yes/no, defaults to no\)
 echo -e "\n"
 
 read local
@@ -34,11 +34,11 @@ fi
 
 
 
-if [ "$local" = "yes" ]; then
+if [ "$local" = "no" ]; then
     echo Okay, I\'ll just update the version in your \`trans_trends/ms\` directory.
     echo -e "\n"
 fi
-if [ "$local" = "no" ]; then
+if [ "$local" = "yes" ]; then
     echo Okay, I\'ll update the version in your \`trans_trends/ms\` directory,
     echo plus the Box version
     echo -e "\n"
@@ -73,7 +73,7 @@ rm -Rf *.aux *.bbl *.bcf *.blg *.log *.out *.run.xml *.synctex.gz
 
 
 
-if [ "$local" = "no" ]; then
+if [ "$local" = "yes" ]; then
     if [ -d ~/"Box Sync/trans_trends/" ]; then
         cp __ms.pdf ~/"Box Sync/trans_trends/" && \
         mv ~/"Box Sync/trans_trends/__ms.pdf" ~/"Box Sync/trans_trends/manuscript.pdf"
