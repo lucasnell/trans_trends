@@ -77,8 +77,8 @@ data_fit <- myv_arth %>%
 #            y_scale = NULL,
 #            hmc = T,
 #            change = T,
-#            rstan_control = list(iter = 2000, chains = 4, seed = 3e3,
-#                                 control = list(adapt_delta = 0.95)))
+#            rstan_control = list(iter = 4000, chains = 6, seed = 3e3,
+#                                 control = list(adapt_delta = 0.975)))
 
 # export fit
 # saveRDS(fit, "analysis/output/fit.rds")
@@ -87,15 +87,15 @@ data_fit <- myv_arth %>%
 # fit <- readRDS("analysis/output/fit.rds")
 
 # summarize
-fit_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
-    as.data.frame() %>%
-    rownames_to_column() %>%
-    as_tibble() %>%
-    rename(var = rowname,
-           lo = `16%`,
-           mi = `50%`,
-           hi = `84%`) %>%
-    select(var, lo, mi, hi)
+# fit_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
+#     as.data.frame() %>%
+#     rownames_to_column() %>%
+#     as_tibble() %>%
+#     rename(var = rowname,
+#            lo = `16%`,
+#            mi = `50%`,
+#            hi = `84%`) %>%
+#     select(var, lo, mi, hi)
 
 # write_csv(fit_sum, "analysis/output/fit_sum.csv")
 
@@ -215,15 +215,15 @@ red_re <- c("y ~ midges_z + time_z + dist_z + (1 | taxon + plot + trans) +
 #           y_scale = NULL,
 #           hmc = T,
 #           change = T,
-#           rstan_control = list(iter = 2000, chains = 4, seed = 3e3,
-#                                control = list(adapt_delta = 0.95)))
+#           rstan_control = list(iter = 4000, chains = 6, seed = 3e3,
+#                                control = list(adapt_delta = 0.975)))
 # })
 
 # extract stan output
 red_re_stan <- lapply(red_re_fits, function(x){x$stan})
 names(red_re_stan) <- c("midges_z","time_z","dist_z")
 
-# saveRDS(red_re_stan, "analysis/output/reduced_fits_re.rds")
+saveRDS(red_re_stan, "analysis/output/reduced_fits_re.rds")
 # red_re_stan <- readRDS("analysis/output/reduced_fits_re.rds")
 
 # calculate deviances
@@ -275,8 +275,8 @@ red_fere <- c("y ~ time_z + dist_z + (1 | taxon + plot + trans) +
 #             y_scale = NULL,
 #             hmc = T,
 #             change = T,
-#             rstan_control = list(iter = 2000, chains = 4, seed = 3e3,
-#                                 control = list(adapt_delta = 0.95)))
+#             rstan_control = list(iter = 4000, chains = 6, seed = 3e3,
+#                                 control = list(adapt_delta = 0.975)))
 # })
 
 red_fere_names <- c("midges_z","time_z","dist_z","full")
