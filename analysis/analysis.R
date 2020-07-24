@@ -191,28 +191,30 @@ slope_p <- coef_sum$beta %>%
     ggplot()+
     facet_wrap(~coef, ncol= 1)+
     geom_rect(data = coef_sum$alpha,
-              aes(xmin = 0.5, xmax = 6.5, ymin = lo, ymax = hi, fill = coef),
+              aes(xmin = -1, xmax = 10, ymin = lo, ymax = hi, fill = coef),
               alpha = 0.25, linetype =  0)+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_point(aes(tx, mi, color = coef), size = 1.5)+
     geom_linerange(aes(tx, ymin = lo, ymax = hi, color = coef))+
     geom_text(data = tibble(coef = sort(unique(coef_sum$beta[["coef"]])),
-                            x = 0.5, y = -0.6),
+                            x = 0, y = -0.6),
               aes(x, y, label = coef),
               size = 12 / 2.83465, hjust = 0, vjust = 1, color = "black") +
-    scale_y_continuous(expression("Response" ~ ({}^{k} * beta[taxon])),
-                       breaks = c(-0.5, 0, 0.5), limits = c(-0.6, 0.6))+
+    scale_y_continuous("Response",
+                       breaks = c(-0.5, 0, 0.5))+
     scale_x_continuous(NULL, breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
                                   "Harvestman","Ground beetles",
                                   "Rove beetles")[taxa_order],
-                       trans = "reverse", limits = c(6.5, 0.5)) +
+                       trans = "reverse") +
     scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
     scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
     # theme(plot.margin = margin(r=0,l=0)) +
     theme(plot.margin = margin(0,0,0,t=4), strip.text.x = element_blank()) +
-    coord_flip() +
+    coord_flip(ylim = c(-0.6, 0.6), xlim = c(6.5, 0)) +
     NULL
+
+
 
 small_labels <- theme(axis.title.y = element_text(size = 10, angle = 90,
                                                   margin = margin(0,0,0,0)),
@@ -228,7 +230,7 @@ ar_p <- coef_sum$ar %>%
     geom_point(size = 1.5)+
     # ggtitle(" ") +
     geom_linerange(aes(ymin = lo, ymax = hi))+
-    scale_y_continuous(expression("AR parameter" ~ (phi)),  limits = c(0, 1),
+    scale_y_continuous("AR parameter",  limits = c(0, 1),
                        breaks = c(0, 0.5, 1))+
     scale_x_continuous(NULL, breaks = 1:6,
                        labels = c("Ground spiders","Wolf spiders","Sheet weavers",
@@ -261,7 +263,7 @@ effect_mean_p <- fit$stan %>%
     geom_density(linetype = 0, alpha = 0.7)+
     scale_fill_manual("", values = coef_palette)+
     scale_y_continuous("Posterior density", limits = c(0, 7), breaks = 0:4 * 2)+
-    scale_x_continuous(expression("Response mean (" * {}^{k} * alpha * ")")) +
+    scale_x_continuous("Response mean") +
     effect_p_theme +
     NULL
 
@@ -286,7 +288,7 @@ effect_sigmas_p <- fit$stan %>%
     scale_fill_manual(NULL, values = coef_palette)+
     guides(fill = guide_legend(keywidth = 0.75, keyheight = 0.75)) +
     scale_y_continuous("Posterior density", limits = c(0, 7), breaks = 0:4 * 2)+
-    scale_x_continuous(expression("Response SD" ~ ({}^{k} * sigma[g]))) +
+    scale_x_continuous("Response SD") +
     effect_p_theme +
     NULL
 
