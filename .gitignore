@@ -11,3 +11,5 @@
 *.png
 
 analysis/output/.Rapp.history
+
+.Rapp.history
