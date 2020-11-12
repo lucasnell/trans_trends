@@ -240,6 +240,8 @@ red_re_stan <- lapply(red_re_fits, function(x){x$stan}) %>%
 #     set_names(model_names)
 
 # write_rds(loo_re, "analysis/output/loo_re.rds")
+# loo_re <- read_rds("analysis/output/loo_re.rds")
+
 
 # calculate deviances
 
@@ -255,7 +257,7 @@ dev_re <- lapply(model_names, function(x){
     bind_rows()
 
 # write_csv(dev_re, "analysis/output/dev_re.csv")
-
+# dev_re <- read_csv("analysis/output/dev_re.csv")
 
 
 
@@ -279,20 +281,20 @@ red_fere <- c("y_z ~ time_z + dist_z +
                 (midges_z + time_z | taxon)")
 
 # fit models
-red_fere_fits <- lapply(red_fere, function(x){m0 =
-    armm(formula = as.formula(x),
-         time_form = ~  time | trans + distf + taxon,
-         ar_form = ~ taxon,
-         obs_error = T,
-         distr = "normal",
-         data = data_fit,
-         x_scale = FALSE,
-         y_scale = NULL,
-         hmc = T,
-         change = T,
-         rstan_control = list(iter = 4000, chains = 4, seed = 3e3,
-                              control = list(adapt_delta = 0.97)))
-})
+# red_fere_fits <- lapply(red_fere, function(x){m0 =
+#     armm(formula = as.formula(x),
+#          time_form = ~  time | trans + distf + taxon,
+#          ar_form = ~ taxon,
+#          obs_error = T,
+#          distr = "normal",
+#          data = data_fit,
+#          x_scale = FALSE,
+#          y_scale = NULL,
+#          hmc = T,
+#          change = T,
+#          rstan_control = list(iter = 4000, chains = 4, seed = 3e3,
+#                               control = list(adapt_delta = 0.97)))
+# })
 
 red_fere_names <- c("midges_z","time_z","dist_z","full")
 
@@ -311,6 +313,7 @@ red_fere_stan = lapply(red_fere_fits, function(x){x$stan}) %>%
 #     set_names(model_names)
 
 # write_rds(loo_fere, "analysis/output/loo_fere.rds")
+# loo_fere <- read_rds("analysis/output/loo_fere.rds")
 
 # calculate deviances
 
@@ -326,6 +329,7 @@ dev_fere <- lapply(model_names, function(x){
     bind_rows()
 
 # write_csv(dev_fere, "analysis/output/dev_fere.csv")
+# dev_fere <- read_csv("analysis/output/dev_fere.csv")
 
 
 
