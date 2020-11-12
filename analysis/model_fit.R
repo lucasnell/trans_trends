@@ -41,7 +41,7 @@ data_fit <- myv_arth %>%
     rename(distance = dist) %>%
     # group_by(taxon) %>%
     mutate(y = log1p(count),
-           y_z = (y - mean(y))/(sd(y))) %>%
+           y = (y - mean(y))/(sd(y))) %>%
     ungroup() %>%
     mutate(midges_z = log1p(midges),
            midges_z = (midges_z - mean(midges_z))/(sd(midges_z)),
@@ -71,7 +71,7 @@ data_fit <- myv_arth %>%
 
 # fit model
 # start_time <- Sys.time()
-# fit <- armm(formula = y_z ~ midges_z + time_z + dist_z +
+# fit <- armm(formula = y ~ midges_z + time_z + dist_z +
 #                 (1 | taxon + taxon_plot + taxon_trans) +
 #                 (midges_z + time_z + dist_z | taxon),
 #            time_form = ~  time | trans + distf + taxon,
@@ -199,13 +199,13 @@ coef_sum <- list(ar = ar, beta = beta, int_full = int_full, int_taxon = int_taxo
 model_names <- c("midges_z","time_z","dist_z")
 
 # reduced models, removing random slopes by taxon
-red_re <- c("y_z ~ midges_z + time_z + dist_z +
+red_re <- c("y ~ midges_z + time_z + dist_z +
                 (1 | taxon + taxon_plot + taxon_trans) +
                 (time_z + dist_z | taxon)",
-             "y_z ~ midges_z + time_z + dist_z +
+             "y ~ midges_z + time_z + dist_z +
                 (1 | taxon + taxon_plot + taxon_trans) +
                 (midges_z + dist_z | taxon)",
-             "y_z ~ midges_z + time_z + dist_z +
+             "y ~ midges_z + time_z + dist_z +
                 (1 | taxon + taxon_plot + taxon_trans) +
                 (midges_z + time_z | taxon)")
 
@@ -270,13 +270,13 @@ dev_re <- lapply(model_names, function(x){
 model_names <- c("midges_z","time_z","dist_z")
 
 # reduced models, removing fixed and random slopes andby taxon
-red_fere <- c("y_z ~ time_z + dist_z +
+red_fere <- c("y ~ time_z + dist_z +
                 (1 | taxon + taxon_plot + taxon_trans) +
                 (time_z + dist_z | taxon)",
-              "y_z ~ midges_z + dist_z +
+              "y ~ midges_z + dist_z +
                 (1 | taxon + taxon_plot + taxon_trans) +
                 (midges_z + dist_z | taxon)",
-              "y_z ~ midges_z + time_z +
+              "y ~ midges_z + time_z +
                 (1 | taxon + taxon_plot + taxon_trans) +
                 (midges_z + time_z | taxon)")
 
