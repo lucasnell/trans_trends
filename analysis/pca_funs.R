@@ -36,7 +36,7 @@ pca_fn <- function(pred_) {
                spread(taxon, y) %>%
                select(-id) %>%
                as.matrix(),
-           center = F, scale= F)
+           center = T, scale= F)
 }
 
 
