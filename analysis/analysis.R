@@ -368,16 +368,79 @@ pred_vec <- map_dfr(c("time", "distance", "midges"), pred_vec_fun)
 pc_axis_lim <- 4.1
 
 
-# biplot function
-# (Only doing PC 1 and 2 for main text)
-biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = -2, .PCs = 1:2) {
+# # biplot function
+# # (Only doing PC 1 and 2 for main text)
+# biplot_fn <- function(var_, .mult = -2, .PCs = 1:2) {
+#
+#     # var_ = "time"
+#     # pred_pca = pred_pca
+#     # .mult = c(-2, 2)
+#     # .PCs = 2:3
+#
+#     if (length(.mult) == 1) .mult <- rep(.mult, 2)
+#     .signs <- ifelse(.mult < 0, "-", "")
+#     .sign_nums <- as.numeric(paste0(.signs, "1"))
+#
+#     var_ <- match.arg(var_, c("midges", "time", "distance"))
+#
+#     var_z_ <- paste0(gsub("^distance$", "dist", var_), "_z")
+#
+#     pc_axes <- paste0(.signs, "PC", .PCs)
+#
+#     pred_pca$obs_rot %>%
+#         # Uncomment below if you want darker spots in front
+#         # I currently don't think we should do it
+#         ## arrange(desc(!!sym(var_z_))) %>%
+#         ggplot(aes_string(x = pc_axes[1], y = pc_axes[2]))+
+#         geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
+#         geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
+#         geom_point(aes_string(color = var_z_),
+#                    alpha = 0.25, size = 2)+
+#         geom_segment(data = pred_vec %>% filter(var == gsub("_z$", "", var_z_)),
+#                      aes_string(x = 0,
+#                                 xend = paste0(".mult[1]*PC", .PCs[1]),
+#                                 y = 0,
+#                                 yend = paste0(".mult[2]*PC", .PCs[2])),
+#                      arrow = arrow(length = unit(6, "pt")),
+#                      size = 0.8, color = "black") +
+#         geom_text(data = tibble(A = .sign_nums[1] * (pc_axis_lim + 0.2),
+#                                 B = .sign_nums[2] * (pc_axis_lim + 0.2)) %>%
+#                       set_names(paste0("PC", .PCs)),
+#                   label = var_, hjust = 1, vjust = 1, size = 12 / 2.83465) +
+#         scale_colour_gradient2("Predictor\nvalue", low =  pca_palette[1],
+#                                mid = pca_palette[2],
+#                                high = pca_palette[3],
+#                                midpoint = -0.5, limits = c(-3,2),
+#                                breaks = c(-3,-0.5,2))+
+#         scale_x_continuous(paste0("PC", .PCs[1]), breaks = 3*-1:1) +
+#         scale_y_continuous(paste0("PC", .PCs[2]), breaks = 3*-1:1) +
+#         coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
+#                     ylim = c(-pc_axis_lim, pc_axis_lim)) +
+#         theme(plot.title = element_text(size = 11, hjust = 0.5, vjust = 0,
+#                                         face = "plain"),
+#               plot.margin = margin(0,0,0,0))
+# }
 
-    # var_ = "time"
-    # pred_pca_ = pred_pca
-    # .mult = c(-2, 2)
-    # .PCs = 2:3
 
-    if (length(.mult) == 1) .mult <- rep(.mult, 2)
+size_scale <- function(.guide = "legend") {
+    scale_size(limits = range(pred_pca$obs_rot$PC3 * -2.01),
+               range = c(0.5, 3), breaks = c(-4,0,4), guide = .guide)
+}
+
+set.seed(2041119884)
+.inds <- sample.int(nrow(pred_pca$obs_rot),
+                    round(nrow(pred_pca$obs_rot) * 0.25))
+
+
+# All three axes:
+triplot_fn <- function(var_, .mult = c(-2, -2, -2)) {
+
+    # var_ = "distance"
+    # .mult = c(-2, -2, -2)
+    .PCs <- 1:3
+
+    stopifnot(length(.mult) %in% c(1,3))
+    if (length(.mult) == 1) .mult <- rep(.mult, 3)
     .signs <- ifelse(.mult < 0, "-", "")
     .sign_nums <- as.numeric(paste0(.signs, "1"))
 
@@ -387,78 +450,132 @@ biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = -2, .PCs = 1:2) {
 
     pc_axes <- paste0(.signs, "PC", .PCs)
 
-    pred_pca_$obs_rot %>%
+    .shape <- ifelse(pred_vec %>%
+                         filter(var == gsub("_z$", "", var_z_)) %>%
+                         .[["PC2"]] %>%
+                         `*`(.mult[2]) %>%
+                         `>=`(0), 24, 25)
+
+    .pca_df <- pred_pca$obs_rot %>%
+        # .[.inds,] %>%x
+        mutate(PC1 = .sign_nums[1] * PC1,
+               PC2 = .sign_nums[2] * PC2,
+               PC3 = .sign_nums[3] * PC3) %>%
+        arrange(PC3)
+
+    .path_df <- pred_vec %>%
+        filter(var == gsub("_z$", "", var_z_)) %>%
+        mutate(PC1 = .mult[1] * PC1,
+               PC2 = .mult[2] * PC2,
+               PC3 = .mult[3] * PC3) %>%
+        mutate(PC1 = list(seq(0, PC1, length.out = 101)),
+               PC2 = list(seq(0, PC2, length.out = 101)),
+               PC3 = list(seq(min(pred_pca$obs_rot$PC3 * .mult[3]),
+                              PC3, length.out = 101))) %>%
+        unnest(cols = c(PC1, PC2, PC3))
+
+    # .arrow_size <- (.path_df[nrow(.path_df),][["PC3"]] - min(.pca_df$PC3)) /
+    #     (diff(range(.pca_df$PC3)))
+
+    .pca_df %>%
         # Uncomment below if you want darker spots in front
         # I currently don't think we should do it
         ## arrange(desc(!!sym(var_z_))) %>%
-        ggplot(aes_string(x = pc_axes[1], y = pc_axes[2]))+
+        ggplot(aes(PC1, PC2, size = PC3))+
         geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
         geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-        geom_point(aes_string(color = var_z_),
-                   alpha = 0.25, size = 2)+
-        geom_segment(data = pred_vec %>% filter(var == gsub("_z$", "", var_z_)),
-                     aes_string(x = 0,
-                                xend = paste0(".mult[1]*PC", .PCs[1]),
-                                y = 0,
-                                yend = paste0(".mult[2]*PC", .PCs[2])),
-                     arrow = arrow(length = unit(6, "pt")),
-                     size = 0.8, color = "black") +
-        geom_text(data = tibble(A = .sign_nums[1] * (pc_axis_lim + 0.2),
-                                B = .sign_nums[2] * (pc_axis_lim + 0.2)) %>%
-                      set_names(paste0("PC", .PCs)),
+        geom_point(aes_string(color = var_z_, fill = var_z_), shape = 21) +
+        geom_path(data = .path_df, color = "black", alpha = 0.5) +
+        geom_point(data = .path_df[nrow(.path_df),],
+                   color = "black", fill = "black", alpha = 0.75,
+                   shape = .shape) +
+        geom_text(data = tibble(A = (pc_axis_lim + 0.2),
+                                B = (pc_axis_lim + 0.2)) %>%
+                      set_names(paste0("PC", .PCs[1:2])),
                   label = var_, hjust = 1, vjust = 1, size = 12 / 2.83465) +
-        scale_colour_gradient2("Predictor\nvalue", low =  pca_palette[1],
-                               mid = pca_palette[2],
-                               high = pca_palette[3],
-                               midpoint = -0.5, limits = c(-3,2),
-                               breaks = c(-3,-0.5,2))+
+        scale_color_viridis_c("Predictor\nvalue", alpha = 0.5,
+                              limits = c(-3,2), breaks = c(-3,-0.5,2)) +
+        scale_fill_viridis_c(limits = c(-3,2), breaks = c(-3,-0.5,2),
+                             alpha = 0.05, guide = FALSE) +
+        size_scale() +
         scale_x_continuous(paste0("PC", .PCs[1]), breaks = 3*-1:1) +
         scale_y_continuous(paste0("PC", .PCs[2]), breaks = 3*-1:1) +
         coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
                     ylim = c(-pc_axis_lim, pc_axis_lim)) +
         theme(plot.title = element_text(size = 11, hjust = 0.5, vjust = 0,
                                         face = "plain"),
-              plot.margin = margin(0,0,0,0))
+              plot.margin = margin(0,0,0,0)) +
+        guides(color = guide_colorbar(override.aes = list(alpha = 1)),
+               size = guide_legend(override.aes = list(shape = 1)))
 }
 
 
 
-fig3a <- pred_pca$taxon_vec %>%
-    mutate(taxon = factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap"),
-                          labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
-                                     "harvestman","ground\nbeetles","rove\nbeetles"))) %>%
-    arrange(taxon) %>%
-    mutate(PC1_lab = -5*PC1 + c(1.2, 0.2, 1, 0.5, -0.8, 0.4),
-           PC2_lab = -5*PC2 + c(-0.4, -0.8, -0.5, 1.7, 0.7, -0.9),
-           ang = c(rep(0,3), 73.5, 0, 0)) %>%
+fig3a_df <- pred_pca$taxon_vec %>%
+    mutate(taxon = factor(taxon, levels = c("gnap","lyco","sheet","opil",
+                                            "cara","stap") %>% rev(),
+                          labels = c("ground\nspiders","wolf\nspiders",
+                                     "sheet\nweavers",
+                                     "harvestman","ground\nbeetles",
+                                     "rove\nbeetles") %>% rev())) %>%
     arrange(desc(taxon)) %>%
+    mutate(PC1 = -5 * PC1,
+           PC2 = -5 * PC2,
+           PC3 = -5 * PC3,
+           PC1_lab = PC1 + c(1.2, 0.2, 1, 0.5, -0.8, 0.4),
+           PC2_lab = PC2 + c(-0.4, -0.8, -0.5, 1.7, 0.7, -0.9),
+           ang = c(rep(0,3), 73.5, 0, 0),
+           PC1 = map(PC1, ~ seq(0, .x, length.out = 101)),
+           PC2 = map(PC2, ~ seq(0, .x, length.out = 101)),
+           PC3 = map(PC3, ~ seq(min(pred_pca$obs_rot$PC3 * -2),
+                                .x, length.out = 101))) %>%
+    unnest(cols = c(PC1, PC2, PC3)) %>%
+    arrange(taxon, PC3)
+
+fig3a <- fig3a_df %>%
     ggplot()+
     geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
     geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-    geom_segment(aes(x = 0, xend = -5*PC1, y = 0, yend = -5*PC2, group = taxon,
-                     color = taxon),
-                 arrow = arrow(length = unit(6, "pt")),
-                 size = 1)+
-    geom_text(aes(label = taxon, x = PC1_lab, y = PC2_lab,
+    # geom_segment(aes(x = 0, xend = -5*PC1, y = 0, yend = -5*PC2, group = taxon,
+    #                  color = taxon),
+    #              arrow = arrow(length = unit(6, "pt")),
+    #              size = 1)+
+    geom_line(aes(x = PC1, y = PC2, color = taxon, size = PC3), alpha = 0.5)+
+    geom_point(data = fig3a_df %>%
+                   group_by(taxon) %>%
+                   filter(PC3 == max(PC3)) %>%
+                   ungroup() %>%
+                   mutate(shape = factor(ifelse(PC2 >= 0, 0, 1))),
+               aes(x = PC1, y = PC2, color = taxon, fill = taxon, size = PC3,
+                   shape = shape))+
+    geom_text(data = fig3a_df %>% distinct(taxon, .keep_all = TRUE),
+              aes(label = taxon, x = PC1_lab, y = PC2_lab,
                   color = taxon, angle = ang),
               size = 9 / 2.83465, lineheight = 0.75)+
     scale_x_continuous("PC1", breaks = 3*-1:1) +
     scale_y_continuous("PC2", breaks = 3*-1:1) +
     coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
                 ylim = c(-pc_axis_lim, pc_axis_lim)) +
-    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1:4, 6:5)],
-                       guide = FALSE) +
+    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(5:6, 4:1)],
+                       guide = FALSE, aesthetics = c("color", "fill")) +
+    scale_shape_manual(values = c(24, 25), guide = FALSE) +
+    size_scale(FALSE) +
     theme(plot.margin = margin(0,0,0,0))
 
 # plot time effect
-fig3b <- biplot_fn("time")
+fig3b <- triplot_fn("time")
 # plot distance effect
-fig3c <- biplot_fn("distance")
+fig3c <- triplot_fn("distance")
 # plot midge effect
-fig3d <- biplot_fn("midges")
+fig3d <- triplot_fn("midges")
 
 
-pca_legend <- get_legend(fig3b + theme(legend.title.align = 0,
+pca_legend <- get_legend(fig3b +
+                             scale_color_viridis_c("Predictor\nvalue",
+                                                   alpha = 1,
+                                                   limits = c(-3,2),
+                                                   breaks = c(-3,-0.5,2)) +
+                             theme(legend.title.align = 0,
                                        legend.title = element_text(size = 11)))
 
 
@@ -472,10 +589,10 @@ fig3 <- plot_grid(plot_grid(fig3a %>% no_x(),
                             labels = c("A", "", "B", "C", "", "D"),
                             nrow = 2, align = "vh", rel_widths = c(1, 0.1, 1)),
                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
-# fig3
+fig3
 
 
-# save_file(fig3, "fig3", width = 6, height = 5)
+# save_file(fig3, "fig3-wPC3", width = 6, height = 5)
 
 
 
