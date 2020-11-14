@@ -3,7 +3,7 @@
 #==========*
 
 # load packages
-library(lizard)
+library(armmr)
 library(tidyverse)
 library(cowplot)
 options(mc.cores = parallel::detectCores()-2)
@@ -16,29 +16,35 @@ if (Sys.info()[["sysname"]] == "Darwin" && .Platform$GUI == "RStudio") {
 }
 
 
+options(dplyr.summarise.inform = FALSE)
+
 
 
 taxa_order <- c(5:6, 4, 1, 3, 2)
-
+taxa_lvls = c("gnap","lyco","sheet","opil","cara", "stap")[taxa_order]
+taxa_labs = c("Ground spiders","Wolf spiders","Sheet weavers",
+              "Harvestman","Ground beetles", "Rove beetles")[taxa_order]
 
 # load data
 data_fit <- read_csv("analysis/data_fit.csv") %>%
-    mutate(Taxon = factor(taxon,
-                          levels = c("gnap","lyco","sheet","opil","cara","stap")[taxa_order],
-                          labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                     "Harvestman","Ground beetles","Rove beetles")[taxa_order]))
+    mutate(taxon_plot = factor(taxon, levels = taxa_lvls, labels = taxa_labs))
 fit <- readRDS("analysis/output/fit.rds")
 fit_sum <- read_csv("analysis/output/fit_sum.csv")
 coef_sum <- readRDS("analysis/output/coef_sum.rds")
 
+
+
+coef_sum$int_taxon <- coef_sum$int_taxon %>%
+    ungroup() %>%
+    mutate(tx = as.numeric(factor(taxon, levels = taxa_lvls)),
+           coef = "int")
 
 coef_sum$beta <- coef_sum$beta %>%
     ungroup() %>%
     mutate(coef = factor(coef %>% paste(),
                          levels = c("time", "dist", "midges"),
                          labels = c("time", "distance", "midges")),
-           tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet",
-                                                    "opil","cara","stap")[taxa_order])))
+           tx = as.numeric(factor(taxon, levels = taxa_lvls)))
 coef_sum$alpha <- coef_sum$alpha %>%
     filter(coef != "int") %>%
     mutate(coef = factor(coef %>% paste(),
@@ -50,8 +56,7 @@ coef_sum$sig_beta <- coef_sum$sig_beta %>%
                          levels = c("time", "dist", "midges"),
                          labels = c("time", "distance", "midges")))
 coef_sum$ar <- coef_sum$ar %>%
-    mutate(tx = as.numeric(factor(taxon, levels = c("gnap","lyco","sheet","opil",
-                                                    "cara","stap")[taxa_order])))
+    mutate(tx = as.numeric(factor(taxon, levels = taxa_lvls)))
 
 
 
@@ -112,16 +117,16 @@ no_leg <- function(p) {
 # time
 time_p <- data_fit %>%
     ggplot(aes(year, y))+
-    facet_wrap(~Taxon, nrow = 4)+
+    facet_wrap(~taxon_plot, nrow = 4)+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_line(aes(group = plot), size = 0.2, color = "gray70")+
     # geom_point(aes(group = plot), size = 1.5, alpha = 0.5)+
     geom_line(data = data_fit %>%
-                  group_by(Taxon, year) %>%
+                  group_by(taxon_plot, year) %>%
                   summarize(y = mean(midges_z)) %>%
                   mutate(type  = "Midge abundance") %>%
                   bind_rows(data_fit %>%
-                                group_by(Taxon, year) %>%
+                                group_by(taxon_plot, year) %>%
                                 summarize(y = mean(y)) %>%
                                 mutate(type  = "Mean by date/distance")) %>%
                   mutate(type = factor(type,
@@ -131,22 +136,22 @@ time_p <- data_fit %>%
     scale_color_manual(NULL, values = c("firebrick","dodgerblue"))+
     scale_x_continuous("Year", breaks = c(2008,2012,2016), limits = c(2007,2018))+
     scale_y_continuous("Transformed abundance",
-                       limits = c(-4.5,4.5), breaks = c(-3,0,3))+
+                       limits = c(-3.1, 3.1), breaks = c(-2,0,2))+
     # theme(legend.position = "none") +
     NULL
 
 # distance
 dist_p <- data_fit %>%
     ggplot(aes(distance, y))+
-    facet_wrap(~Taxon, nrow = 4)+
+    facet_wrap(~taxon_plot, nrow = 4)+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_jitter(aes(group = plot), size = 1, alpha = 0.5, width = 0.1, shape = 1)+
     geom_line(data = data_fit %>%
-                  group_by(Taxon, distance) %>%
+                  group_by(taxon_plot, distance) %>%
                   summarize(y = mean(midges_z)) %>%
                   mutate(type  = "Midge abundance") %>%
                   bind_rows(data_fit %>%
-                                group_by(Taxon, distance) %>%
+                                group_by(taxon_plot, distance) %>%
                                 summarize(y = mean(y)) %>%
                                 mutate(type  = "Mean by date/distance")) %>%
                   mutate(type = factor(type,
@@ -155,8 +160,8 @@ dist_p <- data_fit %>%
               aes(color = type), size = 0.75)+
     scale_color_manual(NULL, values = c("firebrick", "dodgerblue"))+
     scale_x_continuous("Distance (m)", trans = "log", breaks = c(5,50,500))+
-    scale_y_continuous(NULL, limits = c(-4.5,4.5),
-                       breaks = c(-3,0,3)) +
+    scale_y_continuous(NULL, limits = c(-3.1, 3.1),
+                       breaks = c(-2,0,2)) +
     NULL
 
 
@@ -181,8 +186,19 @@ fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 
 
 #==========*
-#========== Plot coefficients (Use `taxon-specicific-slopes` for Figure 2) ----
+#========== Plot coefficients (Use `taxon-specific-slopes` for Figure 2) ----
 #==========*
+
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#       ADD IN SUB-PLOT FOR SLOPES BY TAXON
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
 
 
 
@@ -202,10 +218,7 @@ slope_p <- coef_sum$beta %>%
               size = 12 / 2.83465, hjust = 0, vjust = 1, color = "black") +
     scale_y_continuous("Response",
                        breaks = c(-0.5, 0, 0.5))+
-    scale_x_continuous(NULL, breaks = 1:6,
-                       labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                  "Harvestman","Ground beetles",
-                                  "Rove beetles")[taxa_order],
+    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
                        trans = "reverse") +
     scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
     scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
@@ -223,6 +236,23 @@ small_labels <- theme(axis.title.y = element_text(size = 10, angle = 90,
                       plot.margin = margin(4,4,0,0))
 
 
+# intercept
+int_p <- coef_sum$int_taxon %>%
+    ggplot(aes(tx, mi))+
+    geom_hline(yintercept = 0, color = "gray50")+
+    geom_point(size = 1.5)+
+    # ggtitle(" ") +
+    geom_linerange(aes(ymin = lo, ymax = hi))+
+    scale_y_continuous("Intercept",  limits = c(-1, 1),
+                       breaks = c(-1, 0, 1))+
+    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
+                       trans = "reverse", limits = c(6.5, 0.5))+
+    small_labels +
+    coord_flip() +
+    theme(axis.text.y = element_blank()) +
+    NULL
+
+
 # ar (extra)
 ar_p <- coef_sum$ar %>%
     ggplot(aes(tx, mi))+
@@ -232,9 +262,7 @@ ar_p <- coef_sum$ar %>%
     geom_linerange(aes(ymin = lo, ymax = hi))+
     scale_y_continuous("AR parameter",  limits = c(0, 1),
                        breaks = c(0, 0.5, 1))+
-    scale_x_continuous(NULL, breaks = 1:6,
-                       labels = c("Ground spiders","Wolf spiders","Sheet weavers",
-                                  "Harvestman","Ground beetles","Rove beetles")[taxa_order],
+    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
                        trans = "reverse", limits = c(6.5, 0.5))+
     small_labels +
     coord_flip() +
@@ -253,7 +281,8 @@ effect_mean_p <- fit$stan %>%
     rstan::extract(pars = "alpha") %>%
     .[[1]] %>%
     as.matrix() %>%
-    as_tibble(.name_repair = "universal") %>%
+    {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
+    as_tibble() %>%
     gather() %>%
     filter(key != "...1") %>%  # intercept not necessary
     mutate(coef = factor(key, levels = c("...3","...4","...2"),
@@ -262,7 +291,7 @@ effect_mean_p <- fit$stan %>%
     geom_vline(xintercept = 0,  color = "gray50")+
     geom_density(linetype = 0, alpha = 0.7)+
     scale_fill_manual("", values = coef_palette)+
-    scale_y_continuous("Posterior density", limits = c(0, 7), breaks = 0:4 * 2)+
+    scale_y_continuous("Posterior density", limits = c(0, 10))+
     scale_x_continuous("Response mean") +
     effect_p_theme +
     NULL
@@ -274,7 +303,8 @@ effect_sigmas_p <- fit$stan %>%
     rstan::extract(pars = "sig_beta") %>%
     .[[1]] %>%
     as.matrix() %>%
-    as_tibble(.name_repair = "universal") %>%
+    {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
+    as_tibble() %>%
     gather() %>%
     mutate(coef = factor(key, levels = c("...1","...2","...3","...4","...5","...6"),
                          labels = c("int_tax","int_plot","int_trans","midges",
@@ -287,7 +317,7 @@ effect_sigmas_p <- fit$stan %>%
     geom_density(linetype = 0, alpha = 0.7)+
     scale_fill_manual(NULL, values = coef_palette)+
     guides(fill = guide_legend(keywidth = 0.75, keyheight = 0.75)) +
-    scale_y_continuous("Posterior density", limits = c(0, 7), breaks = 0:4 * 2)+
+    scale_y_continuous("Posterior density", limits = c(0, 10))+
     scale_x_continuous("Response SD") +
     effect_p_theme +
     NULL
