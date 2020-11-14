@@ -51,7 +51,7 @@ coef_sum$alpha <- coef_sum$alpha %>%
                          levels = c("time", "dist", "midges"),
                          labels = c("time", "distance", "midges")))
 coef_sum$sig_beta <- coef_sum$sig_beta %>%
-    filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
+    filter(!(coef %in% c("int_tax","int_tax_plot","int_tax_trans"))) %>%
     mutate(coef = factor(coef %>% paste(),
                          levels = c("time", "dist", "midges"),
                          labels = c("time", "distance", "midges")))
@@ -174,8 +174,8 @@ time_dist_legend <- get_legend(
 
 prow <- plot_grid(time_p %>% no_leg(),
                   dist_p  %>% no_leg(),
-                  labels = c("A", "B"),
-                  align = "vh")
+                  labels = c("a", "b"),
+                  align = "vh", label_fontface = "plain", label_size = 16)
 
 fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 
@@ -190,26 +190,66 @@ fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 #==========*
 
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-#       ADD IN SUB-PLOT FOR SLOPES BY TAXON
+slope_density_df <- fit$stan %>%
+    rstan::extract(pars = "alpha") %>%
+    .[[1]] %>%
+    as.matrix() %>%
+    {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
+    as_tibble() %>%
+    gather() %>%
+    filter(key != "...1") %>%  # intercept not necessary
+    mutate(coef = factor(key, levels = c("...3","...4","...2"),
+                         labels = c("time", "distance", "midges"))) %>%
+    split(.$coef) %>%
+    map_dfr(function(z) {
+        X <- density(z[["value"]], n = 1024)
+        tibble(coef = z[["coef"]][1],
+               x = X$x,
+               y = X$y)
+    }) %>%
+    arrange(coef, x)
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+slope_sd_density_df <- fit$stan %>%
+    rstan::extract(pars = "sig_beta") %>%
+    .[[1]] %>%
+    as.matrix() %>%
+    {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
+    as_tibble() %>%
+    gather() %>%
+    mutate(coef = factor(key, levels = c("...1","...2","...3","...4","...5","...6"),
+                         labels = c("int_tax","int_plot","int_trans","midges",
+                                    "time","distance"))) %>%
+    filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
+    mutate(coef = factor(coef %>% paste(),
+                         levels = c("time", "distance", "midges"))) %>%
+    split(.$coef) %>%
+    map_dfr(function(z) {
+        X <- density(z[["value"]], n = 1024)
+        tibble(coef = z[["coef"]][1],
+               x = X$x,
+               y = X$y)
+    }) %>%
+    arrange(coef, x)
 
 
-
+slope_sd_density_df %>%
+    ggplot(aes(x, y, color = coef)) +
+    geom_path()
 
 
 # taxon-specific slopes
 slope_p <- coef_sum$beta %>%
     ggplot()+
     facet_wrap(~coef, ncol= 1)+
-    geom_rect(data = coef_sum$alpha,
-              aes(xmin = -1, xmax = 10, ymin = lo, ymax = hi, fill = coef),
-              alpha = 0.25, linetype =  0)+
     geom_hline(yintercept = 0, color = "gray50")+
+    geom_polygon(data = slope_density_df %>%
+                  mutate(y = 6.75 - y / max(y) * 6.75 - 0.05),
+                aes(x = y, y = x, fill = coef), alpha = 0.25) +
+    # geom_polygon(data = slope_sd_density_df %>%
+    #               mutate(y = y / max(y) * 3.375 - 0.25 + 0.05),
+    #             aes(x = y, y = x, fill = coef), alpha = 0.25) +
     geom_point(aes(tx, mi, color = coef), size = 1.5)+
     geom_linerange(aes(tx, ymin = lo, ymax = hi, color = coef))+
     geom_text(data = tibble(coef = sort(unique(coef_sum$beta[["coef"]])),
@@ -224,7 +264,8 @@ slope_p <- coef_sum$beta %>%
     scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
     # theme(plot.margin = margin(r=0,l=0)) +
     theme(plot.margin = margin(0,0,0,t=4), strip.text.x = element_blank()) +
-    coord_flip(ylim = c(-0.6, 0.6), xlim = c(6.5, 0)) +
+    coord_flip(ylim = c(-0.68, 0.68), xlim = c(6.75, -0.25), expand = FALSE) +
+    # coord_cartesian(ylim = c(-0.6, 0.6), xlim = c(6.5, 0), expand = FALSE) +
     NULL
 
 
@@ -233,7 +274,7 @@ small_labels <- theme(axis.title.y = element_text(size = 10, angle = 90,
                                                   margin = margin(0,0,0,0)),
                       axis.title.x = element_text(size = 10,
                                                   margin = margin(0,0,0,0)),
-                      plot.margin = margin(4,4,0,0))
+                      plot.margin = margin(t=4, r=4, b=8.5, l=0))
 
 
 # intercept
@@ -271,32 +312,6 @@ ar_p <- coef_sum$ar %>%
 
 
 
-effect_p_theme <- small_labels +
-    theme(axis.text.y = element_blank(),
-          axis.ticks.y = element_blank(),
-          legend.position = "none")
-
-# alphas (extra)
-effect_mean_p <- fit$stan %>%
-    rstan::extract(pars = "alpha") %>%
-    .[[1]] %>%
-    as.matrix() %>%
-    {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
-    as_tibble() %>%
-    gather() %>%
-    filter(key != "...1") %>%  # intercept not necessary
-    mutate(coef = factor(key, levels = c("...3","...4","...2"),
-                         labels = c("time", "distance", "midges"))) %>%
-    ggplot(aes(value, fill = coef))+
-    geom_vline(xintercept = 0,  color = "gray50")+
-    geom_density(linetype = 0, alpha = 0.7)+
-    scale_fill_manual("", values = coef_palette)+
-    scale_y_continuous("Posterior density", limits = c(0, 10))+
-    scale_x_continuous("Response mean") +
-    effect_p_theme +
-    NULL
-
-
 
 # sigmas (extra)
 effect_sigmas_p <- fit$stan %>%
@@ -319,27 +334,29 @@ effect_sigmas_p <- fit$stan %>%
     guides(fill = guide_legend(keywidth = 0.75, keyheight = 0.75)) +
     scale_y_continuous("Posterior density", limits = c(0, 10))+
     scale_x_continuous("Response SD") +
-    effect_p_theme +
+    small_labels +
+    theme(axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          legend.position = "none") +
     NULL
 
 
 fig2 <- plot_grid(EMPTY,
                   slope_p,
-                  plot_grid(EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-                            labels = c("B", "", "C", "", "D"),
-                            rel_heights = c(1.265, 0.1, 1, 0.1, 1),
-                            ncol = 1, label_x = 0.25),
+                  plot_grid(EMPTY, EMPTY, EMPTY,
+                            labels = c("b", "c", "d"),
+                            rel_heights = c(1.58, 1, 1.58),
+                            ncol = 1, label_x = 0.25,
+                            label_fontface = "plain", label_size = 16),
                   plot_grid(ar_p,
-                            EMPTY,
-                            effect_mean_p,
-                            EMPTY,
                             effect_sigmas_p,
-                            rel_heights = c(1.265, 0.1, 1, 0.1, 1),
+                            int_p,
+                            rel_heights = c(1.58, 1, 1.58),
                             ncol = 1),
-                  labels = c("A", "", "", ""), rel_widths = c(0.08, 1, 0.12, 0.6),
-                  nrow = 1)
+                  labels = c("a", "", "", ""), rel_widths = c(0.08, 1, 0.12, 0.6),
+                  nrow = 1, label_fontface = "plain", label_size = 16)
 
-# fig2
+fig2
 
 
 # save_file(fig2, "fig2", width = 6, height = 6)
@@ -541,8 +558,9 @@ fig3 <- plot_grid(plot_grid(fig3a %>% no_x(),
                             fig3c %>% no_leg(),
                             EMPTY,
                             fig3d %>% no_leg() %>% no_y(),
-                            labels = c("A", "", "B", "C", "", "D"),
-                            nrow = 2, align = "vh", rel_widths = c(1, 0.1, 1)),
+                            labels = c("a", "", "b", "c", "", "d"),
+                            nrow = 2, align = "vh", rel_widths = c(1, 0.1, 1),
+                            label_fontface = "plain", label_size = 16),
                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
 # fig3
 
@@ -611,7 +629,8 @@ figS1 <- plot_grid(plot_grid(figS1a %>% no_x(),
                             figS1c %>% no_leg(),
                             EMPTY,
                             figS1d %>% no_leg() %>% no_y(),
-                            labels = c("A", "", "B", "C", "", "D"),
+                            labels = c("a", "", "b", "c", "", "d"),
+                            label_fontface = "plain", label_size = 16,
                             nrow = 2, align = "vh", rel_widths = c(1, 0.1, 1)),
                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
 # figS1
@@ -701,8 +720,8 @@ tbl1_order <- function(x, .col = NULL, .coef_order = c("time", "dist", "midges")
 }
 
 tibble(`coef` = c("", "time", "distance", "midges"),
-       `Taxon-variation` = c("(random)", tbl1_order(loo_dev,"dev_re") %>% fmt("%.0f")),
-       `Overall` = c("(fixed + random)", tbl1_order(loo_dev,"dev_fere") %>% fmt("%.0f")),
+       `Taxon-variation` = c("(random)", tbl1_order(loo_dev,"dev_re") %>% fmt("%.1f")),
+       `Overall` = c("(fixed + random)", tbl1_order(loo_dev,"dev_fere") %>% fmt("%.1f")),
        `EXTRA` = rep("", 4),
        PC1 = c(pred_pca$obs_exp[["PC1"]][1] %>% fmt("(%.2f)"),
                tbl1_order(var_part, "PC1") %>% fmt()),
