@@ -357,12 +357,43 @@ source("analysis/pca_funs.R")
 # pca on predicted values
 pred_pca <- pred_pca_fn(data_fit, coef_sum$beta, coef_sum$int_taxon)
 
+
+#
+# This function is to switch PC2 and PC3 on the fly.
+#
+# NOTE: We're moving PC3 to PC2 bc it explains more of the observed variance!
+# ----------------------*
+switch_pcs <- function(.x) {
+    if (inherits(.x, "data.frame")) {
+        if (!"PC2" %in% colnames(.x)) return(.x)
+        z <- .x[["PC2"]]
+        .x[["PC2"]] <- .x[["PC3"]]
+        .x[["PC3"]] <- z
+    } else if (inherits(.x, "prcomp")) {
+        z <- .x$sdev[2]
+        .x$sdev[2] <- .x$sdev[3]
+        .x$sdev[3] <- z
+        z <- .x$rotation[,"PC2"]
+        .x$rotation[,"PC2"] <- .x$rotation[,"PC3"]
+        .x$rotation[,"PC3"] <- z
+        z <- .x$x[,"PC2"]
+        .x$x[,"PC2"] <- .x$x[,"PC3"]
+        .x$x[,"PC3"] <- z
+    } else stop("\nUnknown type in `switch_pcs`")
+    return(.x)
+}
+
+pred_pca <- map(pred_pca, switch_pcs)
+
+
+
 # taxon vectors
 pred_pca$taxon_vec %>%
     arrange(-abs(PC1))
 
 # variance explained in predicted values (first three axes must explain everything)
 summary(pred_pca$pca)
+
 
 # variance explained in observed values (For Results)
 pred_pca$obs_exp
@@ -398,12 +429,13 @@ pred_vec <- map_dfr(c("time", "distance", "midges"), pred_vec_fun)
 pc_axis_lim <- 4.1
 
 
+
+
 # biplot function
 # (Only doing PC 1 and 2 for main text)
-biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = -2, .PCs = 1:2) {
+biplot_fn <- function(var_, .mult = c(-2, 2), .PCs = 1:2) {
 
     # var_ = "time"
-    # pred_pca_ = pred_pca
     # .mult = c(-2, 2)
     # .PCs = 2:3
 
@@ -417,7 +449,7 @@ biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = -2, .PCs = 1:2) {
 
     pc_axes <- paste0(.signs, "PC", .PCs)
 
-    pred_pca_$obs_rot %>%
+    pred_pca$obs_rot %>%
         # Uncomment below if you want darker spots in front
         # I currently don't think we should do it
         ## arrange(desc(!!sym(var_z_))) %>%
@@ -453,32 +485,42 @@ biplot_fn <- function(var_, pred_pca_ = pred_pca, .mult = -2, .PCs = 1:2) {
 
 
 
+
+
 fig3a <- pred_pca$taxon_vec %>%
-    mutate(taxon = factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap"),
+    mutate(taxon = factor(taxon, levels = taxa_lvls %>% rev(),
                           labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
-                                     "harvestman","ground\nbeetles","rove\nbeetles"))) %>%
+                                     "harvestman","ground\nbeetles","rove\nbeetles")[rev(taxa_order)])) %>%
     arrange(taxon) %>%
-    mutate(PC1_lab = -5*PC1 + c(1.2, 0.2, 1, 0.5, -0.8, 0.4),
-           PC2_lab = -5*PC2 + c(-0.4, -0.8, -0.5, 1.7, 0.7, -0.9),
-           ang = c(rep(0,3), 73.5, 0, 0)) %>%
+    mutate(PC1 = -5*PC1,
+           PC2 = 5*PC2,
+           PC1_lab = PC1 + c(0.0, 0.8, -0.8, 3.3, -1.1, 0.4)[rev(taxa_order)],
+           PC2_lab = PC2 + c(0.7, -0.6, -2.3, -0.7, 0.4, -0.9)[rev(taxa_order)]) %>%
     arrange(desc(taxon)) %>%
     ggplot()+
     geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
     geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-    geom_segment(aes(x = 0, xend = -5*PC1, y = 0, yend = -5*PC2, group = taxon,
+    geom_segment(aes(x = 0, xend = PC1, y = 0, yend = PC2, group = taxon,
                      color = taxon),
                  arrow = arrow(length = unit(6, "pt")),
                  size = 1)+
+    geom_segment(data = tibble(PC1 = c(1.25,  -0.8),
+                               PC2 = c(0.8,   -0.8),
+                               PC1e = c(-0.3, -0.4),
+                               PC2e = c(1,    0.6)),
+                 aes(x = PC1, y = PC2, xend = PC1e, yend = PC2e),
+                 color = "black", size = 0.25) +
     geom_text(aes(label = taxon, x = PC1_lab, y = PC2_lab,
-                  color = taxon, angle = ang),
+                  color = taxon),
               size = 9 / 2.83465, lineheight = 0.75)+
     scale_x_continuous("PC1", breaks = 3*-1:1) +
     scale_y_continuous("PC2", breaks = 3*-1:1) +
     coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
                 ylim = c(-pc_axis_lim, pc_axis_lim)) +
-    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1:4, 6:5)],
+    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1,4,3,5,2,6)],
                        guide = FALSE) +
     theme(plot.margin = margin(0,0,0,0))
+
 
 # plot time effect
 fig3b <- biplot_fn("time")
@@ -510,45 +552,52 @@ fig3 <- plot_grid(plot_grid(fig3a %>% no_x(),
 
 
 # -----*
-# With PCs 2 and 3 ----
+# With PCs 1 and 3 ----
 # (perhaps for the supplement)
 # -----*
 
 figS1a <- pred_pca$taxon_vec %>%
-    mutate(taxon = factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap"),
+    mutate(taxon = factor(taxon, levels = taxa_lvls %>% rev(),
                           labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
-                                     "harvestman","ground\nbeetles","rove\nbeetles"))) %>%
+                                     "harvestman","ground\nbeetles","rove\nbeetles")[rev(taxa_order)])) %>%
     arrange(taxon) %>%
-    mutate(PC2_lab = -5*PC2 + c(-0.8, -1.4, -1.4,
-                                1.0, 1.2, 1.2),
-           PC3_lab = 5*PC3 + c(-0.8, -0.5, 0,
-                                1.5, 0.5, -0.4),
-           ang = c(rep(0,3), 52.18151, 0, 0)) %>%
+    mutate(PC1 = -5*PC1,
+           PC3 = 5*PC3,
+           PC1_lab = PC1 + c(1.4, 0.6, 0,
+                                -1.3, -1.2, 0.2)[rev(taxa_order)],
+           PC3_lab = PC3 + c(0.8, -0.9, 0.9,
+                                -2.5, -0.3, 0.8)[rev(taxa_order)]) %>%
     arrange(desc(taxon)) %>%
     ggplot()+
     geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
     geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-    geom_segment(aes(x = 0, xend = -5*PC2, y = 0, yend = 5*PC3, group = taxon,
+    geom_segment(aes(x = 0, xend = PC1, y = 0, yend = PC3, group = taxon,
                      color = taxon),
                  arrow = arrow(length = unit(6, "pt")),
                  size = 1)+
-    geom_text(aes(label = taxon, x = PC2_lab, y = PC3_lab,
-                  color = taxon, angle = ang),
+    geom_text(aes(label = taxon, x = PC1_lab, y = PC3_lab,
+                  color = taxon),
               size = 9 / 2.83465, lineheight = 0.75)+
-    scale_x_continuous("PC2") +  ## , breaks = 3*-1:1) +
+    geom_segment(data = tibble(PC1 = -0.5,
+                               PC2 = -2.5,
+                               PC1e = -0.2,
+                               PC2e = -0.1),
+                 aes(x = PC1, y = PC2, xend = PC1e, yend = PC2e),
+                 color = "black", size = 0.25) +
+    scale_x_continuous("PC1") +  ## , breaks = 3*-1:1) +
     scale_y_continuous("PC3") +  ## , breaks = 3*-1:1) +
     coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
                 ylim = c(-pc_axis_lim, pc_axis_lim)) +
-    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1:4, 6:5)],
+    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1,4,3,5,2,6)],
                        guide = FALSE) +
     theme(plot.margin = margin(0,0,0,0))
 
 # plot time effect
-figS1b <- biplot_fn("time", .PCs = 2:3, .mult = c(-2, 2))
+figS1b <- biplot_fn("time", .PCs = c(1,3), .mult = c(-2, 2))
 # plot distance effect
-figS1c <- biplot_fn("distance", .PCs = 2:3, .mult = c(-2, 2))
+figS1c <- biplot_fn("distance", .PCs = c(1,3), .mult = c(-2, 2))
 # plot midge effect
-figS1d <- biplot_fn("midges", .PCs = 2:3, .mult = c(-2, 2))
+figS1d <- biplot_fn("midges", .PCs = c(1,3), .mult = c(-2, 2))
 
 
 S1_pca_legend <- get_legend(figS1b + theme(legend.title.align = 0,
@@ -574,70 +623,6 @@ figS1 <- plot_grid(plot_grid(figS1a %>% no_x(),
 
 
 
-# -----*
-# With PCs 1 and 3 ----
-# (perhaps for the supplement)
-# -----*
-
-figS2a <- pred_pca$taxon_vec %>%
-    mutate(taxon = factor(taxon, levels = c("gnap","lyco","sheet","opil","cara","stap"),
-                          labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
-                                     "harvestman","ground\nbeetles","rove\nbeetles"))) %>%
-    arrange(taxon) %>%
-    mutate(PC1_lab = -5*PC1 + c(0, 1.0, 1.0,
-                                -1.3, -1.2, 0.4),
-           PC3_lab = 5*PC3 + c(-0.8, -0.4, 0.8,
-                               1.2, 0.4, -0.8),
-           ang = c(rep(0, 3), -53.27706, rep(0, 2))) %>%
-    arrange(desc(taxon)) %>%
-    ggplot()+
-    geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
-    geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-    geom_segment(aes(x = 0, xend = -5*PC1, y = 0, yend = 5*PC3, group = taxon,
-                     color = taxon),
-                 arrow = arrow(length = unit(6, "pt")),
-                 size = 1)+
-    geom_text(aes(label = taxon, x = PC1_lab, y = PC3_lab,
-                  color = taxon, angle = ang),
-              size = 9 / 2.83465, lineheight = 0.75)+
-    scale_x_continuous("PC1") +  ## , breaks = 3*-1:1) +
-    scale_y_continuous("PC3") +  ## , breaks = 3*-1:1) +
-    coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
-                ylim = c(-pc_axis_lim, pc_axis_lim)) +
-    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1:4, 6:5)],
-                       guide = FALSE) +
-    theme(plot.margin = margin(0,0,0,0))
-
-# plot time effect
-figS2b <- biplot_fn("time", .PCs = c(1,3), .mult = c(-2, 2))
-# plot distance effect
-figS2c <- biplot_fn("distance", .PCs = c(1,3), .mult = c(-2, 2))
-# plot midge effect
-figS2d <- biplot_fn("midges", .PCs = c(1,3), .mult = c(-2, 2))
-
-
-S2_pca_legend <- get_legend(figS2b + theme(legend.title.align = 0,
-                                           legend.title = element_text(size = 11)))
-
-
-
-figS2 <- plot_grid(plot_grid(figS2a %>% no_x(),
-                             EMPTY,
-                             figS2b %>% no_leg() %>% no_xy(),
-                             figS2c %>% no_leg(),
-                             EMPTY,
-                             figS2d %>% no_leg() %>% no_y(),
-                             labels = c("A", "", "B", "C", "", "D"),
-                             nrow = 2, align = "vh", rel_widths = c(1, 0.1, 1)),
-                   pca_legend, nrow = 1, rel_widths = c(1, 0.2))
-# figS2
-
-
-# save_file(figS2, "figS2", width = 6, height = 5)
-
-
-
-
 
 
 
@@ -653,18 +638,13 @@ figS2 <- plot_grid(plot_grid(figS2a %>% no_x(),
 
 # Table I (exclude standard errors)
 loo_dev <- read_csv("analysis/output/dev_re.csv", col_types = cols()) %>%
-    mutate(dev = 2*abs(elpd_diff),
-           dev_se = 2*se_diff) %>%
-    select(var, dev, dev_se) %>%
-    rename( dev_re = dev, dev_re_se = dev_se) %>%
+    rename(dev_re = delt_looic) %>%
     full_join(read_csv("analysis/output/dev_fere.csv", col_types = cols()) %>%
-                  mutate(dev = 2*abs(elpd_diff),
-                         dev_se = 2*se_diff) %>%
-                  select(var,dev, dev_se) %>%
-                  rename(dev_fere = dev, dev_fere_se = dev_se),
-              by = "var") %>%
-    filter(var != "full") %>%
-    mutate(var = gsub("_z$", "", var))
+                  rename(dev_fere = delt_looic),
+              by = "model") %>%
+    mutate(model = gsub("_z$", "", model)) %>%
+    rename(var = model)
+
 
 
 
@@ -678,10 +658,10 @@ var_part <- lapply(c("PC1","PC2","PC3"), function(x){
     y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
     tibble(var = c("midges_z", "time_z", "dist_z"),
            pc = x,
-           cont = anova(lm(y, data = pred_pca$axes))[,2] %>% {.[1:3]/sum(.[1:3])} %>%
-               round(3)
-    )
-}) %>%
+           cont = anova(lm(y, data = pred_pca$axes))[,2] %>%
+               {.[1:3]/sum(.[1:3])} %>%
+               round(3))
+    }) %>%
     bind_rows() %>%
     spread(pc, cont) %>%
     mutate(var = gsub("_z$", "", var))
