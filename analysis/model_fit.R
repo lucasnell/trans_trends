@@ -160,11 +160,28 @@ int_full <- fit_sum %>%
     filter(coef == "int")
 
 # taxon-specific intercepts
-int_taxon <- int_full %>%
+# average over plot and transect variation
+# standardize to mean for each predictor (only nonzero for time_z)
+beta_pars <- {fit_sum %>%
+        filter(str_detect(fit_sum$var, "beta"), !str_detect(fit_sum$var, "sig"))}$var
+int_taxon <- rstan::extract(fit$stan, beta_pars) %>%
+    bind_cols() %>%
+    mutate(step = row_number()) %>%
+    gather(var, val, -step) %>%
+    mutate(id = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
+           coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[3])),
+           coef = factor(coef, levels = c(1:4),
+                         labels = c("int","midges","time","dist"))) %>%
+    full_join(taxa_long) %>%
+    filter(coef %in% c("int","time"))  %>%
+    group_by(step, taxon, coef) %>%
+    summarize(val = mean(val)) %>%
+    spread(coef, val) %>%
     group_by(taxon) %>%
-    summarize(lo = mean(lo),
-              mi = mean(mi),
-              hi = mean(hi))
+    mutate(val = int + time * mean(data_fit$time_z)) %>%
+    summarize(lo = quantile(val, probs = 0.16),
+              mi = median(val),
+              hi = quantile(val, probs = 0.84))
 
 
 # mean slopes
