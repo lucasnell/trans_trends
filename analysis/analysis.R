@@ -128,15 +128,15 @@ time_p <- data_fit %>%
                   bind_rows(data_fit %>%
                                 group_by(taxon_plot, year) %>%
                                 summarize(y = mean(y)) %>%
-                                mutate(type  = "Mean by date/distance")) %>%
+                                mutate(type  = "Mean by year/distance")) %>%
                   mutate(type = factor(type,
                                        levels = c("Midge abundance",
-                                                  "Mean by date/distance"))),
+                                                  "Mean by year/distance"))),
               aes(color = type), size = 0.75)+
     scale_color_manual(NULL, values = c("firebrick","dodgerblue"))+
     scale_x_continuous("Year", breaks = c(2008,2012,2016), limits = c(2007,2018))+
     scale_y_continuous("Transformed abundance",
-                       limits = c(-3.1, 3.1), breaks = c(-2,0,2))+
+                       limits = c(-2, 3.1), breaks = c(-2,0,2))+
     # theme(legend.position = "none") +
     NULL
 
@@ -153,15 +153,14 @@ dist_p <- data_fit %>%
                   bind_rows(data_fit %>%
                                 group_by(taxon_plot, distance) %>%
                                 summarize(y = mean(y)) %>%
-                                mutate(type  = "Mean by date/distance")) %>%
+                                mutate(type  = "Mean by year/distance")) %>%
                   mutate(type = factor(type,
                                        levels = c("Midge abundance",
-                                                  "Mean by date/distance"))),
+                                                  "Mean by year/distance"))),
               aes(color = type), size = 0.75)+
     scale_color_manual(NULL, values = c("firebrick", "dodgerblue"))+
     scale_x_continuous("Distance (m)", trans = "log", breaks = c(5,50,500))+
-    scale_y_continuous(NULL, limits = c(-3.1, 3.1),
-                       breaks = c(-2,0,2)) +
+    scale_y_continuous(NULL, limits = c(-2, 3.1), breaks = c(-2,0,2)) +
     NULL
 
 
@@ -179,6 +178,7 @@ prow <- plot_grid(time_p %>% no_leg(),
 
 fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 
+fig1
 
 # save_file(fig1, "fig1", width = 6, height = 4)
 
@@ -234,87 +234,69 @@ slope_sd_density_df <- fit$stan %>%
     arrange(coef, x)
 
 
-slope_sd_density_df %>%
-    ggplot(aes(x, y, color = coef)) +
-    geom_path()
+# slope_density_CI_df <- slope_density_df %>%
+#     split(.$coef) %>%
+#     map_dfr(function(.x) {
+#         .lo <- filter(coef_sum$alpha, coef == .x$coef[1])[["lo"]]
+#         .hi <- filter(coef_sum$alpha, coef == .x$coef[1])[["hi"]]
+#         mutate(.x, lo = abs(x - .lo), hi = abs(x - .hi)) %>%
+#             filter(lo == min(lo) | hi == min(hi) |
+#                        (x > .lo & x < .hi)) %>%
+#             select(-lo, -hi)
+#     })
 
 
-# taxon-specific slopes
-slope_p <- coef_sum$beta %>%
-    ggplot()+
-    facet_wrap(~coef, ncol= 1)+
-    geom_hline(yintercept = 0, color = "gray50")+
-    geom_polygon(data = slope_density_df %>%
-                  mutate(y = 6.75 - y / max(y) * 6.75 - 0.05),
-                aes(x = y, y = x, fill = coef), alpha = 0.25) +
-    # geom_polygon(data = slope_sd_density_df %>%
-    #               mutate(y = y / max(y) * 3.375 - 0.25 + 0.05),
-    #             aes(x = y, y = x, fill = coef), alpha = 0.25) +
-    geom_point(aes(tx, mi, color = coef), size = 1.5)+
-    geom_linerange(aes(tx, ymin = lo, ymax = hi, color = coef))+
-    geom_text(data = tibble(coef = sort(unique(coef_sum$beta[["coef"]])),
-                            x = 0, y = -0.6),
-              aes(x, y, label = coef),
-              size = 12 / 2.83465, hjust = 0, vjust = 1, color = "black") +
-    scale_y_continuous("Response",
-                       breaks = c(-0.5, 0, 0.5))+
-    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
-                       trans = "reverse") +
-    scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
-    scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
-    # theme(plot.margin = margin(r=0,l=0)) +
-    theme(plot.margin = margin(0,0,0,t=4), strip.text.x = element_blank()) +
-    coord_flip(ylim = c(-0.68, 0.68), xlim = c(6.75, -0.25), expand = FALSE) +
-    # coord_cartesian(ylim = c(-0.6, 0.6), xlim = c(6.5, 0), expand = FALSE) +
-    NULL
-
-
-
-small_labels <- theme(axis.title.y = element_text(size = 10, angle = 90,
-                                                  margin = margin(0,0,0,0)),
-                      axis.title.x = element_text(size = 10,
-                                                  margin = margin(0,0,0,0)),
-                      plot.margin = margin(t=4, r=4, b=8.5, l=0))
-
-
-# intercept
-int_p <- coef_sum$int_taxon %>%
-    ggplot(aes(tx, mi))+
-    geom_hline(yintercept = 0, color = "gray50")+
-    geom_point(size = 1.5)+
-    # ggtitle(" ") +
-    geom_linerange(aes(ymin = lo, ymax = hi))+
-    scale_y_continuous("Intercept",  limits = c(-1, 1),
-                       breaks = c(-1, 0, 1))+
-    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
-                       trans = "reverse", limits = c(6.5, 0.5))+
-    small_labels +
-    coord_flip() +
-    theme(axis.text.y = element_blank()) +
-    NULL
-
-
-# ar (extra)
-ar_p <- coef_sum$ar %>%
-    ggplot(aes(tx, mi))+
-    geom_hline(yintercept = 0, color = "gray50")+
-    geom_point(size = 1.5)+
-    # ggtitle(" ") +
-    geom_linerange(aes(ymin = lo, ymax = hi))+
-    scale_y_continuous("AR parameter",  limits = c(0, 1),
-                       breaks = c(0, 0.5, 1))+
-    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
-                       trans = "reverse", limits = c(6.5, 0.5))+
-    small_labels +
-    coord_flip() +
-    theme(axis.text.y = element_blank()) +
-    NULL
+slope_density_CI_df <- fit$stan %>%
+    rstan::extract(pars = "alpha") %>%
+    .[[1]] %>%
+    as.matrix() %>%
+    {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
+    as_tibble() %>%
+    gather() %>%
+    filter(key != "...1") %>%  # intercept not necessary
+    mutate(coef = factor(key, levels = c("...3","...4","...2"),
+                         labels = c("time", "distance", "midges"))) %>%
+    split(.$coef) %>%
+    map_dfr(function(z) {
+        .lo <- filter(coef_sum$alpha, coef == z$coef[1])[["lo"]]
+        .hi <- filter(coef_sum$alpha, coef == z$coef[1])[["hi"]]
+        X <- density(z[["value"]], from = .lo, to = .hi)
+        tibble(coef = z[["coef"]][1],
+               x = c(X$x[1], X$x, tail(X$x, 1)),
+               y = c(0, X$y, 0))
+    }) %>%
+    arrange(coef, x)
 
 
 
+# slope_density_df %>%
+#     ggplot(aes(x, y, color = coef)) +
+#     geom_path() +
+#     geom_polygon(data = slope_density_CI_df, aes(fill = coef),
+#                  alpha = 0.5, color = NA)
 
-# sigmas (extra)
-effect_sigmas_p <- fit$stan %>%
+annotation_custom2 <- function (grob,
+                                xmin = -Inf, xmax = Inf,
+                                ymin = -Inf, ymax = Inf,
+                                data) {
+
+    layer(data = data, stat = StatIdentity, position = PositionIdentity,
+          geom = ggplot2:::GeomCustomAnn,
+          inherit.aes = TRUE, params = list(grob = grob,
+                                            xmin = xmin, xmax = xmax,
+                                            ymin = ymin, ymax = ymax))
+
+}
+
+coef_p_labs <- function(.x) {
+    mutate(.x,
+           coef = factor(paste(coef), levels = c("time", "distance", "midges"),
+                         labels = c("Time response", "Distance response",
+                                    "Midge response")))
+}
+
+
+insets <- fit$stan %>%
     rstan::extract(pars = "sig_beta") %>%
     .[[1]] %>%
     as.matrix() %>%
@@ -327,34 +309,164 @@ effect_sigmas_p <- fit$stan %>%
     filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
     mutate(coef = factor(coef %>% paste(),
                          levels = c("time", "distance", "midges"))) %>%
+    split(.$coef) %>%
+    map(function(.x) {
+        .coef <- .x$coef[1]
+        .color <- coef_palette[as.integer(.coef)]
+        if (.coef == "midges") {
+            .x_axis <- element_text(size = 8, margin = margin(0,0,0,0))
+            .plot.margin <- margin(0,0,0,0)
+        } else {
+            .x_axis <- element_blank()
+            .plot.margin <- margin(0,0,0,b=8)
+        }
+        p <- ggplot(.x, aes(value, fill = coef))+
+            geom_vline(xintercept = 0, size = 0.5, color = "black")+
+            geom_hline(yintercept = 0, size = 0.5, color = "black")+
+            geom_density(linetype = 0, alpha = 0.7, fill = .color)+
+            scale_y_continuous("Posterior density", limits = c(0, 10))+
+            scale_x_continuous("SD among taxa", breaks = c(0, 0.5, 1)) +
+            theme(axis.text.y = element_blank(),
+                  axis.ticks.y = element_blank(),
+                  axis.title.y = element_blank(),
+                  axis.text.x = element_text(size = 6),
+                  axis.ticks.x = element_line(size = 0.25),
+                  axis.title.x = .x_axis,
+                  plot.margin = .plot.margin,
+                  panel.border = element_blank()) +
+            coord_cartesian(xlim = c(0, 1.0), ylim = c(0, 10), expand = FALSE) +
+            NULL
+        annotation_custom2(
+            grob = ggplotGrob(p),
+            data = data.frame(coef = .coef) %>% coef_p_labs(),
+            ymin = 0.25, ymax=0.6, xmin=0, xmax=-3)
+    })
+
+
+
+# taxon-specific slopes
+slope_p <- coef_sum$beta %>%
+    coef_p_labs() %>%
+    ggplot()+
+    facet_wrap(~coef, ncol = 1, scales = "free_x", strip.position = "bottom")+
+    geom_hline(yintercept = 0, color = "gray50")+
+    geom_polygon(data = slope_density_df %>%
+                  mutate(y = 6.75 - y / max(y) * 6.75 - 0.05) %>%
+                     coef_p_labs(),
+                aes(x = y, y = x, fill = coef), alpha = 0.25) +
+    geom_polygon(data = slope_density_CI_df %>%
+                  mutate(y = 6.75 - y / max(y) * 6.75 - 0.05) %>%
+                     coef_p_labs(),
+                aes(x = y, y = x, fill = coef), alpha = 0.3) +
+    geom_point(aes(tx, mi, color = coef), size = 1.5)+
+    geom_linerange(aes(tx, ymin = lo, ymax = hi, color = coef))+
+    scale_y_continuous("Response",
+                       breaks = c(-0.5, 0, 0.5))+
+    scale_x_continuous(breaks = 1:6, labels = taxa_labs,
+                       trans = "reverse",
+                       sec.axis = sec_axis(~ .,
+                                           breaks = c(0, mean(c(6.75, -0.25))),
+                                           labels = c("", "Posterior density"))) +
+    scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
+    scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
+    coord_flip(ylim = c(-0.68, 0.68), xlim = c(6.75, -0.25), expand = FALSE) +
+    theme(plot.margin = margin(0,0,b=6.5,t=4),
+          strip.placement = "outside",
+          strip.background = element_blank(),
+          strip.text.x = element_text(size = 12, margin = margin(0,0,0,b=3)),
+          panel.spacing = unit(1, "lines"),
+          # strip.text.x = element_blank(),
+          # strip.text.x = element_text(size = 12, margin = margin(0,0,t=0,b=3)),
+          axis.title.x = element_blank(),
+          axis.title.y.left = element_blank(),
+          axis.title.y.right = element_blank(),
+          # axis.text.y.right = element_blank(),
+          axis.text.y.right = element_text(size = 10, angle = -90,
+                                           hjust = 0.5, vjust = 0.5),
+          axis.ticks.y.right = element_blank()) +
+    insets +
+    NULL
+
+
+
+
+
+int_ar_p <- coef_sum$int_taxon %>%
+    # Un-scale values:
+    mutate(coef = "Mean trans. abundance") %>%
+    bind_rows(mutate(coef_sum$ar, coef = "AR parameter")) %>%
+    ggplot(aes(tx, mi))+
+    geom_hline(yintercept = 0, color = "gray50")+
+    geom_blank(data = tibble(coef = "AR parameter", mi = 1, tx = 1)) +
+    geom_point(size = 1.5)+
+    facet_wrap(~ coef, ncol = 1, scales = "free", strip.position = "bottom") +
+    geom_linerange(aes(ymin = lo, ymax = hi))+
+    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
+                       trans = "reverse", limits = c(6.5, 0.5)) +
+    coord_flip() +
+    theme(axis.text.y = element_blank(),
+          axis.title.x = element_blank(),
+          strip.placement = "outside",
+          strip.background = element_blank(),
+          panel.spacing = unit(1, "lines"),
+          strip.text.x = element_text(size = 12, margin = margin(0,0,0,b=3)),
+          plot.margin = margin(t=4, r=4, b=0, l=0)) +
+    NULL
+
+
+
+
+# obs and process error
+error_p <- fit$stan %>%
+    rstan::extract(pars = c("sig_obs", "sig_proc")) %>%
+    map(as.matrix) %>%
+    do.call(what = cbind) %>%
+    {colnames(.) <- c("sig_obs", "sig_proc"); .} %>%
+    as_tibble() %>%
+    gather() %>%
+    mutate(coef = factor(key, levels = c("sig_obs", "sig_proc"),
+                         labels = c("sigma[obs]", "sigma[proc]"))) %>%
     ggplot(aes(value, fill = coef))+
     geom_vline(xintercept = 0,  color = "gray50")+
     geom_density(linetype = 0, alpha = 0.7)+
-    scale_fill_manual(NULL, values = coef_palette)+
-    guides(fill = guide_legend(keywidth = 0.75, keyheight = 0.75)) +
-    scale_y_continuous("Posterior density", limits = c(0, 10))+
-    scale_x_continuous("Response SD") +
-    small_labels +
+    geom_text(data = tibble(coef = factor(c("sigma[proc]", "sigma[obs]")),
+                            value = c(0.05, 0.45),
+                            y = c(6, 10)),
+              aes(y = y, label = coef, color = coef), hjust = 0, parse = TRUE) +
+    scale_fill_manual(NULL, values = c("firebrick", "dodgerblue"))+
+    scale_y_continuous("Posterior density")+
+    scale_x_continuous("Error SD") +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
+          axis.title.x = element_text(size = 12, margin = margin(0,0,t=6,b=6)),
+          axis.title.y = element_text(size = 10, margin = margin(0,0,0,0)),
+          plot.margin = margin(t=14, r=4, b=1, l=0),
           legend.position = "none") +
     NULL
 
 
-fig2 <- plot_grid(EMPTY,
+
+
+
+fig2 <- plot_grid(plot_grid(EMPTY, EMPTY, EMPTY,
+                            labels = letters[1:3],
+                            rel_heights = c(1.845, 1.845, 2),
+                            ncol = 1, label_x = 0,
+                            label_y = c(1, 0.965, 0.93),
+                            label_fontface = "plain", label_size = 16),
                   slope_p,
                   plot_grid(EMPTY, EMPTY, EMPTY,
-                            labels = c("b", "c", "d"),
-                            rel_heights = c(1.58, 1, 1.58),
-                            ncol = 1, label_x = 0.25,
+                            labels = letters[4:6],
+                            rel_heights = c(1.845, 1.845, 2),
+                            ncol = 1, label_x = 0.75, hjust = 1,
+                            label_y = c(1, 0.965, 0.93),
                             label_fontface = "plain", label_size = 16),
-                  plot_grid(ar_p,
-                            effect_sigmas_p,
-                            int_p,
-                            rel_heights = c(1.58, 1, 1.58),
+                  plot_grid(int_ar_p,
+                            error_p,
+                            rel_heights = c(1.845, 1),
                             ncol = 1),
-                  labels = c("a", "", "", ""), rel_widths = c(0.08, 1, 0.12, 0.6),
-                  nrow = 1, label_fontface = "plain", label_size = 16)
+                  rel_widths = c(0.08, 1, 0.12, 0.6), nrow = 1)
+
 
 fig2
 
