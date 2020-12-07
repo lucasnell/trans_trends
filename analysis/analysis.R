@@ -3,7 +3,7 @@
 #==========*
 
 # load packages
-library(armmr)
+library(TransTrendsPkg)
 library(tidyverse)
 library(cowplot)
 options(mc.cores = parallel::detectCores()-2)

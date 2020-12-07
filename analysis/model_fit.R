@@ -3,7 +3,7 @@
 #==========
 
 # load packages
-library(armmr)
+library(TransTrendsPkg)
 library(loo)
 library(tidyverse)
 options(mc.cores = parallel::detectCores()-4)
