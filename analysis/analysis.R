@@ -78,10 +78,13 @@ theme_set(theme_bw() %+replace%
                     axis.text = element_text(size = 9, color = "black"),
                     axis.title.y = element_text(size = 12, angle = 90,
                                                 margin = margin(0,0,0,r=6)),
-                    axis.title.x = element_text(size = 12, margin = margin(0,0,0,t=6)),
+                    axis.title.x = element_text(size = 12,
+                                                margin = margin(0,0,0,t=6)),
                     strip.text = element_text(size = 10),
-                    strip.text.x = element_text(margin = margin(b = 2, t = 6), vjust = 0),
-                    strip.text.y = element_text(margin = margin(0,0,0,10), angle = 270)))
+                    strip.text.x = element_text(margin = margin(b = 2, t = 6),
+                                                vjust = 0),
+                    strip.text.y = element_text(margin = margin(0,0,0,10),
+                                                angle = 270)))
 
 # empty plot
 EMPTY <- ggplot() + geom_blank() + theme_void()
@@ -134,7 +137,8 @@ time_p <- data_fit %>%
                                                   "Mean by year/distance"))),
               aes(color = type), size = 0.75)+
     scale_color_manual(NULL, values = c("firebrick","dodgerblue"))+
-    scale_x_continuous("Year", breaks = c(2008,2012,2016), limits = c(2007,2018))+
+    scale_x_continuous("Year", breaks = c(2008,2012,2016),
+                       limits = c(2007,2018))+
     scale_y_continuous("Transformed abundance",
                        limits = c(-2, 3.1), breaks = c(-2,0,2))+
     # theme(legend.position = "none") +
@@ -145,7 +149,8 @@ dist_p <- data_fit %>%
     ggplot(aes(distance, y))+
     facet_wrap(~taxon_plot, nrow = 4)+
     geom_hline(yintercept = 0, color = "gray50")+
-    geom_jitter(aes(group = plot), size = 1, alpha = 0.5, width = 0.1, shape = 1)+
+    geom_jitter(aes(group = plot), size = 1, alpha = 0.5,
+                width = 0.1, shape = 1)+
     geom_line(data = data_fit %>%
                   group_by(taxon_plot, distance) %>%
                   summarize(y = mean(midges_z)) %>%
@@ -211,6 +216,7 @@ slope_density_df <- fit$stan %>%
     arrange(coef, x)
 
 
+
 slope_sd_density_df <- fit$stan %>%
     rstan::extract(pars = "sig_beta") %>%
     .[[1]] %>%
@@ -218,7 +224,7 @@ slope_sd_density_df <- fit$stan %>%
     {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
     as_tibble() %>%
     gather() %>%
-    mutate(coef = factor(key, levels = c("...1","...2","...3","...4","...5","...6"),
+    mutate(coef = factor(key, levels = paste0("...", 1:6),
                          labels = c("int_tax","int_plot","int_trans","midges",
                                     "time","distance"))) %>%
     filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
@@ -303,7 +309,7 @@ insets <- fit$stan %>%
     {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
     as_tibble() %>%
     gather() %>%
-    mutate(coef = factor(key, levels = c("...1","...2","...3","...4","...5","...6"),
+    mutate(coef = factor(key, levels = paste0("...", 1:6),
                          labels = c("int_tax","int_plot","int_trans","midges",
                                     "time","distance"))) %>%
     filter(!(coef %in% c("int_tax","int_plot","int_trans"))) %>%
@@ -366,7 +372,8 @@ slope_p <- coef_sum$beta %>%
                        trans = "reverse",
                        sec.axis = sec_axis(~ .,
                                            breaks = c(0, mean(c(6.75, -0.25))),
-                                           labels = c("", "Posterior density"))) +
+                                           labels = c("",
+                                                      "Posterior density"))) +
     scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
     scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
     coord_flip(ylim = c(-0.68, 0.68), xlim = c(6.75, -0.25), expand = FALSE) +
@@ -478,7 +485,7 @@ fig2
 
 
 #==========*
-#========== PCA (Combine biplots for `midge effect`, `time effect`, and `distance` for Fig 3 ----
+#========== PCA ----
 #==========*
 
 source("analysis/pca_funs.R")
@@ -520,7 +527,8 @@ pred_pca <- map(pred_pca, switch_pcs)
 pred_pca$taxon_vec %>%
     arrange(-abs(PC1))
 
-# variance explained in predicted values (first three axes must explain everything)
+# variance explained in predicted values (first three axes must
+# explain everything)
 summary(pred_pca$pca)
 
 
@@ -618,13 +626,17 @@ biplot_fn <- function(var_, .mult = c(-2, 2), .PCs = 1:2) {
 
 fig3a <- pred_pca$taxon_vec %>%
     mutate(taxon = factor(taxon, levels = taxa_lvls %>% rev(),
-                          labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
-                                     "harvestman","ground\nbeetles","rove\nbeetles")[rev(taxa_order)])) %>%
+                          labels = c("ground\nspiders","wolf\nspiders",
+                                     "sheet\nweavers", "harvestman",
+                                     "ground\nbeetles","rove\nbeetles") %>%
+                              .[rev(taxa_order)])) %>%
     arrange(taxon) %>%
     mutate(PC1 = -5*PC1,
            PC2 = 5*PC2,
-           PC1_lab = PC1 + c(0.0, 0.8, -0.8, 3.3, -1.1, 0.4)[rev(taxa_order)],
-           PC2_lab = PC2 + c(0.7, -0.6, -2.3, -0.7, 0.4, -0.9)[rev(taxa_order)]) %>%
+           PC1_lab = PC1 + c(0.0, 0.8, -0.8, 3.3, -1.1, 0.4) %>%
+               .[rev(taxa_order)],
+           PC2_lab = PC2 + c(0.7, -0.6, -2.3, -0.7, 0.4, -0.9) %>%
+               .[rev(taxa_order)]) %>%
     arrange(desc(taxon)) %>%
     ggplot()+
     geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
@@ -646,7 +658,8 @@ fig3a <- pred_pca$taxon_vec %>%
     scale_y_continuous("PC2", breaks = 3*-1:1) +
     coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
                 ylim = c(-pc_axis_lim, pc_axis_lim)) +
-    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1,4,3,5,2,6)],
+    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2") %>%
+                           .[c(1,4,3,5,2,6)],
                        guide = FALSE) +
     theme(plot.margin = margin(0,0,0,0))
 
@@ -688,8 +701,10 @@ fig3 <- plot_grid(plot_grid(fig3a %>% no_x(),
 
 figS1a <- pred_pca$taxon_vec %>%
     mutate(taxon = factor(taxon, levels = taxa_lvls %>% rev(),
-                          labels = c("ground\nspiders","wolf\nspiders","sheet\nweavers",
-                                     "harvestman","ground\nbeetles","rove\nbeetles")[rev(taxa_order)])) %>%
+                          labels = c("ground\nspiders","wolf\nspiders",
+                                     "sheet\nweavers", "harvestman",
+                                     "ground\nbeetles","rove\nbeetles") %>%
+                              .[rev(taxa_order)])) %>%
     arrange(taxon) %>%
     mutate(PC1 = -5*PC1,
            PC3 = 5*PC3,
@@ -718,7 +733,8 @@ figS1a <- pred_pca$taxon_vec %>%
     scale_y_continuous("PC3") +  ## , breaks = 3*-1:1) +
     coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
                 ylim = c(-pc_axis_lim, pc_axis_lim)) +
-    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")[c(1,4,3,5,2,6)],
+    scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2") %>%
+                           .[c(1,4,3,5,2,6)],
                        guide = FALSE) +
     theme(plot.margin = margin(0,0,0,0))
 
@@ -730,8 +746,9 @@ figS1c <- biplot_fn("distance", .PCs = c(1,3), .mult = c(-2, 2))
 figS1d <- biplot_fn("midges", .PCs = c(1,3), .mult = c(-2, 2))
 
 
-S1_pca_legend <- get_legend(figS1b + theme(legend.title.align = 0,
-                                           legend.title = element_text(size = 11)))
+S1_pca_legend <- get_legend(figS1b +
+                                theme(legend.title.align = 0,
+                                      legend.title = element_text(size = 11)))
 
 
 
@@ -798,7 +815,8 @@ var_part <- lapply(c("PC1","PC2","PC3"), function(x){
     mutate(var = gsub("_z$", "", var))
 
 # overall variance accounted for by predictors (for Table I)
-overall_part <- as.matrix(var_part[,2:4]) %*% t(as.matrix(pred_pca$obs_exp[1,2:4]))
+overall_part <- as.matrix(var_part[,2:4]) %*%
+    t(as.matrix(pred_pca$obs_exp[1,2:4]))
 row.names(overall_part) <- var_part$var
 
 
@@ -817,7 +835,8 @@ coef_order <- c("time", "dist", "midges")
 
 fmt <- function(x, .f = "%.2f") sprintf(.f,x)
 
-tbl1_order <- function(x, .col = NULL, .coef_order = c("time", "dist", "midges")) {
+tbl1_order <- function(x, .col = NULL,
+                       .coef_order = c("time", "dist", "midges")) {
     if (inherits(x, "matrix")) {
         stopifnot(!is.null(rownames(x)))
         if (is.null(.col)) .col <- 1
@@ -832,8 +851,10 @@ tbl1_order <- function(x, .col = NULL, .coef_order = c("time", "dist", "midges")
 }
 
 tibble(`coef` = c("", "time", "distance", "midges"),
-       `Taxon-variation` = c("(random)", tbl1_order(loo_dev,"dev_re") %>% fmt("%.1f")),
-       `Overall` = c("(fixed + random)", tbl1_order(loo_dev,"dev_fere") %>% fmt("%.1f")),
+       `Taxon-variation` = c("(random)", tbl1_order(loo_dev,"dev_re") %>%
+                                 fmt("%.1f")),
+       `Overall` = c("(fixed + random)", tbl1_order(loo_dev,"dev_fere") %>%
+                         fmt("%.1f")),
        `EXTRA` = rep("", 4),
        PC1 = c(pred_pca$obs_exp[["PC1"]][1] %>% fmt("(%.2f)"),
                tbl1_order(var_part, "PC1") %>% fmt()),
@@ -841,7 +862,8 @@ tibble(`coef` = c("", "time", "distance", "midges"),
                tbl1_order(var_part, "PC2") %>% fmt()),
        PC3 = c(pred_pca$obs_exp[["PC3"]][1] %>% fmt("(%.2f)"),
                tbl1_order(var_part, "PC3") %>% fmt()),
-       Total = c(pred_pca$obs_exp[1,paste0("PC", 1:3)] %>% sum() %>% fmt("(%.2f)"),
+       Total = c(pred_pca$obs_exp[1,paste0("PC", 1:3)] %>% sum() %>%
+                     fmt("(%.2f)"),
                  fmt(overall_part[coef_order,]))) %>%
     knitr::kable(format = "latex")
 
