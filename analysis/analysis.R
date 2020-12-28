@@ -6,12 +6,14 @@
 library(TransTrendsPkg)
 library(tidyverse)
 library(cowplot)
+library(egg)
 options(mc.cores = parallel::detectCores()-2)
 
 # In RStudio on macOS, this makes a separate plotting window that's independent of
 # the Plots pane
 if (Sys.info()[["sysname"]] == "Darwin" && .Platform$GUI == "RStudio") {
-    options("device" = "quartz")
+    options(device = "quartz")
+    quartz.options(width = 6, height = 4, reset = FALSE)
     grDevices::graphics.off()
 }
 
@@ -64,6 +66,7 @@ coef_sum$ar <- coef_sum$ar %>%
 # Define theme and colorblind-friendly palettes
 # ------------*
 coef_palette <- viridisLite::plasma(3, end = 0.8)
+names(coef_palette) <- c("time", "distance", "midges")
 pca_palette <- viridisLite::viridis(3)
 
 
@@ -113,9 +116,13 @@ no_leg <- function(p) {
 
 
 
-#==========*
-#========== Observed data (Combine 'time' and 'distance' into Figure 1) ----
-#==========*
+# ==================================================*
+# ==================================================*
+
+# Fig 1 - Observed data ----
+
+# ==================================================*
+# ==================================================*
 
 # time
 time_p <- data_fit %>%
@@ -190,9 +197,13 @@ fig1
 
 
 
-#==========*
-#========== Plot coefficients (Use `taxon-specific-slopes` for Figure 2) ----
-#==========*
+# ==================================================*
+# ==================================================*
+
+# Fig 2 - Coefficients ----
+
+# ==================================================*
+# ==================================================*
 
 
 
@@ -240,17 +251,6 @@ slope_sd_density_df <- fit$stan %>%
     arrange(coef, x)
 
 
-# slope_density_CI_df <- slope_density_df %>%
-#     split(.$coef) %>%
-#     map_dfr(function(.x) {
-#         .lo <- filter(coef_sum$alpha, coef == .x$coef[1])[["lo"]]
-#         .hi <- filter(coef_sum$alpha, coef == .x$coef[1])[["hi"]]
-#         mutate(.x, lo = abs(x - .lo), hi = abs(x - .hi)) %>%
-#             filter(lo == min(lo) | hi == min(hi) |
-#                        (x > .lo & x < .hi)) %>%
-#             select(-lo, -hi)
-#     })
-
 
 slope_density_CI_df <- fit$stan %>%
     rstan::extract(pars = "alpha") %>%
@@ -275,12 +275,6 @@ slope_density_CI_df <- fit$stan %>%
 
 
 
-# slope_density_df %>%
-#     ggplot(aes(x, y, color = coef)) +
-#     geom_path() +
-#     geom_polygon(data = slope_density_CI_df, aes(fill = coef),
-#                  alpha = 0.5, color = NA)
-
 annotation_custom2 <- function (grob,
                                 xmin = -Inf, xmax = Inf,
                                 ymin = -Inf, ymax = Inf,
@@ -294,12 +288,6 @@ annotation_custom2 <- function (grob,
 
 }
 
-coef_p_labs <- function(.x) {
-    mutate(.x,
-           coef = factor(paste(coef), levels = c("time", "distance", "midges"),
-                         labels = c("Time response", "Distance response",
-                                    "Midge response")))
-}
 
 
 insets <- fit$stan %>%
@@ -318,20 +306,16 @@ insets <- fit$stan %>%
     split(.$coef) %>%
     map(function(.x) {
         .coef <- .x$coef[1]
-        .color <- coef_palette[as.integer(.coef)]
-        if (.coef == "midges") {
-            .x_axis <- element_text(size = 8, margin = margin(0,0,0,0))
-            .plot.margin <- margin(0,0,0,0)
-        } else {
-            .x_axis <- element_blank()
-            .plot.margin <- margin(0,0,0,b=8)
-        }
+        .color <- coef_palette[[paste(.coef)]]
+        .x_axis <- element_text(size = 6, margin = margin(0,0,0,0))
+        .plot.margin <- margin(0,0,0,b=4)
         p <- ggplot(.x, aes(value, fill = coef))+
             geom_vline(xintercept = 0, size = 0.5, color = "black")+
             geom_hline(yintercept = 0, size = 0.5, color = "black")+
-            geom_density(linetype = 0, alpha = 0.7, fill = .color)+
+            geom_density(linetype = 0, alpha = 0.3, fill = .color)+
             scale_y_continuous("Posterior density", limits = c(0, 10))+
-            scale_x_continuous("SD among taxa", breaks = c(0, 0.5, 1)) +
+            scale_x_continuous("Taxon SD",
+                               breaks = c(0, 0.5, 1)) +
             theme(axis.text.y = element_blank(),
                   axis.ticks.y = element_blank(),
                   axis.title.y = element_blank(),
@@ -344,80 +328,93 @@ insets <- fit$stan %>%
             NULL
         annotation_custom2(
             grob = ggplotGrob(p),
-            data = data.frame(coef = .coef) %>% coef_p_labs(),
+            data = data.frame(coef = .coef),
             ymin = 0.25, ymax=0.6, xmin=0, xmax=-3)
     })
 
 
+slope_p_fun <- function(.coef) {
+
+    .coef <- match.arg(tolower(.coef), levels(coef_sum$beta$coef))
+
+    .ylab <- gsub("s$", "", .coef) %>%
+        str_to_title() %>%
+        paste("response")
+
+    .color <- coef_palette[[.coef]]
+
+    .plot <- coef_sum$beta %>%
+        filter(coef == .coef) %>%
+        ggplot()+
+        geom_hline(yintercept = 0, color = "gray50")+
+        geom_polygon(data = slope_density_df %>%
+                         filter(coef == .coef) %>%
+                         mutate(y = 6.75 - y / max(y) * 6.75 - 0.05),
+                     aes(x = y, y = x), alpha = 0.25, fill = .color) +
+        geom_polygon(data = slope_density_CI_df %>%
+                         filter(coef == .coef) %>%
+                         mutate(y = 6.75 - y / max(y) * 6.75 - 0.05),
+                     aes(x = y, y = x), alpha = 0.3, fill = .color) +
+        geom_point(aes(tx, mi), size = 1.5, color = .color)+
+        geom_linerange(aes(tx, ymin = lo, ymax = hi), color = .color)+
+        scale_y_continuous(.ylab,  breaks = c(-0.5, 0, 0.5))+
+        scale_x_continuous("Posterior density",
+                           trans = "reverse",
+                           sec.axis =
+                               sec_axis(~ .,
+                                        breaks = 1:6, labels = taxa_labs)) +
+        coord_flip(ylim = c(-0.68, 0.68), xlim = c(6.75, -0.25),
+                   expand = FALSE) +
+        theme(axis.text.y = element_text(size = 8, margin = margin(0,0,0,l=2)),
+              axis.text.x = element_text(size = 8, margin = margin(0,0,0,t=2)),
+              axis.title.x = element_text(size = 10, margin = margin(0,0,0,0)),
+              axis.title.y.right = element_blank(),
+              axis.title.y.left = element_text(size = 10,
+                                                margin = margin(0,0,0,0)),
+              axis.text.y.left = element_blank(),
+              axis.ticks.y.left = element_blank(),
+              plot.margin = margin(t=8, r=8, b=8, l=8)) +
+        insets[[which(levels(coef_sum$beta$coef) == .coef)]] +
+        NULL
+
+    return(.plot)
+}
 
 # taxon-specific slopes
-slope_p <- coef_sum$beta %>%
-    coef_p_labs() %>%
-    ggplot()+
-    facet_wrap(~coef, ncol = 1, scales = "free_x", strip.position = "bottom")+
-    geom_hline(yintercept = 0, color = "gray50")+
-    geom_polygon(data = slope_density_df %>%
-                  mutate(y = 6.75 - y / max(y) * 6.75 - 0.05) %>%
-                     coef_p_labs(),
-                aes(x = y, y = x, fill = coef), alpha = 0.25) +
-    geom_polygon(data = slope_density_CI_df %>%
-                  mutate(y = 6.75 - y / max(y) * 6.75 - 0.05) %>%
-                     coef_p_labs(),
-                aes(x = y, y = x, fill = coef), alpha = 0.3) +
-    geom_point(aes(tx, mi, color = coef), size = 1.5)+
-    geom_linerange(aes(tx, ymin = lo, ymax = hi, color = coef))+
-    scale_y_continuous("Response",
-                       breaks = c(-0.5, 0, 0.5))+
-    scale_x_continuous(breaks = 1:6, labels = taxa_labs,
-                       trans = "reverse",
-                       sec.axis = sec_axis(~ .,
-                                           breaks = c(0, mean(c(6.75, -0.25))),
-                                           labels = c("",
-                                                      "Posterior density"))) +
-    scale_fill_manual(NULL, values = coef_palette, guide = FALSE)+
-    scale_color_manual(NULL, values = coef_palette, guide = FALSE)+
-    coord_flip(ylim = c(-0.68, 0.68), xlim = c(6.75, -0.25), expand = FALSE) +
-    theme(plot.margin = margin(0,0,b=6.5,t=4),
-          strip.placement = "outside",
-          strip.background = element_blank(),
-          strip.text.x = element_text(size = 12, margin = margin(0,0,0,b=3)),
-          panel.spacing = unit(1, "lines"),
-          # strip.text.x = element_blank(),
-          # strip.text.x = element_text(size = 12, margin = margin(0,0,t=0,b=3)),
-          axis.title.x = element_blank(),
-          axis.title.y.left = element_blank(),
-          axis.title.y.right = element_blank(),
-          # axis.text.y.right = element_blank(),
-          axis.text.y.right = element_text(size = 10, angle = -90,
-                                           hjust = 0.5, vjust = 0.5),
-          axis.ticks.y.right = element_blank()) +
-    insets +
-    NULL
+slope_p <- lapply(levels(coef_sum$beta$coef), slope_p_fun)
 
 
 
-
-
-int_ar_p <- coef_sum$int_taxon %>%
-    # Un-scale values:
-    mutate(coef = "Mean trans. abundance") %>%
-    bind_rows(mutate(coef_sum$ar, coef = "AR parameter")) %>%
+int_p <- coef_sum$int_taxon %>%
     ggplot(aes(tx, mi))+
     geom_hline(yintercept = 0, color = "gray50")+
-    geom_blank(data = tibble(coef = "AR parameter", mi = 1, tx = 1)) +
     geom_point(size = 1.5)+
-    facet_wrap(~ coef, ncol = 1, scales = "free", strip.position = "bottom") +
     geom_linerange(aes(ymin = lo, ymax = hi))+
     scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
+                       position = "top",
                        trans = "reverse", limits = c(6.5, 0.5)) +
+    scale_y_continuous("Mean trans. abundance") +
     coord_flip() +
-    theme(axis.text.y = element_blank(),
-          axis.title.x = element_blank(),
-          strip.placement = "outside",
-          strip.background = element_blank(),
-          panel.spacing = unit(1, "lines"),
-          strip.text.x = element_text(size = 12, margin = margin(0,0,0,b=3)),
-          plot.margin = margin(t=4, r=4, b=0, l=0)) +
+    theme(axis.text.y.right = element_text(size = 8, margin = margin(0,0,0,l=2)),
+          axis.text.x = element_text(size = 8, margin = margin(0,0,0,t=2)),
+          axis.title.x = element_text(size = 10, margin = margin(0,0,0,0)),
+          plot.margin = margin(t=8, r=8, b=8, l=8)) +
+    NULL
+
+ar_p <- coef_sum$ar %>%
+    ggplot(aes(tx, mi))+
+    geom_hline(yintercept = 0, color = "gray50")+
+    geom_point(size = 1.5)+
+    geom_linerange(aes(ymin = lo, ymax = hi))+
+    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
+                       position = "top",
+                       trans = "reverse", limits = c(6.5, 0.5)) +
+    scale_y_continuous("AR parameter", breaks = c(0, 0.5, 1)) +
+    coord_flip(ylim = c(0, 1)) +
+    theme(axis.text.y = element_text(size = 8, margin = margin(0,0,0,l=2)),
+          axis.text.x = element_text(size = 8, margin = margin(0,0,0,t=2)),
+          axis.title.x = element_text(size = 10, margin = margin(0,0,0,0)),
+          plot.margin = margin(t=8, r=8, b=8, l=8)) +
     NULL
 
 
@@ -441,52 +438,53 @@ error_p <- fit$stan %>%
                             y = c(6, 10)),
               aes(y = y, label = coef, color = coef), hjust = 0, parse = TRUE) +
     scale_fill_manual(NULL, values = c("firebrick", "dodgerblue"))+
-    scale_y_continuous("Posterior density")+
+    scale_y_continuous("Posterior density", position = "left")+
     scale_x_continuous("Error SD") +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
-          axis.title.x = element_text(size = 12, margin = margin(0,0,t=6,b=6)),
-          axis.title.y = element_text(size = 10, margin = margin(0,0,0,0)),
-          plot.margin = margin(t=14, r=4, b=1, l=0),
+          axis.title.y = element_text(size = 10, margin = margin(0,0,0,l=-8)),
+          axis.text.x = element_text(size = 8, margin = margin(0,0,0,t=2)),
+          axis.title.x = element_text(size = 10, margin = margin(0,0,0,0)),
+          plot.margin = margin(t=8, r=8, b=8, l=8),
           legend.position = "none") +
     NULL
 
 
+# No taxa names:
+nt <- function(.x) .x + theme(axis.text.y.right = element_blank())
+# No secondary label for "Posterior density":
+ny2 <- function(.x) .x <- .x + theme(axis.title.y.left = element_blank())
+
+
+fig2 <- ggarrange(error_p,
+                  ar_p %>% nt(),
+                  int_p,
+                  slope_p[[1]] %>% nt(),
+                  slope_p[[2]] %>% ny2() %>% nt(),
+                  slope_p[[3]] %>% ny2(),
+                  labels = letters[1:6],
+                  label.args = list(gp = grid::gpar(font = 1, fontsize = 16),
+                                    x = unit(0,"line"), hjust = 0),
+                  nrow = 2, byrow = TRUE, draw = FALSE)
 
 
 
-fig2 <- plot_grid(plot_grid(EMPTY, EMPTY, EMPTY,
-                            labels = letters[1:3],
-                            rel_heights = c(1.845, 1.845, 2),
-                            ncol = 1, label_x = 0,
-                            label_y = c(1, 0.965, 0.93),
-                            label_fontface = "plain", label_size = 16),
-                  slope_p,
-                  plot_grid(EMPTY, EMPTY, EMPTY,
-                            labels = letters[4:6],
-                            rel_heights = c(1.845, 1.845, 2),
-                            ncol = 1, label_x = 0.75, hjust = 1,
-                            label_y = c(1, 0.965, 0.93),
-                            label_fontface = "plain", label_size = 16),
-                  plot_grid(int_ar_p,
-                            error_p,
-                            rel_heights = c(1.845, 1),
-                            ncol = 1),
-                  rel_widths = c(0.08, 1, 0.12, 0.6), nrow = 1)
+# fig2
 
 
-fig2
-
-
-# save_file(fig2, "fig2", width = 6, height = 6)
+# save_file(fig2, "fig2", width = 6, height = 4)
 
 
 
 
 
-#==========*
-#========== PCA ----
-#==========*
+# ==================================================*
+# ==================================================*
+
+# Fig 3 - PCA ----
+
+# ==================================================*
+# ==================================================*
 
 source("analysis/pca_funs.R")
 
@@ -693,11 +691,13 @@ fig3 <- plot_grid(plot_grid(fig3a %>% no_x(),
 # save_file(fig3, "fig3", width = 6, height = 5)
 
 
+# ==================================================*
+# ==================================================*
 
-# -----*
-# With PCs 1 and 3 ----
-# (perhaps for the supplement)
-# -----*
+# Fig S1 - PCs 1&3 ----
+
+# ==================================================*
+# ==================================================*
 
 figS1a <- pred_pca$taxon_vec %>%
     mutate(taxon = factor(taxon, levels = taxa_lvls %>% rev(),
