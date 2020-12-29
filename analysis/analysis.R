@@ -733,9 +733,9 @@ pred_pca_p <- list(
 
 
 
-fig3 <- ggarrange(plots = c(taxon_pca_p, pred_pca_p)[c(1,4,2,5,3,6)],
+fig3 <- ggarrange(plots = c(taxon_pca_p, pred_pca_p),
                   nrow = 3, labels = letters[1:6],
-                  draw = FALSE,
+                  draw = FALSE, byrow = FALSE,
                   label.args = list(gp = gpar(font = 1, fontsize = 16),
                                     x = unit(0,"line"), hjust = 0))
 
