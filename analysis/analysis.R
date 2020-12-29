@@ -7,6 +7,8 @@ library(TransTrendsPkg)
 library(tidyverse)
 library(cowplot)
 library(egg)
+library(grid)
+library(viridisLite)
 options(mc.cores = parallel::detectCores()-2)
 
 # In RStudio on macOS, this makes a separate plotting window that's independent of
@@ -25,7 +27,7 @@ options(dplyr.summarise.inform = FALSE)
 taxa_order <- c(5:6, 4, 1, 3, 2)
 taxa_lvls = c("gnap","lyco","sheet","opil","cara", "stap")[taxa_order]
 taxa_labs = c("Ground spiders","Wolf spiders","Sheet weavers",
-              "Harvestman","Ground beetles", "Rove beetles")[taxa_order]
+              "Harvestmen","Ground beetles", "Rove beetles")[taxa_order]
 
 # load data
 data_fit <- read_csv("analysis/data_fit.csv") %>%
@@ -65,9 +67,9 @@ coef_sum$ar <- coef_sum$ar %>%
 # ------------*
 # Define theme and colorblind-friendly palettes
 # ------------*
-coef_palette <- viridisLite::plasma(3, end = 0.8)
+coef_palette <- plasma(3, end = 0.8)
 names(coef_palette) <- c("time", "distance", "midges")
-pca_palette <- viridisLite::viridis(3)
+pca_palette <- viridis(3)
 
 
 # set theme
@@ -190,7 +192,7 @@ prow <- plot_grid(time_p %>% no_leg(),
 
 fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 
-fig1
+# fig1
 
 # save_file(fig1, "fig1", width = 6, height = 4)
 
@@ -249,6 +251,8 @@ slope_sd_density_df <- fit$stan %>%
                y = X$y)
     }) %>%
     arrange(coef, x)
+
+
 
 
 
@@ -463,7 +467,7 @@ fig2 <- ggarrange(error_p,
                   slope_p[[2]] %>% ny2() %>% nt(),
                   slope_p[[3]] %>% ny2(),
                   labels = letters[1:6],
-                  label.args = list(gp = grid::gpar(font = 1, fontsize = 16),
+                  label.args = list(gp = gpar(font = 1, fontsize = 16),
                                     x = unit(0,"line"), hjust = 0),
                   nrow = 2, byrow = TRUE, draw = FALSE)
 
@@ -751,7 +755,7 @@ pred_pca_p <- list(
 fig3 <- ggarrange(plots = c(taxon_pca_p, pred_pca_p)[c(1,4,2,5,3,6)],
                   nrow = 3, labels = letters[1:6],
                   draw = FALSE,
-                  label.args = list(gp = grid::gpar(font = 1, fontsize = 16),
+                  label.args = list(gp = gpar(font = 1, fontsize = 16),
                                     x = unit(0,"line"), hjust = 0))
 
 
@@ -841,7 +845,7 @@ figS1 <- ggarrange(pred_color_pca_fun(1, 2) %>% no_leg(),
                    pred_color_pca_fun(2, 3) %>% no_leg(),
                    labels = letters[1:3],
                    draw = FALSE,
-                   label.args = list(gp = grid::gpar(font = 1, fontsize = 16),
+                   label.args = list(gp = gpar(font = 1, fontsize = 16),
                                      x = unit(0,"line"), hjust = 0))
 
 
