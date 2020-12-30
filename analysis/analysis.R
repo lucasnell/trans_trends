@@ -67,8 +67,6 @@ coef_sum$ar <- coef_sum$ar %>%
 # ------------*
 # Define theme and colorblind-friendly palettes
 # ------------*
-coef_palette <- plasma(3, end = 0.8)
-names(coef_palette) <- c("time", "distance", "midges")
 pca_palette <- viridis(3)
 
 
@@ -276,70 +274,9 @@ slope_density_CI_df <- fit$stan %>%
 
 
 
-annotation_custom2 <- function (grob,
-                                xmin = -Inf, xmax = Inf,
-                                ymin = -Inf, ymax = Inf,
-                                data) {
-
-    layer(data = data, stat = StatIdentity, position = PositionIdentity,
-          geom = ggplot2:::GeomCustomAnn,
-          inherit.aes = TRUE, params = list(grob = grob,
-                                            xmin = xmin, xmax = xmax,
-                                            ymin = ymin, ymax = ymax))
-
-}
-
-
-
-insets <- fit$stan %>%
-    rstan::extract(pars = "sig_beta") %>%
-    .[[1]] %>%
-    as.matrix() %>%
-    {colnames(.) <- c("int_tax","int_plot","int_trans","midges",
-                      "time","distance"); .} %>%
-    as_tibble() %>%
-    select(all_of(c("midges", "time","distance"))) %>%
-    pivot_longer(everything(), names_to = "coef") %>%
-    mutate(coef = factor(coef, levels = c("time", "distance", "midges"))) %>%
-    split(.$coef) %>%
-    set_names(c("time", "distance", "midges")) %>%
-    map(function(.x) {
-        .coef <- .x$coef[1]
-        .color <- coef_palette[[paste(.coef)]]
-        if (.coef == "midges") {
-            .y_axis <- element_text(size = 6, margin = margin(0,0,0,r=1))
-            .plot.margin <- margin(0,0,0,l=0)
-        } else {
-            .y_axis <- element_blank()
-            .plot.margin <- margin(0,0,0,l=9)
-        }
-        p <- ggplot(.x, aes(value, fill = coef))+
-            geom_vline(xintercept = 0, size = 0.5, color = "black")+
-            geom_hline(yintercept = 0, size = 0.5, color = "black")+
-            geom_density(linetype = 0, alpha = 1, fill = .color)+
-            scale_y_continuous("Posterior density", limits = c(0, 10))+
-            scale_x_continuous("Among taxa SD",
-                               breaks = c(0, 0.4, 0.8)) +
-            theme(axis.text.x = element_blank(),
-                  axis.ticks.x = element_blank(),
-                  axis.title.x = element_blank(),
-                  axis.text.y = element_text(size = 6),
-                  axis.ticks.y = element_line(size = 0.25),
-                  axis.title.y = .y_axis,
-                  plot.margin = .plot.margin,
-                  panel.border = element_blank()) +
-            coord_flip(xlim = c(0, 1.0), ylim = c(0, 10), expand = FALSE) +
-            NULL
-        return(p)
-    })
-
-
-
-
-
 slope_p_fun <- function(.coef) {
 
-    # .coef = "midges"
+    # .coef = "time"
 
     .coef <- match.arg(tolower(.coef), levels(coef_sum$beta$coef))
 
@@ -347,31 +284,25 @@ slope_p_fun <- function(.coef) {
         str_to_title() %>%
         paste("response")
 
-
-    .color <- coef_palette[[.coef]]
+    # quartz.options(width = 3, height = 2, reset = FALSE)
 
     .plot <- coef_sum$beta %>%
         filter(coef == .coef) %>%
         ggplot()+
-        geom_hline(yintercept = 0, color = "gray50")+
         geom_polygon(data = slope_density_df %>%
                          mutate(y = y / max(y) * (3.5 - 0.5) + 0.5) %>%
                          filter(coef == .coef),
-                     aes(x = y, y = x), alpha = 0.25, fill = .color) +
-        # geom_polygon(data = slope_density_CI_df %>%
-        #                  mutate(y = 6.5 - y / max(y) * 6.5 + 0.5) %>%
-        #                  filter(coef == .coef),
-        #              aes(x = y, y = x), alpha = 0.3, fill = .color) +
+                     aes(x = y, y = x), fill = "gray80") +
         geom_polygon(data = slope_sd_density_df %>%
                          mutate(y = 7 - y / max(y) * (3.5 - 0.5)) %>%
                          filter(coef == .coef),
-                     aes(x = y, y = x), alpha = 0.3, fill = .color) +
-        geom_point(aes(tx, mi), size = 1.5, color = .color)+
-        geom_linerange(aes(tx, ymin = lo, ymax = hi), color = .color)+
-        scale_y_continuous(.ylab,  breaks = c(-0.5, 0, 0.5),
-                           sec.axis =
-                               sec_axis(~ ., "Among taxa SD"))+
-        scale_x_continuous("Posterior density",
+                     aes(x = y, y = x), fill = "gray80") +
+        geom_hline(yintercept = 0, color = "gray50")+
+        geom_point(aes(tx, mi), size = 1.5, color = "black")+
+        geom_linerange(aes(tx, ymin = lo, ymax = hi), color = "black")+
+        scale_y_continuous(.ylab,  breaks = c(-0.5, 0, 0.5))+
+        scale_x_continuous(NULL,
+                           breaks = 1:6, labels = taxa_labs,
                            sec.axis =
                                sec_axis(~ .,
                                         breaks = 1:6, labels = taxa_labs)) +
@@ -382,23 +313,14 @@ slope_p_fun <- function(.coef) {
               axis.ticks.y.right = element_blank(),
               axis.title.y.left = element_text(size = 10, margin = margin(0,0,0,r=6)),
               axis.title.y.right = element_text(size = 10, margin = margin(0,0,0,l=6)),
-              axis.title.x.top = element_blank(),
-              axis.title.x.bottom = element_text(size = 10,
-                                              margin = margin(0,0,0,t=8)),
-              axis.text.x.top = element_text(size = 8, angle = 30,
+              axis.title.x = element_blank(),
+              axis.text.x.top = element_text(size = 8, angle = 45,
                                              vjust = 0.1, hjust = 0.1,
                                              margin = margin(0,0,0,b=2)),
-              axis.text.x.bottom = element_blank(),
-              axis.ticks.x.bottom = element_blank(),
-              plot.margin = margin(t=8, r=0, b=8, l=8)) +
-        # annotation_custom2(grob = ggplotGrob(insets[[.coef]]),
-        #                    data = data.frame(coef = .coef),
-        #                    # ymin = ifelse(.coef == "midges", -0.6, 0.1),
-        #                    # ymax = ifelse(.coef == "midges", -0.1, 0.6),
-        #                    # xmin = 1.5, xmax = 3)
-        #                    ymin = 0.2,
-        #                    ymax = 0.6,
-        #                    xmin = 1.5, xmax = 3) +
+              axis.text.x.bottom = element_text(size = 8, angle = -45,
+                                                vjust = 0, hjust = 0.1,
+                                                margin = margin(0,0,0,t=6)),
+              plot.margin = margin(t=8, r=9, b=8, l=8)) +
         NULL
 
     return(.plot)
@@ -406,7 +328,12 @@ slope_p_fun <- function(.coef) {
 
 # taxon-specific slopes
 slope_p <- lapply(levels(coef_sum$beta$coef), slope_p_fun)
-
+slope_p[[1]] <- slope_p[[1]] +
+    geom_text(data = tibble(x = c(1,    4.5),
+                            y = c(-0.25, 0.45),
+                            lab = c("mean", "among taxa SD")),
+              aes(x, y, label = lab), size = 8 / 2.83465,
+              hjust = 0, vjust = 0.5, color = "gray50")
 
 
 ar_p <- coef_sum$ar %>%
@@ -414,21 +341,21 @@ ar_p <- coef_sum$ar %>%
     geom_hline(yintercept = 0, color = "gray50")+
     geom_point(size = 1.5)+
     geom_linerange(aes(ymin = lo, ymax = hi))+
-    scale_x_continuous(NULL, breaks = 1:6, labels = taxa_labs,
-                       position = "top") +
+    scale_x_continuous(NULL,
+                       breaks = 1:6, labels = taxa_labs,
+                       sec.axis =
+                           sec_axis(~ .,
+                                    breaks = 1:6, labels = taxa_labs)) +
     scale_y_continuous("AR parameter", breaks = c(0, 0.5, 1)) +
     coord_cartesian(ylim = c(0, 1), xlim = c(0.5, 7),
                     expand = FALSE) +
     theme(axis.text.y = element_text(size = 8, margin = margin(0,0,0,r=2)),
           axis.title.y = element_text(size = 10, margin = margin(0,0,0,r=6)),
-          axis.title.x.top = element_blank(),
-          axis.title.x.bottom = element_text(size = 10,
-                                             margin = margin(0,0,0,t=4)),
-          axis.text.x.top = element_text(size = 8, angle = 30,
+          axis.title.x = element_blank(),
+          axis.text.x.top = element_text(size = 8, angle = 45,
                                          vjust = 0.1, hjust = 0.1,
                                          margin = margin(0,0,0,b=2)),
           axis.text.x.bottom = element_blank(),
-          axis.ticks.x.bottom = element_blank(),
           plot.margin = margin(t=8, r=8, b=8, l=8)) +
     NULL
 
@@ -437,16 +364,16 @@ ar_p <- coef_sum$ar %>%
 
 
 
-# No taxa names:
-nt <- function(.x) .x + theme(axis.text.x.top = element_blank())
-# No secondary label for "Posterior density":
-npd <- function(.x) .x <- .x + theme(axis.title.x.bottom = element_blank())
+# No taxa names, top:
+ntt <- function(.x) .x + theme(axis.text.x.top = element_blank())
+# No taxa names, bottom:
+ntb <- function(.x) .x <- .x + theme(axis.text.x.bottom = element_blank())
 
 
 fig2 <- ggarrange(ar_p,
-                  slope_p[[1]] %>% nt() %>% npd(),
-                  slope_p[[2]] %>% nt() %>% npd(),
-                  slope_p[[3]] %>% nt(),
+                  slope_p[[1]] %>% ntt() %>% ntb(),
+                  slope_p[[2]] %>% ntt() %>% ntb(),
+                  slope_p[[3]] %>% ntt(),
                   labels = letters[1:4],
                   label.args = list(gp = gpar(font = 1, fontsize = 16),
                                     x = unit(0, "line"), hjust = 0),
