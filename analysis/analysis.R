@@ -219,7 +219,7 @@ slope_density_df <- fit$stan %>%
                          labels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
     map_dfr(function(z) {
-        X <- density(z[["value"]], n = 1024)
+        X <- density(z[["value"]], n = 2048)
         tibble(coef = z[["coef"]][1],
                x = X$x,
                y = X$y)
@@ -248,7 +248,7 @@ slope_sd_density_df <- fit$stan %>%
     arrange(coef, x)
 
 
-
+ci_alpha <- 0.32
 
 
 slope_density_CI_df <- fit$stan %>%
@@ -263,8 +263,30 @@ slope_density_CI_df <- fit$stan %>%
                          labels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
     map_dfr(function(z) {
-        .lo <- filter(coef_sum$alpha, coef == z$coef[1])[["lo"]]
-        .hi <- filter(coef_sum$alpha, coef == z$coef[1])[["hi"]]
+        .lo <- quantile(z[["value"]], ci_alpha / 2)[[1]]
+        .hi <- quantile(z[["value"]], 1 - ci_alpha / 2)[[1]]
+        X <- density(z[["value"]], from = .lo, to = .hi)
+        tibble(coef = z[["coef"]][1],
+               x = c(X$x[1], X$x, tail(X$x, 1)),
+               y = c(0, X$y, 0))
+    }) %>%
+    arrange(coef, x)
+
+
+slope_sd_density_CI_df <- fit$stan %>%
+    rstan::extract(pars = "sig_beta") %>%
+    .[[1]] %>%
+    as.matrix() %>%
+    {colnames(.) <- c("int_tax","int_plot","int_trans","midges",
+                      "time","distance"); .} %>%
+    as_tibble() %>%
+    select(all_of(c("midges", "time","distance"))) %>%
+    pivot_longer(everything(), names_to = "coef") %>%
+    mutate(coef = factor(coef, levels = c("time", "distance", "midges"))) %>%
+    split(.$coef) %>%
+    map_dfr(function(z) {
+        .lo <- quantile(z[["value"]], ci_alpha / 2)[[1]]
+        .hi <- quantile(z[["value"]], 1 - ci_alpha / 2)[[1]]
         X <- density(z[["value"]], from = .lo, to = .hi)
         tibble(coef = z[["coef"]][1],
                x = c(X$x[1], X$x, tail(X$x, 1)),
@@ -289,6 +311,7 @@ slope_p_fun <- function(.coef) {
     .plot <- coef_sum$beta %>%
         filter(coef == .coef) %>%
         ggplot()+
+        # main density curves:
         geom_polygon(data = slope_density_df %>%
                          mutate(y = y / max(y) * (3.5 - 0.5) + 0.5) %>%
                          filter(coef == .coef),
@@ -297,6 +320,15 @@ slope_p_fun <- function(.coef) {
                          mutate(y = 7 - y / max(y) * (3.5 - 0.5)) %>%
                          filter(coef == .coef),
                      aes(x = y, y = x), fill = "gray80") +
+        # uncertainty interval density curves:
+        geom_polygon(data = slope_density_CI_df %>%
+                         mutate(y = y / max(y) * (3.5 - 0.5) + 0.5) %>%
+                         filter(coef == .coef),
+                     aes(x = y, y = x), fill = "gray60") +
+        geom_polygon(data = slope_sd_density_CI_df %>%
+                         mutate(y = 7 - y / max(y) * (3.5 - 0.5)) %>%
+                         filter(coef == .coef),
+                     aes(x = y, y = x), fill = "gray60") +
         geom_hline(yintercept = 0, color = "gray50")+
         geom_point(aes(tx, mi), size = 1.5, color = "black")+
         geom_linerange(aes(tx, ymin = lo, ymax = hi), color = "black")+
@@ -329,9 +361,9 @@ slope_p_fun <- function(.coef) {
 # taxon-specific slopes
 slope_p <- lapply(levels(coef_sum$beta$coef), slope_p_fun)
 slope_p[[1]] <- slope_p[[1]] +
-    geom_text(data = tibble(x = c(1,    4.5),
-                            y = c(-0.25, 0.45),
-                            lab = c("mean", "among taxa SD")),
+    geom_text(data = tibble(x = c(0.7,    4.5),
+                            y = c(-0.28, 0.45),
+                            lab = c("among taxa mean", "among taxa SD")),
               aes(x, y, label = lab), size = 8 / 2.83465,
               hjust = 0, vjust = 0.5, color = "gray50")
 
@@ -661,7 +693,7 @@ pred_pca_p <- list(
 
 
 fig3 <- ggarrange(plots = c(taxon_pca_p, pred_pca_p),
-                  nrow = 3, labels = letters[1:6],
+                  nrow = 3, labels = letters[c(1,3,5,2,4,6)],
                   draw = FALSE, byrow = FALSE,
                   label.args = list(gp = gpar(font = 1, fontsize = 16),
                                     x = unit(0,"line"), hjust = 0))
@@ -774,21 +806,6 @@ figS1 <- ggarrange(pred_color_pca_fun(1, 2) %>% no_leg(),
 # ===============*
 
 
-#---------*
-# * LOO deviance ----
-#---------*
-
-# Table I (exclude standard errors)
-loo_dev <- read_csv("analysis/output/dev_re.csv", col_types = cols()) %>%
-    rename(dev_re = delt_looic) %>%
-    full_join(read_csv("analysis/output/dev_fere.csv", col_types = cols()) %>%
-                  rename(dev_fere = delt_looic),
-              by = "model") %>%
-    mutate(model = gsub("_z$", "", model)) %>%
-    rename(var = model)
-
-
-
 
 #---------*
 # * Variance partitioning ----
@@ -844,21 +861,16 @@ tbl1_order <- function(x, .col = NULL,
     return(x)
 }
 
-tibble(`coef` = c("", "time", "distance", "midges"),
-       `Taxon-variation` = c("(random)", tbl1_order(loo_dev,"dev_re") %>%
-                                 fmt("%.1f")),
-       `Overall` = c("(fixed + random)", tbl1_order(loo_dev,"dev_fere") %>%
-                         fmt("%.1f")),
-       `EXTRA` = rep("", 4),
-       PC1 = c(pred_pca$obs_exp[["PC1"]][1] %>% fmt("(%.2f)"),
-               tbl1_order(var_part, "PC1") %>% fmt()),
-       PC2 = c(pred_pca$obs_exp[["PC2"]][1] %>% fmt("(%.2f)"),
-               tbl1_order(var_part, "PC2") %>% fmt()),
-       PC3 = c(pred_pca$obs_exp[["PC3"]][1] %>% fmt("(%.2f)"),
-               tbl1_order(var_part, "PC3") %>% fmt()),
-       Total = c(pred_pca$obs_exp[1,paste0("PC", 1:3)] %>% sum() %>%
-                     fmt("(%.2f)"),
-                 fmt(overall_part[coef_order,]))) %>%
+tibble(`coef` = c("time", "distance", "midges", "Total"),
+       PC1 = c(tbl1_order(var_part, "PC1") %>% fmt(),
+               pred_pca$obs_exp[["PC1"]][1] %>% fmt("(%.2f)")),
+       PC2 = c(tbl1_order(var_part, "PC2") %>% fmt(),
+               pred_pca$obs_exp[["PC2"]][1] %>% fmt("(%.2f)")),
+       PC3 = c(tbl1_order(var_part, "PC3") %>% fmt(),
+               pred_pca$obs_exp[["PC3"]][1] %>% fmt("(%.2f)")),
+       Total = c(overall_part[coef_order,],
+                 pred_pca$obs_exp[1,paste0("PC", 1:3)] %>% sum()) %>%
+           fmt("(%.2f)")) %>%
     knitr::kable(format = "latex")
 
 
