@@ -38,13 +38,14 @@ coef_sum <- readRDS("analysis/output/coef_sum.rds")
 
 
 
+
+
+
 coef_sum$int_taxon <- coef_sum$int_taxon %>%
-    ungroup() %>%
     mutate(tx = as.numeric(factor(taxon, levels = taxa_lvls)),
            coef = "int")
 
 coef_sum$beta <- coef_sum$beta %>%
-    ungroup() %>%
     mutate(coef = factor(coef %>% paste(),
                          levels = c("time", "dist", "midges"),
                          labels = c("time", "distance", "midges")),
@@ -263,9 +264,8 @@ slope_density_CI_df <- fit$stan %>%
                          labels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
     map_dfr(function(z) {
-        .lo <- quantile(z[["value"]], ci_alpha / 2)[[1]]
-        .hi <- quantile(z[["value"]], 1 - ci_alpha / 2)[[1]]
-        X <- density(z[["value"]], from = .lo, to = .hi)
+        .ci <- hpdi(z[["value"]], 1 - ci_alpha)
+        X <- density(z[["value"]], from = .ci[["lower"]], to = .ci[["upper"]])
         tibble(coef = z[["coef"]][1],
                x = c(X$x[1], X$x, tail(X$x, 1)),
                y = c(0, X$y, 0))
@@ -285,9 +285,8 @@ slope_sd_density_CI_df <- fit$stan %>%
     mutate(coef = factor(coef, levels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
     map_dfr(function(z) {
-        .lo <- quantile(z[["value"]], ci_alpha / 2)[[1]]
-        .hi <- quantile(z[["value"]], 1 - ci_alpha / 2)[[1]]
-        X <- density(z[["value"]], from = .lo, to = .hi)
+        .ci <- hpdi(z[["value"]], 1 - ci_alpha)
+        X <- density(z[["value"]], from = .ci[["lower"]], to = .ci[["upper"]])
         tibble(coef = z[["coef"]][1],
                x = c(X$x[1], X$x, tail(X$x, 1)),
                y = c(0, X$y, 0))
@@ -711,7 +710,7 @@ fig3 <- ggarrange(plots = c(taxon_pca_p, pred_pca_p),
 # ==================================================*
 # ==================================================*
 
-# Fig S1 - PCs 1&3 ----
+# Fig S1 - colored by predictor ----
 
 # ==================================================*
 # ==================================================*

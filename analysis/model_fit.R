@@ -94,16 +94,30 @@ data_fit <- myv_arth %>%
 # import fit
 # fit <- read_rds("analysis/output/fit.rds")
 
-# summarize
-# fit_sum <- rstan::summary(fit$stan, probs = c(0.16,0.50,0.84))$summary %>%
+
+get_fit_hpdi <- function(.var) {
+    z <- do.call(c, lapply(1:fit$stan@sim$chains,
+                           function(i) {
+                               fit$stan@sim$samples[[i]][[.var]][
+                                   -(1:fit$stan@sim$warmup2[i])]
+                           }))
+    z_hpdi <- hpdi(z, 0.68)
+    return(tibble(var = .var, lo = z_hpdi[["lower"]], hi = z_hpdi[["upper"]]))
+}
+
+
+# # summarize
+# fit_sum <- rstan::summary(fit$stan, probs = 0.50) %>%
+#     .[["summary"]] %>%
 #     as.data.frame() %>%
 #     rownames_to_column() %>%
 #     as_tibble() %>%
 #     rename(var = rowname,
-#            lo = `16%`,
-#            mi = `50%`,
-#            hi = `84%`) %>%
+#            mi = `50%`) %>%
+#     left_join(map_dfr(.$var, get_fit_hpdi), by = "var") %>%
 #     select(var, lo, mi, hi, n_eff, Rhat)
+
+
 
 # write_csv(fit_sum, "analysis/output/fit_sum.csv")
 
@@ -137,17 +151,18 @@ ar <- fit_sum %>%
 
 # taxon-specific slopes
 beta <- fit_sum %>%
-    filter(str_detect(fit_sum$var, "beta"), !str_detect(fit_sum$var, "sig")) %>%
+    filter(str_detect(var, "beta"), !str_detect(var, "sig")) %>%
     mutate(id = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
            coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[3])),
-           coef = factor(coef, levels = c(1:4),
+           coef = factor(coef, levels = 1:4,
                          labels = c("int","midges","time","dist"))) %>%
     full_join(taxa_long) %>%
     filter(coef != "int") %>%
     group_by(coef, taxon) %>%
     summarize(lo = unique(lo),
               mi = unique(mi),
-              hi = unique(hi))
+              hi = unique(hi)) %>%
+    ungroup()
 
 # intercepts
 int_full <- fit_sum %>%
@@ -176,12 +191,20 @@ int_taxon <- rstan::extract(fit$stan, beta_pars) %>%
     filter(coef %in% c("int","time"))  %>%
     group_by(step, taxon, coef) %>%
     summarize(val = mean(val)) %>%
+    ungroup() %>%
     spread(coef, val) %>%
-    group_by(taxon) %>%
     mutate(val = int + time * mean(data_fit$time_z)) %>%
-    summarize(lo = quantile(val, probs = 0.16),
-              mi = median(val),
-              hi = quantile(val, probs = 0.84))
+    split(.$taxon) %>%
+    map_dfr(function(.x) {
+        ci <- hpdi(.x$val, 0.68)
+        .dd <- tibble(taxon = .x$taxon[1],
+                      lo = ci[["lower"]],
+                      mi = median(.x$val),
+                      hi = ci[["upper"]])
+        return(.dd)
+    })
+
+
 
 
 # mean slopes
@@ -203,6 +226,18 @@ coef_sum <- list(ar = ar, beta = beta, int_full = int_full, int_taxon = int_taxo
                       alpha = alpha, sig_beta = sig_beta)
 
 # write_rds(coef_sum, "analysis/output/coef_sum.rds")
+
+
+
+
+
+# ----------------------------------------------------------------------`
+# ----------------------------------------------------------------------`
+
+# REMOVE STARTING HERE?? ----
+
+# ----------------------------------------------------------------------`
+# ----------------------------------------------------------------------`
 
 
 
