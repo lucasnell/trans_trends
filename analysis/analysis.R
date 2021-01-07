@@ -860,16 +860,16 @@ tbl1_order <- function(x, .col = NULL,
     return(x)
 }
 
-tibble(`coef` = c("time", "distance", "midges", "Total"),
+tibble(`coef` = c("time", "distance", "midges", "Axis loading"),
        PC1 = c(tbl1_order(var_part, "PC1") %>% fmt(),
-               pred_pca$obs_exp[["PC1"]][1] %>% fmt("(%.2f)")),
+               pred_pca$obs_exp[["PC1"]][1] %>% fmt()),
        PC2 = c(tbl1_order(var_part, "PC2") %>% fmt(),
-               pred_pca$obs_exp[["PC2"]][1] %>% fmt("(%.2f)")),
+               pred_pca$obs_exp[["PC2"]][1] %>% fmt()),
        PC3 = c(tbl1_order(var_part, "PC3") %>% fmt(),
-               pred_pca$obs_exp[["PC3"]][1] %>% fmt("(%.2f)")),
-       Total = c(overall_part[coef_order,],
+               pred_pca$obs_exp[["PC3"]][1] %>% fmt()),
+       `Predictor loading` = c(overall_part[coef_order,],
                  pred_pca$obs_exp[1,paste0("PC", 1:3)] %>% sum()) %>%
-           fmt("(%.2f)")) %>%
+           fmt()) %>%
     knitr::kable(format = "latex")
 
 
