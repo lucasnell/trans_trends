@@ -436,7 +436,7 @@ pred_pca <- pred_pca_fn(data_fit, coef_sum$beta, coef_sum$int_taxon)
 
 
 #
-# This function is to switch PC2 and PC3 on the fly.
+# This function is to switch PC2 and PC.
 #
 # NOTE: We're moving PC3 to PC2 bc it explains more of the observed variance!
 # ----------------------*
@@ -461,6 +461,12 @@ switch_pcs <- function(.x) {
 }
 
 pred_pca <- map(pred_pca, switch_pcs)
+# Also adjust cumulative proportion for `obs_exp`:
+pred_pca$obs_exp[pred_pca$obs_exp$type == "cumulative",-1] <-
+    pred_pca$obs_exp[pred_pca$obs_exp$type == "individual",-1] %>%
+    unlist() %>%
+    cumsum() %>%
+    as.list()
 
 
 
@@ -502,7 +508,7 @@ pred_vec <- map_dfr(c("time", "distance", "midges"),
 
 
 pc_axis_lim <- 4.1
-pc_mults <- list(pred = c(-2, 2, 2), taxon = c(-5, 5, 5))
+pc_mults <- list(pred = c(2, -2, 2), taxon = c(5, -5, 5))
 
 pca_theme <- theme(plot.margin = margin(0,0,t=8,r=8),
                    axis.text.y = element_text(size = 8,
@@ -535,7 +541,7 @@ taxon_pca_fun <- function(.xPC, .yPC,
 
     .dd <- pred_pca$taxon_vec %>%
         mutate(taxon = factor(taxon, levels = taxa_lvls %>% rev(),
-                              labels = c("ground\nspiders","wolf\nspiders",
+                              labels = c("ground spiders","wolf\nspiders",
                                          "sheet\nweavers", "harvestmen",
                                          "ground\nbeetles","rove\nbeetles") %>%
                                   .[rev(taxa_order)])) %>%
@@ -595,8 +601,8 @@ taxon_pca_fun <- function(.xPC, .yPC,
 
 taxon_pca_p <- list(
     taxon_pca_fun(1, 2,
-                  .nudge_x = c(-0.4,  0.5, -1.5,  2.7, -1.0,  0.5),
-                  .nudge_y = c( 1.0, -1.4, -3.0, -2.6,  0.8, -1.3),
+                  .nudge_x = c(0.0,   0.5, -1.5,  2.7, -1.0,  0.5),
+                  .nudge_y = c( 0.8, -1.4, -3.0, -2.6,  0.8, -1.3),
                   .segment_df = tibble(x = c(1.25,  -1.3),
                                        y = c(-0.6,   -1.3),
                                        xend = c(-0.4, -0.4),

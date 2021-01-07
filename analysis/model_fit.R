@@ -95,6 +95,8 @@ data_fit <- myv_arth %>%
 # fit <- read_rds("analysis/output/fit.rds")
 
 
+
+# Gets uncertainty intervals via HPDI, and estimates via mode
 get_fit_hpdi <- function(.var) {
     z <- do.call(c, lapply(1:fit$stan@sim$chains,
                            function(i) {
@@ -102,18 +104,21 @@ get_fit_hpdi <- function(.var) {
                                    -(1:fit$stan@sim$warmup2[i])]
                            }))
     z_hpdi <- hpdi(z, 0.68)
-    return(tibble(var = .var, lo = z_hpdi[["lower"]], hi = z_hpdi[["upper"]]))
+    .mi <- posterior_mode(z)
+    return(tibble(var = .var,
+                  lo = z_hpdi[["lower"]],
+                  mi = .mi,
+                  hi = z_hpdi[["upper"]]))
 }
 
 
 # # summarize
-# fit_sum <- rstan::summary(fit$stan, probs = 0.50) %>%
+# fit_sum <- rstan::summary(fit$stan, probs = c()) %>%
 #     .[["summary"]] %>%
 #     as.data.frame() %>%
 #     rownames_to_column() %>%
 #     as_tibble() %>%
-#     rename(var = rowname,
-#            mi = `50%`) %>%
+#     rename(var = rowname) %>%
 #     left_join(map_dfr(.$var, get_fit_hpdi), by = "var") %>%
 #     select(var, lo, mi, hi, n_eff, Rhat)
 
@@ -173,8 +178,9 @@ int_full <- fit_sum %>%
 # taxon-specific intercepts
 # average over plot and transect variation
 # standardize to mean for each predictor (only nonzero for time_z)
-beta_pars <- {fit_sum %>%
-        filter(str_detect(fit_sum$var, "beta"), !str_detect(fit_sum$var, "sig"))}$var
+beta_pars <- fit_sum %>%
+    filter(str_detect(fit_sum$var, "beta"), !str_detect(fit_sum$var, "sig")) %>%
+    .[["var"]]
 int_taxon <- rstan::extract(fit$stan, beta_pars) %>%
     bind_cols() %>%
     mutate(step = row_number()) %>%
@@ -195,7 +201,7 @@ int_taxon <- rstan::extract(fit$stan, beta_pars) %>%
         ci <- hpdi(.x$val, 0.68)
         .dd <- tibble(taxon = .x$taxon[1],
                       lo = ci[["lower"]],
-                      mi = median(.x$val),
+                      mi = posterior_mode(.x$val),
                       hi = ci[["upper"]])
         return(.dd)
     })
