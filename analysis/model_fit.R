@@ -4,9 +4,8 @@
 
 # load packages
 library(TransTrendsPkg)
-library(loo)
 library(tidyverse)
-options(mc.cores = parallel::detectCores()-4)
+options(mc.cores = max(1, parallel::detectCores()-4))
 
 # load data
 myv_arth <- read_csv("data/myv_arth.csv")
@@ -24,7 +23,6 @@ myv_arth <- read_csv("data/myv_arth.csv")
 data_fit <- myv_arth %>%
     filter(taxon != "acar") %>%
     rename(distance = dist) %>%
-    # group_by(taxon) %>%
     mutate(y = log1p(count),
            y = (y - mean(y))/(sd(y))) %>%
     ungroup() %>%
@@ -43,6 +41,7 @@ data_fit <- myv_arth %>%
            taxon_trans = factor(paste0(taxon, trans))) %>%
     arrange(trans, distance, taxon, year)
 
+# Write it for easier use later:
 # write_csv(data_fit, "analysis/data_fit.csv")
 
 
@@ -54,8 +53,9 @@ data_fit <- myv_arth %>%
 #========== Full model
 #==========
 
-# fit model
-# start_time <- Sys.time()
+# # (Commented out below because we've saved the rds file)
+# #
+# # fit model
 # fit <- armm(formula = y ~ midges_z + time_z + dist_z +
 #                 (1 | taxon + taxon_plot + taxon_trans) +
 #                 (midges_z + time_z + dist_z | taxon),
@@ -70,30 +70,26 @@ data_fit <- myv_arth %>%
 #            change = T,
 #            rstan_control = list(iter = 4000, chains = 4, seed = 3e3,
 #                                 control = list(adapt_delta = 0.97)))
-# end_time <- Sys.time()
-# end_time - start_time
-
-# export fit
+#
 # write_rds(fit, "analysis/output/fit.rds")
+#
 
 # import fit
-# fit <- read_rds("analysis/output/fit.rds")
+fit <- read_rds("analysis/output/fit.rds")
 
 
 
-# Gets uncertainty intervals via HPDI, and estimates via mode
-get_fit_hpdi <- function(.var) {
+# Gets uncertainty intervals via quantiles, and estimates via median
+get_fit_info <- function(.var) {
     z <- do.call(c, lapply(1:fit$stan@sim$chains,
                            function(i) {
                                fit$stan@sim$samples[[i]][[.var]][
                                    -(1:fit$stan@sim$warmup2[i])]
                            }))
-    z_hpdi <- hpdi(z, 0.68)
-    .mi <- posterior_mode(z)
     return(tibble(var = .var,
-                  lo = z_hpdi[["lower"]],
-                  mi = .mi,
-                  hi = z_hpdi[["upper"]]))
+                  lo = unname(quantile(z, 0.16)),
+                  mi = median(z),
+                  hi = unname(quantile(z, 0.84))))
 }
 
 
@@ -104,15 +100,13 @@ get_fit_hpdi <- function(.var) {
 #     rownames_to_column() %>%
 #     as_tibble() %>%
 #     rename(var = rowname) %>%
-#     left_join(map_dfr(.$var, get_fit_hpdi), by = "var") %>%
+#     left_join(map_dfr(.$var, get_fit_info), by = "var") %>%
 #     select(var, lo, mi, hi, n_eff, Rhat)
-
-
-
+#
 # write_csv(fit_sum, "analysis/output/fit_sum.csv")
 
 # import fit summary
-# fit_sum <- read_csv("analysis/output/fit_sum.csv")
+fit_sum <- read_csv("analysis/output/fit_sum.csv")
 
 
 
@@ -183,11 +177,10 @@ int_taxon <- rstan::extract(fit$stan, beta_pars) %>%
     mutate(val = int + time * mean(data_fit$time_z)) %>%
     split(.$taxon) %>%
     map_dfr(function(.x) {
-        ci <- hpdi(.x$val, 0.68)
         .dd <- tibble(taxon = .x$taxon[1],
-                      lo = ci[["lower"]],
-                      mi = posterior_mode(.x$val),
-                      hi = ci[["upper"]])
+                      lo = unname(quantile(.x$val, 0.16)),
+                      mi = median(.x$val),
+                      hi = unname(quantile(.x$val, 0.84)))
         return(.dd)
     })
 
@@ -198,14 +191,14 @@ int_taxon <- rstan::extract(fit$stan, beta_pars) %>%
 alpha <- fit_sum %>%
     filter(str_detect(fit_sum$var, "alpha")) %>%
     mutate(coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
-           coef = factor(coef, levels = c(1:4),
+           coef = factor(coef, levels = 1:4,
                          labels = c("int","midges","time","dist")))
 
 # sigmas
 sig_beta <- fit_sum %>%
     filter(str_detect(fit_sum$var, "sig_beta")) %>%
     mutate(coef = strsplit(var, "\\[|\\]|,") %>% map_int(~as.integer(.x[2])),
-           coef = factor(coef, levels = c(1:6),
+           coef = factor(coef, levels = 1:6,
                          labels = c("int_tax","int_tax_plot","int_tax_trans",
                                     "midges","time","dist")))
 

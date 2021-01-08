@@ -9,7 +9,7 @@ library(cowplot)
 library(egg)
 library(grid)
 library(viridisLite)
-options(mc.cores = parallel::detectCores()-2)
+options(mc.cores = max(1, parallel::detectCores()-2))
 
 # In RStudio on macOS, this makes a separate plotting window that's independent of
 # the Plots pane
@@ -23,11 +23,20 @@ if (Sys.info()[["sysname"]] == "Darwin" && .Platform$GUI == "RStudio") {
 options(dplyr.summarise.inform = FALSE)
 
 
+# ------------*
+# Map abbreviated taxa names to full names, and order them properly for plots
+# ------------*
 
 taxa_order <- c(5:6, 4, 1, 3, 2)
 taxa_lvls = c("gnap","lyco","sheet","opil","cara", "stap")[taxa_order]
 taxa_labs = c("Ground spiders","Wolf spiders","Sheet weavers",
               "Harvestmen","Ground beetles", "Rove beetles")[taxa_order]
+
+
+
+# ------------*
+# Load and clean data from model fit
+# ------------*
 
 # load data
 data_fit <- read_csv("analysis/data_fit.csv") %>%
@@ -35,11 +44,6 @@ data_fit <- read_csv("analysis/data_fit.csv") %>%
 fit <- readRDS("analysis/output/fit.rds")
 fit_sum <- read_csv("analysis/output/fit_sum.csv")
 coef_sum <- readRDS("analysis/output/coef_sum.rds")
-
-
-
-
-
 
 coef_sum$int_taxon <- coef_sum$int_taxon %>%
     mutate(tx = as.numeric(factor(taxon, levels = taxa_lvls)),
@@ -66,7 +70,8 @@ coef_sum$ar <- coef_sum$ar %>%
 
 
 # ------------*
-# Define theme and colorblind-friendly palettes
+# Define theme, a colorblind-friendly palette, and
+# helper functions/objects for plots
 # ------------*
 pca_palette <- viridis(3)
 
@@ -94,23 +99,26 @@ theme_set(theme_bw() %+replace%
 EMPTY <- ggplot() + geom_blank() + theme_void()
 
 
-# cairo_pdf embeds fonts by default
+# use cairo_pdf because it embeds fonts by default
 save_file <- function(x, fn, ...) {
     cairo_pdf(paste0("analysis/output/", gsub(".pdf$", "", fn), ".pdf"), ...)
     print(x)
     dev.off()
 }
-
+# remove x axis from a plot
 no_x <- function(p) {
     p + theme(axis.title.x = element_blank(), axis.text.x = element_blank())
 }
+# remove y axis from a plot
 no_y <- function(p) {
     p + theme(axis.title.y = element_blank(), axis.text.y = element_blank())
 }
+# remove x and y axes from a plot
 no_xy <- function(p) {
     p + theme(axis.title.x = element_blank(), axis.text.x = element_blank(),
               axis.title.y = element_blank(), axis.text.y = element_blank())
 }
+# remove legend from a plot
 no_leg <- function(p) {
     p + theme(legend.position = "none")
 }
@@ -249,7 +257,6 @@ slope_sd_density_df <- fit$stan %>%
     arrange(coef, x)
 
 
-ci_alpha <- 0.32
 
 
 slope_density_CI_df <- fit$stan %>%
@@ -264,8 +271,8 @@ slope_density_CI_df <- fit$stan %>%
                          labels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
     map_dfr(function(z) {
-        .ci <- hpdi(z[["value"]], 1 - ci_alpha)
-        X <- density(z[["value"]], from = .ci[["lower"]], to = .ci[["upper"]])
+        .ci <- quantile(z[["value"]], c(0.16, 0.84))
+        X <- density(z[["value"]], from = .ci[["16%"]], to = .ci[["84%"]])
         tibble(coef = z[["coef"]][1],
                x = c(X$x[1], X$x, tail(X$x, 1)),
                y = c(0, X$y, 0))
@@ -285,8 +292,8 @@ slope_sd_density_CI_df <- fit$stan %>%
     mutate(coef = factor(coef, levels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
     map_dfr(function(z) {
-        .ci <- hpdi(z[["value"]], 1 - ci_alpha)
-        X <- density(z[["value"]], from = .ci[["lower"]], to = .ci[["upper"]])
+        .ci <- quantile(z[["value"]], c(0.16, 0.84))
+        X <- density(z[["value"]], from = .ci[["16%"]], to = .ci[["84%"]])
         tibble(coef = z[["coef"]][1],
                x = c(X$x[1], X$x, tail(X$x, 1)),
                y = c(0, X$y, 0))
@@ -304,8 +311,6 @@ slope_p_fun <- function(.coef) {
     .ylab <- gsub("s$", "", .coef) %>%
         str_to_title() %>%
         paste("response")
-
-    # quartz.options(width = 3, height = 2, reset = FALSE)
 
     .plot <- coef_sum$beta %>%
         filter(coef == .coef) %>%
@@ -339,11 +344,14 @@ slope_p_fun <- function(.coef) {
                                         breaks = 1:6, labels = taxa_labs)) +
         coord_cartesian(ylim = c(-0.68, 0.68), xlim = c(0.5, 7),
                         expand = FALSE) +
-        theme(axis.text.y.left = element_text(size = 8, margin = margin(0,0,0,r=2)),
+        theme(axis.text.y.left = element_text(size = 8,
+                                              margin = margin(0,0,0,r=2)),
               axis.text.y.right = element_blank(),
               axis.ticks.y.right = element_blank(),
-              axis.title.y.left = element_text(size = 10, margin = margin(0,0,0,r=6)),
-              axis.title.y.right = element_text(size = 10, margin = margin(0,0,0,l=6)),
+              axis.title.y.left = element_text(size = 10,
+                                               margin = margin(0,0,0,r=6)),
+              axis.title.y.right = element_text(size = 10,
+                                                margin = margin(0,0,0,l=6)),
               axis.title.x = element_blank(),
               axis.text.x.top = element_text(size = 8, angle = 45,
                                              vjust = 0.1, hjust = 0.1,
@@ -508,7 +516,7 @@ pred_vec <- map_dfr(c("time", "distance", "midges"),
 
 
 pc_axis_lim <- 4.1
-pc_mults <- list(pred = c(2, -2, 2), taxon = c(5, -5, 5))
+pc_mults <- list(pred = c(-2, 2, 2), taxon = c(-5, 5, 5))
 
 pca_theme <- theme(plot.margin = margin(0,0,t=8,r=8),
                    axis.text.y = element_text(size = 8,
@@ -541,7 +549,7 @@ taxon_pca_fun <- function(.xPC, .yPC,
 
     .dd <- pred_pca$taxon_vec %>%
         mutate(taxon = factor(taxon, levels = taxa_lvls %>% rev(),
-                              labels = c("ground spiders","wolf\nspiders",
+                              labels = c("ground\nspiders","wolf\nspiders",
                                          "sheet\nweavers", "harvestmen",
                                          "ground\nbeetles","rove\nbeetles") %>%
                                   .[rev(taxa_order)])) %>%
@@ -601,8 +609,8 @@ taxon_pca_fun <- function(.xPC, .yPC,
 
 taxon_pca_p <- list(
     taxon_pca_fun(1, 2,
-                  .nudge_x = c(0.0,   0.5, -1.5,  2.7, -1.0,  0.5),
-                  .nudge_y = c( 0.8, -1.4, -3.0, -2.6,  0.8, -1.3),
+                  .nudge_x = c(-0.4,  0.5, -1.5,  2.7, -1.0,  0.5),
+                  .nudge_y = c( 1.0, -1.4, -3.0, -2.6,  0.8, -1.3),
                   .segment_df = tibble(x = c(1.25,  -1.3),
                                        y = c(-0.6,   -1.3),
                                        xend = c(-0.4, -0.4),
