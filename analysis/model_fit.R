@@ -11,21 +11,6 @@ options(mc.cores = parallel::detectCores()-4)
 # load data
 myv_arth <- read_csv("data/myv_arth.csv")
 
-# set theme
-theme_set(theme_bw() %+replace%
-              theme(panel.grid = element_blank(),
-                    strip.background = element_blank(),
-                    legend.margin = margin(0,0,0,0),
-                    strip.text = element_text(size=12),
-                    legend.text = element_text(size=12),
-                    legend.title = element_text(size=14),
-                    axis.text = element_text(size=12, color="black"),
-                    axis.title.y = element_text(size=14,angle = 90,
-                                                margin=margin(0,15,0,0)),
-                    axis.title.x = element_text(size=14,margin=margin(15,0,0,0)),
-                    strip.text.x = element_text(margin=margin(0,0,10,0)),
-                    strip.text.y = element_text(margin=margin(0,0,0,10), angle=270),
-                    axis.title = element_text(size=14)))
 
 
 
