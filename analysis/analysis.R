@@ -1,6 +1,14 @@
-#==========*
-#========== Preliminaries ----
-#==========*
+
+#'
+#' This file creates figures 1-3 and table 1.
+#'
+
+
+
+
+# ==================================================*
+# Preliminaries ----
+# ==================================================*
 
 # load packages
 library(TransTrendsPkg)
@@ -9,18 +17,8 @@ library(cowplot)
 library(egg)
 library(grid)
 library(viridisLite)
-options(mc.cores = max(1, parallel::detectCores()-2))
-
-# In RStudio on macOS, this makes a separate plotting window that's independent of
-# the Plots pane
-if (Sys.info()[["sysname"]] == "Darwin" && .Platform$GUI == "RStudio") {
-    options(device = "quartz")
-    quartz.options(width = 6, height = 4, reset = FALSE)
-    grDevices::graphics.off()
-}
 
 
-options(dplyr.summarise.inform = FALSE)
 
 
 # ------------*
@@ -49,21 +47,22 @@ coef_sum$int_taxon <- coef_sum$int_taxon %>%
     mutate(tx = as.numeric(factor(taxon, levels = taxa_lvls)),
            coef = "int")
 
+# Order levels of coefficient factor:
+make_coef_fct <- function(.coef) {
+    factor(.coef %>% paste(),
+           levels = c("time", "dist", "midges"),
+           labels = c("time", "distance", "midges"))
+}
+
 coef_sum$beta <- coef_sum$beta %>%
-    mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "dist", "midges"),
-                         labels = c("time", "distance", "midges")),
+    mutate(coef = make_coef_fct(coef),
            tx = as.numeric(factor(taxon, levels = taxa_lvls)))
 coef_sum$alpha <- coef_sum$alpha %>%
     filter(coef != "int") %>%
-    mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "dist", "midges"),
-                         labels = c("time", "distance", "midges")))
+    mutate(coef = make_coef_fct(coef))
 coef_sum$sig_beta <- coef_sum$sig_beta %>%
     filter(!(coef %in% c("int_tax","int_tax_plot","int_tax_trans"))) %>%
-    mutate(coef = factor(coef %>% paste(),
-                         levels = c("time", "dist", "midges"),
-                         labels = c("time", "distance", "midges")))
+    mutate(coef = make_coef_fct(coef))
 coef_sum$ar <- coef_sum$ar %>%
     mutate(tx = as.numeric(factor(taxon, levels = taxa_lvls)))
 
@@ -133,20 +132,19 @@ no_leg <- function(p) {
 # ==================================================*
 # ==================================================*
 
-# time
+# by time
 time_p <- data_fit %>%
     ggplot(aes(year, y))+
     facet_wrap(~taxon_plot, nrow = 4)+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_line(aes(group = plot), size = 0.2, color = "gray70")+
-    # geom_point(aes(group = plot), size = 1.5, alpha = 0.5)+
     geom_line(data = data_fit %>%
                   group_by(taxon_plot, year) %>%
-                  summarize(y = mean(midges_z)) %>%
+                  summarize(y = mean(midges_z), .groups = "drop") %>%
                   mutate(type  = "Midge abundance") %>%
                   bind_rows(data_fit %>%
                                 group_by(taxon_plot, year) %>%
-                                summarize(y = mean(y)) %>%
+                                summarize(y = mean(y), .groups = "drop") %>%
                                 mutate(type  = "Mean by year/distance")) %>%
                   mutate(type = factor(type,
                                        levels = c("Midge abundance",
@@ -157,10 +155,9 @@ time_p <- data_fit %>%
                        limits = c(2007,2018))+
     scale_y_continuous("Transformed abundance",
                        limits = c(-2, 3.1), breaks = c(-2,0,2))+
-    # theme(legend.position = "none") +
     NULL
 
-# distance
+# by distance
 dist_p <- data_fit %>%
     ggplot(aes(distance, y))+
     facet_wrap(~taxon_plot, nrow = 4)+
@@ -169,11 +166,11 @@ dist_p <- data_fit %>%
                 width = 0.1, shape = 1)+
     geom_line(data = data_fit %>%
                   group_by(taxon_plot, distance) %>%
-                  summarize(y = mean(midges_z)) %>%
+                  summarize(y = mean(midges_z), .groups = "drop") %>%
                   mutate(type  = "Midge abundance") %>%
                   bind_rows(data_fit %>%
                                 group_by(taxon_plot, distance) %>%
-                                summarize(y = mean(y)) %>%
+                                summarize(y = mean(y), .groups = "drop") %>%
                                 mutate(type  = "Mean by year/distance")) %>%
                   mutate(type = factor(type,
                                        levels = c("Midge abundance",
@@ -184,7 +181,7 @@ dist_p <- data_fit %>%
     scale_y_continuous(NULL, limits = c(-2, 3.1), breaks = c(-2,0,2)) +
     NULL
 
-
+# separate legend
 time_dist_legend <- get_legend(
     time_p +
         guides(color = guide_legend(nrow = 1)) +
@@ -215,17 +212,16 @@ fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 # ==================================================*
 
 
-
+#' Extract posterior densities for the fixed effects
+#' and for the random effect SDs
 slope_density_df <- fit$stan %>%
     rstan::extract(pars = "alpha") %>%
-    .[[1]] %>%
-    as.matrix() %>%
-    {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
+    do.call(what = cbind) %>%
+    {colnames(.) <- c("int", "midges", "time", "distance"); .} %>%
     as_tibble() %>%
-    gather() %>%
-    filter(key != "...1") %>%  # intercept not necessary
-    mutate(coef = factor(key, levels = c("...3","...4","...2"),
-                         labels = c("time", "distance", "midges"))) %>%
+    select(-int) %>%  # intercept not necessary
+    pivot_longer(everything(), names_to = "coef") %>%
+    mutate(coef = factor(coef, levels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
     map_dfr(function(z) {
         X <- density(z[["value"]], n = 2048)
@@ -234,17 +230,13 @@ slope_density_df <- fit$stan %>%
                y = X$y)
     }) %>%
     arrange(coef, x)
-
-
-
 slope_sd_density_df <- fit$stan %>%
     rstan::extract(pars = "sig_beta") %>%
-    .[[1]] %>%
-    as.matrix() %>%
+    do.call(what = cbind) %>%
     {colnames(.) <- c("int_tax","int_plot","int_trans","midges",
                       "time","distance"); .} %>%
     as_tibble() %>%
-    select(all_of(c("midges", "time","distance"))) %>%
+    select(all_of(c("midges", "time", "distance"))) %>%
     pivot_longer(everything(), names_to = "coef") %>%
     mutate(coef = factor(coef, levels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
@@ -257,18 +249,17 @@ slope_sd_density_df <- fit$stan %>%
     arrange(coef, x)
 
 
-
-
-slope_density_CI_df <- fit$stan %>%
+#' Do the same as above, but restrict the densities to being between
+#' the 68% uncertainty intervals.
+#' These are used to create the darker shaded regions in fig 2.
+slope_density_UI_df <- fit$stan %>%
     rstan::extract(pars = "alpha") %>%
-    .[[1]] %>%
-    as.matrix() %>%
-    {colnames(.) <- paste0("...", 1:ncol(.)); .} %>%
+    do.call(what = cbind) %>%
+    {colnames(.) <- c("int", "midges", "time", "distance"); .} %>%
     as_tibble() %>%
-    gather() %>%
-    filter(key != "...1") %>%  # intercept not necessary
-    mutate(coef = factor(key, levels = c("...3","...4","...2"),
-                         labels = c("time", "distance", "midges"))) %>%
+    select(-int) %>%  # intercept not necessary
+    pivot_longer(everything(), names_to = "coef") %>%
+    mutate(coef = factor(coef, levels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
     map_dfr(function(z) {
         .ci <- quantile(z[["value"]], c(0.16, 0.84))
@@ -278,16 +269,13 @@ slope_density_CI_df <- fit$stan %>%
                y = c(0, X$y, 0))
     }) %>%
     arrange(coef, x)
-
-
-slope_sd_density_CI_df <- fit$stan %>%
+slope_sd_density_UI_df <- fit$stan %>%
     rstan::extract(pars = "sig_beta") %>%
-    .[[1]] %>%
-    as.matrix() %>%
+    do.call(what = cbind) %>%
     {colnames(.) <- c("int_tax","int_plot","int_trans","midges",
                       "time","distance"); .} %>%
     as_tibble() %>%
-    select(all_of(c("midges", "time","distance"))) %>%
+    select(all_of(c("midges", "time", "distance"))) %>%
     pivot_longer(everything(), names_to = "coef") %>%
     mutate(coef = factor(coef, levels = c("time", "distance", "midges"))) %>%
     split(.$coef) %>%
@@ -301,10 +289,8 @@ slope_sd_density_CI_df <- fit$stan %>%
     arrange(coef, x)
 
 
-
+# Creates subpanels for each predictor (fig 2 b--d)
 slope_p_fun <- function(.coef) {
-
-    # .coef = "time"
 
     .coef <- match.arg(tolower(.coef), levels(coef_sum$beta$coef))
 
@@ -325,11 +311,11 @@ slope_p_fun <- function(.coef) {
                          filter(coef == .coef),
                      aes(x = y, y = x), fill = "gray80") +
         # uncertainty interval density curves:
-        geom_polygon(data = slope_density_CI_df %>%
+        geom_polygon(data = slope_density_UI_df %>%
                          mutate(y = y / max(y) * (3.5 - 0.5) + 0.5) %>%
                          filter(coef == .coef),
                      aes(x = y, y = x), fill = "gray60") +
-        geom_polygon(data = slope_sd_density_CI_df %>%
+        geom_polygon(data = slope_sd_density_UI_df %>%
                          mutate(y = 7 - y / max(y) * (3.5 - 0.5)) %>%
                          filter(coef == .coef),
                      aes(x = y, y = x), fill = "gray60") +
@@ -365,8 +351,10 @@ slope_p_fun <- function(.coef) {
     return(.plot)
 }
 
-# taxon-specific slopes
+
 slope_p <- lapply(levels(coef_sum$beta$coef), slope_p_fun)
+
+#' Add labels for density curves to Fig 2b
 slope_p[[1]] <- slope_p[[1]] +
     geom_text(data = tibble(x = c(0.7,    4.5),
                             y = c(-0.28, 0.45),
@@ -375,6 +363,7 @@ slope_p[[1]] <- slope_p[[1]] +
               hjust = 0, vjust = 0.5, color = "gray50")
 
 
+# AR coefficient plot:
 ar_p <- coef_sum$ar %>%
     ggplot(aes(tx, mi))+
     geom_hline(yintercept = 0, color = "gray50")+
@@ -402,10 +391,10 @@ ar_p <- coef_sum$ar %>%
 
 
 
-
-# No taxa names, top:
+#' Helper plot functions.
+#' No taxa names, top:
 ntt <- function(.x) .x + theme(axis.text.x.top = element_blank())
-# No taxa names, bottom:
+#' No taxa names, bottom:
 ntb <- function(.x) .x <- .x + theme(axis.text.x.bottom = element_blank())
 
 
@@ -437,9 +426,10 @@ fig2 <- ggarrange(ar_p,
 # ==================================================*
 # ==================================================*
 
+# This file contains a bunch of functions for the PCA:
 source("analysis/pca_funs.R")
 
-# pca on predicted values
+# PCA on predicted values
 pred_pca <- pred_pca_fn(data_fit, coef_sum$beta, coef_sum$int_taxon)
 
 
@@ -502,7 +492,8 @@ pred_vec <- map_dfr(c("time", "distance", "midges"),
                             group_by(!!sym_) %>%
                             summarize(PC1 = mean(PC1),
                                       PC2 = mean(PC2),
-                                      PC3 = mean(PC3)) %>%
+                                      PC3 = mean(PC3),
+                                      .groups = "drop") %>%
                             rename(val = !!sym_) %>%
                             arrange(val) %>%
                             mutate(var = pred_)  %>%
@@ -516,7 +507,13 @@ pred_vec <- map_dfr(c("time", "distance", "midges"),
 
 
 pc_axis_lim <- 4.1
+#' We're scaling some of the projections. This is to keep that consistent.
 pc_mults <- list(pred = c(-2, 2, 2), taxon = c(-5, 5, 5))
+
+
+# ----------------*
+# Plots of taxon response vectors
+# ----------------*
 
 pca_theme <- theme(plot.margin = margin(0,0,t=8,r=8),
                    axis.text.y = element_text(size = 8,
@@ -533,15 +530,6 @@ taxon_pca_fun <- function(.xPC, .yPC,
                           .nudge_x = NULL,
                           .nudge_y = NULL,
                           .segment_df = NULL) {
-
-    # .PCs = 1:2
-    # .nudge_x = c(0.0, 0.8, -0.8, 3.3, -1.1, 0.4)
-    # .nudge_y = c(0.7, -0.6, -2.3, -0.7, 0.4, -0.9)
-    # .segment_df = tibble(x = c(1.25,  -0.8),
-    #                      y = c(0.8,   -0.8),
-    #                      xend = c(-0.3, -0.4),
-    #                      yend = c(1,    0.6))
-    # rm(.PCs, .nudge_x, .nudge_y, .dd, .segment_df)
 
     stopifnot(isTRUE(length(.xPC) == 1) && isTRUE(length(.yPC) == 1))
 
@@ -619,6 +607,10 @@ taxon_pca_p <- list(
     taxon_pca_fun(2, 3))
 
 
+
+# ----------------*
+# Plots of model predictors and observed data
+# ----------------*
 
 predictor_pca_fun <- function(.xPC, .yPC, .label_df = NULL, ...) {
 
@@ -704,7 +696,9 @@ pred_pca_p <- list(
 
 
 
-
+# --------------*
+# Combine them all into fig 3
+# --------------*
 fig3 <- ggarrange(plots = c(taxon_pca_p, pred_pca_p),
                   nrow = 3, labels = letters[c(1,3,5,2,4,6)],
                   draw = FALSE, byrow = FALSE,

@@ -1,3 +1,9 @@
+#'
+#' This file contains a bunch of helper functions for the PCA.
+#' It's used inside `analysis.R`.
+#'
+
+
 library(tidyverse)
 
 # predicted values from model

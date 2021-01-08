@@ -1,3 +1,25 @@
+
+#'
+#' This file cleans the data, fits the model using the `TransTrendsPkg` package,
+#' and summarizes the model output to some temporary files.
+#' Below, change the `.REFIT_MODEL` object to `TRUE` if you want to refit
+#' the full model.
+#' If you already have the `fit.rds` file that contains the model fit,
+#' then it's much faster to just use that.
+#' That's why `.REFIT_MODEL` is currently set to `FALSE`.
+#'
+#' All writing to `CSV` or `RDS` files is commented out here, so that
+#' unnecessary files aren't written to disk.
+#' Uncomment those lines if you want to create new versions.
+#'
+
+
+
+.REFIT_MODEL <- FALSE
+
+
+
+
 #==========
 #========== Preliminaries
 #==========
@@ -7,7 +29,7 @@ library(TransTrendsPkg)
 library(tidyverse)
 options(mc.cores = max(1, parallel::detectCores()-4))
 
-# load data
+# load raw data
 myv_arth <- read_csv("data/myv_arth.csv")
 
 
@@ -19,7 +41,6 @@ myv_arth <- read_csv("data/myv_arth.csv")
 #========== Prepare data
 #==========
 
-# prepare data
 data_fit <- myv_arth %>%
     filter(taxon != "acar") %>%
     rename(distance = dist) %>%
@@ -41,7 +62,6 @@ data_fit <- myv_arth %>%
            taxon_trans = factor(paste0(taxon, trans))) %>%
     arrange(trans, distance, taxon, year)
 
-# Write it for easier use later:
 # write_csv(data_fit, "analysis/data_fit.csv")
 
 
@@ -53,60 +73,63 @@ data_fit <- myv_arth %>%
 #========== Full model
 #==========
 
-# # (Commented out below because we've saved the rds file)
-# #
-# # fit model
-# fit <- armm(formula = y ~ midges_z + time_z + dist_z +
-#                 (1 | taxon + taxon_plot + taxon_trans) +
-#                 (midges_z + time_z + dist_z | taxon),
-#            time_form = ~  time | trans + distf + taxon,
-#            ar_form = ~ taxon,
-#            obs_error = T,
-#            distr = "normal",
-#            data = data_fit,
-#            x_scale = FALSE,
-#            y_scale = NULL,
-#            hmc = T,
-#            change = T,
-#            rstan_control = list(iter = 4000, chains = 4, seed = 3e3,
-#                                 control = list(adapt_delta = 0.97)))
-#
-# write_rds(fit, "analysis/output/fit.rds")
-#
 
-# import fit
-fit <- read_rds("analysis/output/fit.rds")
+if (.REFIT_MODEL) {
 
+    fit <- armm(formula = y ~ midges_z + time_z + dist_z +
+                    (1 | taxon + taxon_plot + taxon_trans) +
+                    (midges_z + time_z + dist_z | taxon),
+                time_form = ~ time | trans + distf + taxon,
+                ar_form = ~ taxon,
+                obs_error = TRUE,
+                distr = "normal",
+                data = data_fit,
+                x_scale = FALSE,
+                y_scale = NULL,
+                hmc = TRUE,
+                change = TRUE,
+                rstan_control = list(iter = 4000, chains = 4, seed = 3e3,
+                                     control = list(adapt_delta = 0.97)))
 
+    # write_rds(fit, "analysis/output/fit.rds")
 
-# Gets uncertainty intervals via quantiles, and estimates via median
-get_fit_info <- function(.var) {
-    z <- do.call(c, lapply(1:fit$stan@sim$chains,
-                           function(i) {
-                               fit$stan@sim$samples[[i]][[.var]][
-                                   -(1:fit$stan@sim$warmup2[i])]
-                           }))
-    return(tibble(var = .var,
-                  lo = unname(quantile(z, 0.16)),
-                  mi = median(z),
-                  hi = unname(quantile(z, 0.84))))
+    # Gets uncertainty intervals via quantiles, and estimates via median
+    get_fit_info <- function(.var) {
+        z <- do.call(c, lapply(1:fit$stan@sim$chains,
+                               function(i) {
+                                   fit$stan@sim$samples[[i]][[.var]][
+                                       -(1:fit$stan@sim$warmup2[i])]
+                               }))
+        return(tibble(var = .var,
+                      lo = unname(quantile(z, 0.16)),
+                      mi = median(z),
+                      hi = unname(quantile(z, 0.84))))
+    }
+
+    # summarize
+    fit_sum <- rstan::summary(fit$stan, probs = c()) %>%
+        .[["summary"]] %>%
+        as.data.frame() %>%
+        rownames_to_column() %>%
+        as_tibble() %>%
+        rename(var = rowname) %>%
+        left_join(map_dfr(.$var, get_fit_info), by = "var") %>%
+        select(var, lo, mi, hi, n_eff, Rhat)
+
+    # write_csv(fit_sum, "analysis/output/fit_sum.csv")
+
+} else {
+
+    fit <- read_rds("analysis/output/fit.rds")
+    fit_sum <- read_csv("analysis/output/fit_sum.csv")
+
 }
 
 
-# # summarize
-# fit_sum <- rstan::summary(fit$stan, probs = c()) %>%
-#     .[["summary"]] %>%
-#     as.data.frame() %>%
-#     rownames_to_column() %>%
-#     as_tibble() %>%
-#     rename(var = rowname) %>%
-#     left_join(map_dfr(.$var, get_fit_info), by = "var") %>%
-#     select(var, lo, mi, hi, n_eff, Rhat)
-#
-# write_csv(fit_sum, "analysis/output/fit_sum.csv")
 
-# import fit summary
-fit_sum <- read_csv("analysis/output/fit_sum.csv")
+
+
+
 
 
 
