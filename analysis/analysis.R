@@ -511,11 +511,7 @@ pc_axis_lim <- 4.1
 pc_mults <- list(pred = c(-2, 2, 2), taxon = c(-5, 5, 5))
 
 
-# ----------------*
-# Plots of taxon response vectors
-# ----------------*
-
-pca_theme <- theme(plot.margin = margin(0,0,t=8,r=8),
+pca_theme <- theme(plot.margin = margin(t=8,r=8,b=0,l=8),
                    axis.text.y = element_text(size = 8,
                                                margin = margin(0,0,0,r=2)),
                    axis.title.y = element_text(size = 10,
@@ -524,6 +520,11 @@ pca_theme <- theme(plot.margin = margin(0,0,t=8,r=8),
                                               margin = margin(0,0,0,t=2)),
                    axis.title.x = element_text(size = 10,
                                                margin = margin(0,0,0,b=8)))
+
+
+# ----------------*
+# Plots of taxon response vectors
+# ----------------*
 
 
 taxon_pca_fun <- function(.xPC, .yPC,
@@ -625,7 +626,7 @@ predictor_pca_fun <- function(.xPC, .yPC, .label_df = NULL, ...) {
                PC2 = sign(pc_mults$pred[2]) * PC2,
                PC3 = sign(pc_mults$pred[3]) * PC3)
 
-    vars <- c("midges", "time", "distance")
+    vars <- c("time", "distance", "midges")
 
     .pred_vec <- pred_vec %>%
         mutate(PC1 = pc_mults$pred[1] * PC1,
@@ -657,9 +658,7 @@ predictor_pca_fun <- function(.xPC, .yPC, .label_df = NULL, ...) {
                     ylim = c(-pc_axis_lim, pc_axis_lim)) +
         pca_theme +
         theme(axis.title.y = element_blank(),
-              axis.text.y = element_blank(),
-              # Switch L and R from taxon PCA plots:
-              plot.margin = pca_theme$plot.margin[c(1, 4, 3, 2)])
+              axis.text.y = element_blank())
 
     if (!is.null(.label_df)) {
         stopifnot(is.data.frame(.label_df) && nrow(.label_df) == 3)
@@ -697,19 +696,101 @@ pred_pca_p <- list(
 
 
 # --------------*
+# Variance partitioning
+# --------------*
+
+
+# variance partition of PC axes by predictors
+var_part <- lapply(c("PC1","PC2","PC3"), function(x) {
+    y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
+    tibble(var = c("midges_z", "time_z", "dist_z"),
+           pc = x,
+           cont = anova(lm(y, data = pred_pca$axes))[,2] %>%
+               {.[1:3]/sum(.[1:3])})
+    }) %>%
+    bind_rows() %>%
+    spread(pc, cont) %>%
+    mutate(var = gsub("_z$", "", var))
+
+
+# variance accounted for by predictors and PCs:
+var_df <- var_part %>%
+    mutate(PC1 = PC1 * pred_pca$obs_exp$PC1[1],
+           PC2 = PC2 * pred_pca$obs_exp$PC2[1],
+           PC3 = PC3 * pred_pca$obs_exp$PC3[1],
+           var = make_coef_fct(var)) %>%
+    pivot_longer(starts_with("PC"), names_to = "pc") %>%
+    mutate(pc = gsub("PC", "", pc) %>% as.integer()) %>%
+    arrange(pc, var) %>%
+    mutate(cumvalue = cumsum(value),
+           lag_cumvalue = lag(cumvalue, default = 0))
+
+
+
+
+var_part_p <- var_df %>%
+    mutate(y = pc - 1,
+           ymax = 0 - y * 0.5,
+           ymin = ymax - 1) %>%
+    ggplot() +
+    geom_rect(aes(xmin = lag_cumvalue, xmax = cumvalue,
+                  ymax = ymax, ymin = ymin, fill = var)) +
+    geom_text(data = var_df %>%
+                  group_by(pc) %>%
+                  summarize(value = (min(lag_cumvalue) + max(cumvalue)) / 2,
+                            .groups = "drop") %>%
+                  add_row(pc = 4, value = (1 + sum(var_df$value)) / 2) %>%
+                  mutate(y = 0 - (pc-1) * 0.5,
+                         lab = ifelse(pc < 4, paste0("PC", pc), "")),
+              aes(value, y, label = lab),
+              nudge_y = 0.3, size = 8 / 2.83465) +
+    geom_point(data = tibble(var = var_df$var %>% unique() %>% sort(),
+                             value = 0.79,
+                             y = 0.25 - 0:2 * 0.5),
+              aes(value, y, color = var),
+              size = 2, shape = 15) +
+    geom_text(data = tibble(var = var_df$var %>% unique() %>% sort(),
+                            value = 0.82,
+                            y = 0.25 - 0:2 * 0.5),
+              aes(value, y, label = var, color = var),
+              size = 8 / 2.83465, hjust = 0, vjust = 0.5) +
+    scale_color_viridis_d(end = 0.75, aesthetics = c("fill", "color"),
+                          guide = FALSE) +
+    scale_x_continuous("Proportion of variance", breaks = seq(0, 1, 0.2)) +
+    coord_cartesian(xlim = c(0, 1),
+                    ylim = c(-2.1, 0.7),
+                    expand = FALSE) +
+    pca_theme +
+    theme(axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.title.x = element_text(margin = margin(0,0,0,b=6)),
+          # panel.border = element_blank(),
+          plot.margin = margin(0,0,r=8,l=27)) +
+    NULL
+
+
+
+
+
+# --------------*
 # Combine them all into fig 3
 # --------------*
-fig3 <- ggarrange(plots = c(taxon_pca_p, pred_pca_p),
-                  nrow = 3, labels = letters[c(1,3,5,2,4,6)],
-                  draw = FALSE, byrow = FALSE,
-                  label.args = list(gp = gpar(font = 1, fontsize = 16),
-                                    x = unit(0,"line"), hjust = 0))
-
+fig3 <- plot_grid(ggarrange(plots = c(taxon_pca_p, pred_pca_p),
+                            nrow = 3, labels = letters[c(1,3,5,2,4,6)],
+                            draw = FALSE, byrow = FALSE,
+                            label.args = list(gp = gpar(font = 1, fontsize = 16),
+                                              x = unit(0,"line"), hjust = 0)),
+                  var_part_p,
+                  labels = c("", "g"),
+                  label_fontface = "plain", label_size = 16,
+                  label_x = 0, label_y = 1.3,
+                  ncol = 1, rel_heights = c(5.5, 1))
 
 # fig3
 
 
-# save_file(fig3, "fig3", width = 3, height = 5.5)
+save_file(fig3, "fig3", width = 3, height = 6.5)
 
 
 
@@ -800,85 +881,6 @@ figS1 <- ggarrange(pred_color_pca_fun(1, 2) %>% no_leg(),
 # save_file(figS1, "figS1", width = 6, height = 7)
 
 
-
-
-
-
-
-
-
-
-# ===============*
-# Table I ----
-# ===============*
-
-
-
-#---------*
-# * Variance partitioning ----
-#---------*
-
-
-# variance partition of PC axes by predictors (for Table I)
-var_part <- lapply(c("PC1","PC2","PC3"), function(x){
-    y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
-    tibble(var = c("midges_z", "time_z", "dist_z"),
-           pc = x,
-           cont = anova(lm(y, data = pred_pca$axes))[,2] %>%
-               {.[1:3]/sum(.[1:3])} %>%
-               round(3))
-    }) %>%
-    bind_rows() %>%
-    spread(pc, cont) %>%
-    mutate(var = gsub("_z$", "", var))
-
-# overall variance accounted for by predictors (for Table I)
-overall_part <- as.matrix(var_part[,2:4]) %*%
-    t(as.matrix(pred_pca$obs_exp[1,2:4]))
-row.names(overall_part) <- var_part$var
-
-
-# Which PC axes are most associated with each variable?
-pc_vars <- var_part[,2:4] %>%
-    as.matrix() %>%
-    `*`(matrix(as.numeric(pred_pca$obs_exp[1,2:4]), 3, 3, byrow=TRUE)) %>%
-    as.data.frame() %>%
-    as_tibble() %>%
-    set_names(paste0("PC", 1:3)) %>%
-    mutate(var = var_part$var) %>%
-    select(var, everything())
-
-
-coef_order <- c("time", "dist", "midges")
-
-fmt <- function(x, .f = "%.2f") sprintf(.f,x)
-
-tbl1_order <- function(x, .col = NULL,
-                       .coef_order = c("time", "dist", "midges")) {
-    if (inherits(x, "matrix")) {
-        stopifnot(!is.null(rownames(x)))
-        if (is.null(.col)) .col <- 1
-        x <- as.numeric(x[.coef_order,1])
-    } else if (inherits(x, "data.frame")) {
-        stopifnot(!is.null(.col) && (is.numeric(.col) || is.character(.col)) &&
-                      length(.col) == 1)
-        stopifnot("var" %in% colnames(x))
-        x <- as.numeric(x[match(.coef_order, x$var),][[.col]])
-    } else stop("x must be data frame or matrix")
-    return(x)
-}
-
-tibble(`coef` = c("time", "distance", "midges", "Axis loading"),
-       PC1 = c(tbl1_order(var_part, "PC1") %>% fmt(),
-               pred_pca$obs_exp[["PC1"]][1] %>% fmt()),
-       PC2 = c(tbl1_order(var_part, "PC2") %>% fmt(),
-               pred_pca$obs_exp[["PC2"]][1] %>% fmt()),
-       PC3 = c(tbl1_order(var_part, "PC3") %>% fmt(),
-               pred_pca$obs_exp[["PC3"]][1] %>% fmt()),
-       `Predictor loading` = c(overall_part[coef_order,],
-                 pred_pca$obs_exp[1,paste0("PC", 1:3)] %>% sum()) %>%
-           fmt()) %>%
-    knitr::kable(format = "latex")
 
 
 
