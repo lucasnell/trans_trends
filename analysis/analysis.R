@@ -154,7 +154,8 @@ time_p <- data_fit %>%
     scale_x_continuous("Year", breaks = c(2008,2012,2016),
                        limits = c(2007,2018))+
     scale_y_continuous("Transformed abundance",
-                       limits = c(-2, 3.1), breaks = c(-2,0,2))+
+                       # limits = c(-2, 3.1),
+                       breaks = c(-2,0,2))+
     NULL
 
 # by distance
@@ -178,7 +179,9 @@ dist_p <- data_fit %>%
               aes(color = type), size = 0.75)+
     scale_color_manual(NULL, values = c("firebrick", "dodgerblue"))+
     scale_x_continuous("Distance (m)", trans = "log", breaks = c(5,50,500))+
-    scale_y_continuous(NULL, limits = c(-2, 3.1), breaks = c(-2,0,2)) +
+    scale_y_continuous(NULL,
+                       # limits = c(-2, 3.1),
+                       breaks = c(-2,0,2)) +
     NULL
 
 # separate legend
@@ -233,8 +236,12 @@ slope_density_df <- fit$stan %>%
 slope_sd_density_df <- fit$stan %>%
     rstan::extract(pars = "sig_beta") %>%
     do.call(what = cbind) %>%
-    {colnames(.) <- c("int_tax","int_plot","int_trans","midges",
-                      "time","distance"); .} %>%
+    {colnames(.) <- c("int_tax",
+                      "int_plot",
+                      # "int_trans",
+                      "midges",
+                      "time",
+                      "distance"); .} %>%
     as_tibble() %>%
     select(all_of(c("midges", "time", "distance"))) %>%
     pivot_longer(everything(), names_to = "coef") %>%
@@ -272,8 +279,12 @@ slope_density_UI_df <- fit$stan %>%
 slope_sd_density_UI_df <- fit$stan %>%
     rstan::extract(pars = "sig_beta") %>%
     do.call(what = cbind) %>%
-    {colnames(.) <- c("int_tax","int_plot","int_trans","midges",
-                      "time","distance"); .} %>%
+    {colnames(.) <- c("int_tax",
+                      "int_plot",
+                      # "int_trans",
+                      "midges",
+                      "time",
+                      "distance"); .} %>%
     as_tibble() %>%
     select(all_of(c("midges", "time", "distance"))) %>%
     pivot_longer(everything(), names_to = "coef") %>%

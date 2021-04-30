@@ -44,22 +44,16 @@ myv_arth <- read_csv("data/myv_arth.csv")
 data_fit <- myv_arth %>%
     filter(taxon != "acar") %>%
     rename(distance = dist) %>%
-    mutate(y = log1p(count),
-           y = (y - mean(y))/(sd(y))) %>%
+    mutate(catch_rate = log1p (count / days),
+           midge_rate = log (midges / m_days),
+           midges_z = (midge_rate - mean(midge_rate)) / sd(midge_rate),
+           dist_z = (distance - mean(distance)) / sd(distance),
+           time_z = (year - min(year)) / sd(year),
+           plot = factor(paste(distance, trans)),
+           taxon = factor(taxon)) %>%
+    group_by(taxon) %>%
+    mutate(y = (catch_rate - mean(catch_rate)) / sd(catch_rate)) %>%
     ungroup() %>%
-    mutate(midges_z = log1p(midges),
-           midges_z = (midges_z - mean(midges_z))/(sd(midges_z)),
-           time = factor(year, levels = c(1:max(year))) %>% as.numeric(),
-           time = time - min(time),
-           time_z = (time)/(sd(time)),
-           dist  = log(distance),
-           dist_z = (dist - mean(dist))/(sd(dist)),
-           trans = factor(trans),
-           distf = factor(dist),
-           taxon = factor(taxon),
-           plot = factor(paste0(trans, dist)),
-           taxon_plot = factor(paste0(taxon, plot)),
-           taxon_trans = factor(paste0(taxon, trans))) %>%
     arrange(trans, distance, taxon, year)
 
 # write_csv(data_fit, "analysis/data_fit.csv")
@@ -77,9 +71,9 @@ data_fit <- myv_arth %>%
 if (.REFIT_MODEL) {
 
     fit <- armm(formula = y ~ midges_z + time_z + dist_z +
-                    (1 | taxon + taxon_plot + taxon_trans) +
-                    (midges_z + time_z + dist_z | taxon),
-                time_form = ~ time | trans + distf + taxon,
+                    (1 | taxon + plot) +
+                    (0 + midges_z + time_z + dist_z | taxon),
+                time_form = ~ year | plot + taxon,
                 ar_form = ~ taxon,
                 obs_error = TRUE,
                 distr = "normal",
@@ -89,9 +83,9 @@ if (.REFIT_MODEL) {
                 hmc = TRUE,
                 change = TRUE,
                 rstan_control = list(iter = 4000, chains = 4, seed = 3e3,
-                                     control = list(adapt_delta = 0.97)))
+                                     control = list(adapt_delta = 0.95)))
 
-    # write_rds(fit, "analysis/output/fit.rds")
+    write_rds(fit, "analysis/output/fit.rds")
 
     # Gets uncertainty intervals via quantiles, and estimates via median
     get_fit_info <- function(.var) {
@@ -116,7 +110,7 @@ if (.REFIT_MODEL) {
         left_join(map_dfr(.$var, get_fit_info), by = "var") %>%
         select(var, lo, mi, hi, n_eff, Rhat)
 
-    # write_csv(fit_sum, "analysis/output/fit_sum.csv")
+    write_csv(fit_sum, "analysis/output/fit_sum.csv")
 
 } else {
 
@@ -225,7 +219,11 @@ sig_beta <- fit_sum %>%
                          labels = c("int_tax","int_tax_plot","int_tax_trans",
                                     "midges","time","dist")))
 
-coef_sum <- list(ar = ar, beta = beta, int_full = int_full, int_taxon = int_taxon,
-                      alpha = alpha, sig_beta = sig_beta)
+coef_sum <- list(ar = ar,
+                 beta = beta,
+                 int_full = int_full,
+                 int_taxon = int_taxon,
+                 alpha = alpha,
+                 sig_beta = sig_beta)
 
 # write_rds(coef_sum, "analysis/output/coef_sum.rds")

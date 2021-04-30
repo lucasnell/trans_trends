@@ -23,21 +23,22 @@ pit_clean = pit %>%
     # create variable for year
     # create variables for aggregated abundances of certain groups
     mutate(year = year(coldate),
-           sheet = aran_other + liny) %>%
+           sheet = aran_other + liny,
+           days = as.numeric(coldate - setdate)) %>%
     # rename 'acar_total" as "acar" and "lyco_total" and "lyco
-    rename(acar = acar_total,
-           lyco = lyco_total) %>%
+    rename(lyco = lyco_total) %>%
     # select columns to keep
-    select(trans, dist, year, lyco, sheet, gnap, opil, acar, stap, cara) %>%
-    # convert to long form
-    # keep specific taxa that make most sense for analysis
-    gather(taxon, count, lyco, sheet, gnap, opil, acar, stap, cara) %>%
-    # calculate total year abundance for each taxon and site
-    # a few "counts" are averages, so round
+    select(trans, dist,setdate, coldate, year, days, lyco, sheet, gnap, opil, stap, cara) %>%
+    na.omit() %>%
+    pivot_longer(cols = c(lyco, sheet, gnap, opil, stap, cara)) %>%
+    rename(taxon = name,
+           count = value) %>%
     group_by(trans, dist, year, taxon) %>%
-    summarize(count = sum(round(count), na.rm=T)) %>%
-    # sort by year within site and taxon
+    summarize(days = sum(days),
+              count = round(sum(count))) %>%
+    ungroup() %>%
     arrange(trans, dist, taxon, year)
+
 
 # clean infall data
 inf_clean = inf %>%
@@ -48,11 +49,15 @@ inf_clean = inf %>%
     mutate(year = year(coldate),
            bgch = bgch/fract_bgch,
            smch = smch/fract_smch,
-           midges = bgch + smch) %>%
+           midges = bgch + smch,
+           m_days  = as.numeric(coldate - setdate)) %>%
+    select(trans, dist, year, m_days, midges) %>%
+    na.omit() %>%
     # calculate total year abundance for each taxon and site
     group_by(trans, dist, year) %>%
-    summarize(midges = sum(midges, na.rm=T))
+    summarize(m_days = sum(m_days),
+              midges = sum(midges))
 
 # merge data frames and save
-myv_arth = left_join(pit_clean, inf_clean) %>% as.data.frame()
+myv_arth = left_join(pit_clean, inf_clean)
 # write_csv(myv_arth, "data/myv_arth.csv")
