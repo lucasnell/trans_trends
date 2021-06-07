@@ -130,10 +130,152 @@ no_leg <- function(p) {
 
 
 
+
+# =============================================================================*
+# =============================================================================*
+
+# Fig 1 - Map ----
+
+# =============================================================================*
+# =============================================================================*
+
+
+
+# From decimal degrees to UTM, assuming it's Iceland and using WGS84
+to_utm <- function(.df, .lat = "lat", .lon = "long") {
+    .cord.dec <- SpatialPoints(cbind(.df[[.lon]], .df[[.lat]]),
+                               proj4string=CRS("+proj=longlat"))
+    .cord.UTM <- spTransform(.cord.dec, CRS("+proj=utm +zone=28 ellps=WGS84"))
+    .df[[.lon]] <- .cord.UTM@coords[,1]
+    .df[[.lat]] <- .cord.UTM@coords[,2]
+    return(.df)
+}
+
+
+
+pit_df <- "site,coord,5m,50m,150m,500m
+BTL,x,407123,407104,407094,NA
+BTL,y,7273389,7273347,7273251,NA
+HAG,x,405379,405309,405209,404938
+HAG,y,7274913,7274902,7274870,7274731
+SKF,x,403834,403818,403655,403497
+SKF,y,7277920,7277952,7278041,7278150
+VIN,x,406346,406358,406375,NA
+VIN,y,7278620,7278676,7278767,NA
+FLG,x,410828,410859,410930,411208
+FLG,y,7281762,7281789,7281863,7282065
+NON,x,410707,410695,410690,NA
+NON,y,7276185,7276145,7276040,NA
+KAL,x,409441,409448,409461,NA
+KAL,y,7274132,7274078,7273987,NA" %>%
+    read_csv() %>%
+    pivot_longer(`5m`:`500m`, names_to = "dist") %>%
+    pivot_wider(names_from = coord) %>%
+    mutate(site = tolower(site),
+           dist = str_remove(dist, "m") %>%
+               as.integer() %>%
+               factor(levels = c(5, 50, 150, 500))) %>%
+    filter(site %in% unique(read_csv("analysis/data_fit.csv")[["trans"]])) %>%
+    mutate(site = factor(site, levels = c("vin", "kal", "hag", "non", "btl"),
+                         labels = c("Vindbelgur", "Kálfaströnd", "Haganes",
+                                    "Nóntangi", "Fellshóll")))
+
+
+myvatn_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/myvatn",
+                     layer = "Myvatn_WSGUTM28") %>%
+    tidy() %>%
+    rename(x = long, y = lat)
+
+# Iceland outline is from GADM data (version 3.6; https://gadm.org/)
+iceland_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/iceland",
+                      layer = "gadm36_ISL_0") %>%
+    tidy() %>%
+    to_utm() %>%
+    # -----------`
+    # Shown below are two ways to filter this dataset, to avoid
+    # plotting islands far from shore:
+    # -----------`
+    # 1. You can filter out islands that are very far from shore:
+    # filter(!piece %in% c(90, 133, 143, 157, 215, 244, 257, 258, 260, 262))
+    # 2. Filter for just the mainland:
+    filter(piece == 1) %>%
+    rename(x = long, y = lat)
+
+
+
+
+myvatn_pit_p <- myvatn_df %>%
+    ggplot(aes(x, y)) +
+    geom_polygon(aes(group = group, fill = hole), color = "black", size = 0.1) +
+    geom_point(data = filter(pit_df, dist == 5), aes(color = site), size = 4) +
+    geom_point(data = filter(pit_df, dist == 5), size = 4, shape = 1) +
+    geom_segment(data = tibble(xe = 405.5e3, x = xe - 1e3, y = 7271.5e3),
+                 aes(xend = xe, yend = y), size = 1) +
+    geom_text(data = tibble(x = 405.5e3-500, y = 7271.5e3 + 200),
+              label = "1 km", vjust = 0, hjust = 0.5, size = 10 / 2.83465) +
+    north(rename(myvatn_df, long = x, lat = y), "bottomleft", symbol = 12) +
+    geom_text(data = filter(pit_df, dist == 5) %>%
+                  mutate(x = case_when(site == "Kálfaströnd" ~ x + 2000,
+                                       site == "Haganes" ~ x - 1400,
+                                       site == "Vindbelgur" ~ x - 1200,
+                                       site == "Nóntangi" ~ x + 600,
+                                       site == "Fellshóll" ~ x - 400,
+                                       TRUE ~ x),
+                         y = case_when(site == "Nóntangi" |
+                                           site == "Fellshóll" ~ y - 600,
+                                       site == "Vindbelgur" ~ y + 600,
+                                       TRUE ~ y)),
+              aes(label = site), size = 10 / 2.83465, fontface = "plain") +
+    scale_fill_manual(values = c("lightblue", "white"), guide = FALSE) +
+    scale_color_viridis_d(begin = 0.1, end = 0.9, guide = FALSE) +
+    coord_equal(xlim = c(NA, 411932 + 700)) +
+    theme_minimal() +
+    theme(axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank()) +
+    NULL
+
+
+
+
+
+myvatn_pit_inset_p <- iceland_df %>%
+    ggplot(aes(x, y)) +
+    geom_polygon(aes(group = group), color = "black", size = 0.1,
+                 fill = "gray80") +
+    geom_point(data = tibble(x = 403118.1, y = 7271491),
+               size = 2, color = "black", shape = 16) +
+    coord_equal() +
+    theme_minimal() +
+    theme(axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank()) +
+    NULL
+
+
+
+
+
+sites_p <- ggdraw() +
+    draw_plot(myvatn_pit_p) +
+    draw_plot(myvatn_pit_inset_p, x = 0, y = 1, hjust = 0, vjust = 1,
+              width = 0.55, height = 0.3)
+
+
+
+
+save_file(sites_p, "sites", width = 3.21, height = 3.6)
+
+
+
+
+
 # ==================================================*
 # ==================================================*
 
-# Fig 1 - Observed data ----
+# Fig 2 - Observed data ----
 
 # ==================================================*
 # ==================================================*
@@ -215,7 +357,7 @@ fig1 <- plot_grid(time_dist_legend, prow, ncol = 1, rel_heights = c(0.1, 1))
 # ==================================================*
 # ==================================================*
 
-# Fig 2 - Coefficients ----
+# Fig 3 - Coefficients ----
 
 # ==================================================*
 # ==================================================*
@@ -435,612 +577,10 @@ fig2 <- ggarrange(ar_p,
 
 
 
-# ==================================================*
-# ==================================================*
 
-# Fig 3 - PCA ----
 
-# ==================================================*
-# ==================================================*
 
-# This file contains a bunch of functions for the PCA:
-source("analysis/pca_funs.R")
 
-# PCA on predicted values
-pred_pca <- pred_pca_fn(data_fit, coef_sum$beta, coef_sum$int_taxon)
 
 
-#
-# This function is to switch PC2 and PC.
-#
-# NOTE: We're moving PC3 to PC2 bc it explains more of the observed variance!
-# ----------------------*
-switch_pcs <- function(.x) {
-    if (inherits(.x, "data.frame")) {
-        if (!"PC2" %in% colnames(.x)) return(.x)
-        z <- .x[["PC2"]]
-        .x[["PC2"]] <- .x[["PC3"]]
-        .x[["PC3"]] <- z
-    } else if (inherits(.x, "prcomp")) {
-        z <- .x$sdev[2]
-        .x$sdev[2] <- .x$sdev[3]
-        .x$sdev[3] <- z
-        z <- .x$rotation[,"PC2"]
-        .x$rotation[,"PC2"] <- .x$rotation[,"PC3"]
-        .x$rotation[,"PC3"] <- z
-        z <- .x$x[,"PC2"]
-        .x$x[,"PC2"] <- .x$x[,"PC3"]
-        .x$x[,"PC3"] <- z
-    } else stop("\nUnknown type in `switch_pcs`")
-    return(.x)
-}
-
-pred_pca <- map(pred_pca, switch_pcs)
-# Also adjust cumulative proportion for `obs_exp`:
-pred_pca$obs_exp[pred_pca$obs_exp$type == "cumulative",-1] <-
-    pred_pca$obs_exp[pred_pca$obs_exp$type == "individual",-1] %>%
-    unlist() %>%
-    cumsum() %>%
-    as.list()
-
-
-
-# taxon vectors
-pred_pca$taxon_vec %>%
-    arrange(-abs(PC1))
-
-# variance explained in predicted values (first three axes must
-# explain everything)
-summary(pred_pca$pca)
-
-
-# variance explained in observed values (For Results)
-pred_pca$obs_exp
-
-
-
-# predictor vectors
-pred_vec <- map_dfr(c("time", "distance", "midges"),
-                    function(pred_) {
-                        if (pred_ == "distance") pred_ <- "dist"
-                        sym_ <- sym(paste0(pred_, "_z"))
-                        pred_pca$axes %>%
-                            filter(!!sym_ %in% range(!!sym_)) %>%
-                            group_by(!!sym_) %>%
-                            summarize(PC1 = mean(PC1),
-                                      PC2 = mean(PC2),
-                                      PC3 = mean(PC3),
-                                      .groups = "drop") %>%
-                            rename(val = !!sym_) %>%
-                            arrange(val) %>%
-                            mutate(var = pred_)  %>%
-                            mutate(PC1 = PC1 - PC1[1],
-                                   PC2 = PC2 - PC2[1],
-                                   PC3 = PC3 - PC3[1]) %>%
-                            filter(PC1 != 0 | PC2 != 0 | PC3 != 0) %>%
-                            select(var, starts_with("PC"))
-                    })
-
-
-
-pc_axis_lim <- 4.1
-#' We're scaling some of the projections. This is to keep that consistent.
-pc_mults <- list(pred = c(-2, 2, 2), taxon = c(-5, 5, 5))
-
-
-pca_theme <- theme(plot.margin = margin(t=8,r=8,b=0,l=8),
-                   axis.text.y = element_text(size = 8,
-                                               margin = margin(0,0,0,r=2)),
-                   axis.title.y = element_text(size = 10,
-                                               margin = margin(0,0,0,0)),
-                   axis.text.x = element_text(size = 8,
-                                              margin = margin(0,0,0,t=2)),
-                   axis.title.x = element_text(size = 10,
-                                               margin = margin(0,0,0,b=8)))
-
-
-# ----------------*
-# Plots of taxon response vectors
-# ----------------*
-
-
-taxon_pca_fun <- function(.xPC, .yPC,
-                          .nudge_x = NULL,
-                          .nudge_y = NULL,
-                          .segment_df = NULL) {
-
-    stopifnot(isTRUE(length(.xPC) == 1) && isTRUE(length(.yPC) == 1))
-
-    .PCs <- c(.xPC, .yPC)
-
-    .dd <- pred_pca$taxon_vec %>%
-        mutate(taxon = factor(taxon, levels = taxa_lvls %>% rev(),
-                              labels = c("ground\nspiders","wolf\nspiders",
-                                         "sheet\nweavers", "harvestmen",
-                                         "ground\nbeetles","rove\nbeetles") %>%
-                                  .[rev(taxa_order)])) %>%
-        arrange(taxon) %>%
-        mutate(PC1 = pc_mults$taxon[1] * PC1,
-               PC2 = pc_mults$taxon[2] * PC2,
-               PC3 = pc_mults$taxon[3] * PC3)
-
-    if (!is.null(.nudge_x) && !is.null(.nudge_y)) {
-        .labs <- paste0("PC", .PCs, "_lab")
-        .rto <- rev(taxa_order)
-        .dd[[.labs[1]]] <- .dd[[paste0("PC", .PCs[1])]] + .nudge_x[.rto]
-        .dd[[.labs[2]]] <- .dd[[paste0("PC", .PCs[2])]] + .nudge_y[.rto]
-    }
-
-    .dd <- .dd %>%
-        arrange(desc(taxon))
-
-    .p <- .dd %>%
-        ggplot()+
-        geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
-        geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-        geom_segment(aes_string(x = 0, xend = paste0("PC", .PCs[1]),
-                                y = 0, yend = paste0("PC", .PCs[2]),
-                                group = "taxon", color = "taxon"),
-                     arrow = arrow(length = unit(6, "pt")),
-                     size = 1) +
-        scale_x_continuous(paste0("PC", .PCs[1]), breaks = 3*-1:1) +
-        scale_y_continuous(paste0("PC", .PCs[2]), breaks = 3*-1:1) +
-        coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
-                    ylim = c(-pc_axis_lim, pc_axis_lim)) +
-        scale_color_manual(values = RColorBrewer::brewer.pal(9, "RdYlBu") %>%
-                               .[c(1:3, 7:9)],
-                           guide = FALSE) +
-        pca_theme
-
-    if (!is.null(.nudge_x) && !is.null(.nudge_y)) {
-        .p <- .p +
-            geom_text(aes_string(label = "taxon", x = .labs[1], y = .labs[2],
-                                 color = "taxon"),
-                      size = 7 / 2.83465, lineheight = 0.75)
-    }
-
-    if (!is.null(.segment_df)) {
-        .p <- .p +
-            geom_segment(data = .segment_df,
-                         aes(x = x, y = y, xend = xend, yend = yend),
-                         color = "black", size = 0.25)
-    }
-
-    return(.p)
-}
-
-
-
-
-
-taxon_pca_p <- list(
-    taxon_pca_fun(1, 2,
-                  .nudge_x = c(-0.4,  0.5, -1.5,  2.7, -1.0,  0.5),
-                  .nudge_y = c( 1.0, -1.4, -3.0, -2.6,  0.8, -1.3),
-                  .segment_df = tibble(x = c(1.25,  -1.3),
-                                       y = c(-0.6,   -1.3),
-                                       xend = c(-0.4, -0.4),
-                                       yend = c(1.2,   0.6))),
-    taxon_pca_fun(1, 3),
-    taxon_pca_fun(2, 3))
-
-
-
-# ----------------*
-# Plots of model predictors and observed data
-# ----------------*
-
-predictor_pca_fun <- function(.xPC, .yPC, .label_df = NULL, ...) {
-
-    # .xPC = 1; .yPC = 2; .label_df = NULL
-
-    stopifnot(isTRUE(length(.xPC) == 1) && isTRUE(length(.yPC) == 1))
-
-    .PCs <- c(.xPC, .yPC)
-
-    .obs_rot <- pred_pca$obs_rot %>%
-        mutate(PC1 = sign(pc_mults$pred[1]) * PC1,
-               PC2 = sign(pc_mults$pred[2]) * PC2,
-               PC3 = sign(pc_mults$pred[3]) * PC3)
-
-    vars <- c("time", "distance", "midges")
-
-    .pred_vec <- pred_vec %>%
-        mutate(PC1 = pc_mults$pred[1] * PC1,
-               PC2 = pc_mults$pred[2] * PC2,
-               PC3 = pc_mults$pred[3] * PC3) %>%
-        mutate(var = factor(var, levels = gsub("^distance$", "dist", vars),
-                            labels = vars))
-
-
-    pc_axes <- paste0("PC", .PCs)
-
-    .p <- .obs_rot %>%
-        ggplot(aes_string(x = pc_axes[1], y = pc_axes[2]))+
-        geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
-        geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-        geom_point(alpha = 0.25, size = 1, shape = 1,
-                   # color = "gray60") +
-                   color = viridis::viridis(1, begin = 0.9, end = 0.9)) +
-        geom_segment(data = .pred_vec,
-                     aes_string(x = 0, xend = pc_axes[1],
-                                y = 0, yend = pc_axes[2],
-                                color = "var"),
-                     arrow = arrow(length = unit(6, "pt")),
-                     size = 1) +
-        scale_x_continuous(pc_axes[1], breaks = 3*-1:1) +
-        scale_y_continuous(pc_axes[2], breaks = 3*-1:1) +
-        scale_color_viridis_d(end = 0.75, guide = FALSE) +
-        coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
-                    ylim = c(-pc_axis_lim, pc_axis_lim)) +
-        pca_theme +
-        theme(axis.title.y = element_blank(),
-              axis.text.y = element_blank())
-
-    if (!is.null(.label_df)) {
-        stopifnot(is.data.frame(.label_df) && nrow(.label_df) == 3)
-        stopifnot(identical(c("lab", "x", "y"), sort(colnames(.label_df))))
-        stopifnot(all(c("time", "midges") %in% .label_df$lab))
-        stopifnot(any(grepl("^dist", .label_df$lab)))
-
-        .p <- .p +
-            geom_text(data = .label_df %>%
-                          mutate(var = ifelse(grepl("^dist", lab),
-                                              "distance", lab) %>%
-                                     factor(levels = vars)),
-                      aes(x = x, y = y, label = lab, color = var),
-                      size = 8 / 2.83465,
-                      ...)
-    }
-
-    return(.p)
-
-}
-
-
-
-pred_pca_p <- list(
-    predictor_pca_fun(1, 2,
-                      .label_df = tibble(x = c(-0.8, -1, pc_axis_lim),
-                                         y = c(2.5, -1, 1),
-                                         lab = c("midges", "time", "dist.")),
-                      hjust = 1, vjust = 0.5),
-    predictor_pca_fun(1, 3),
-    predictor_pca_fun(2, 3))
-
-
-
-
-
-# --------------*
-# Variance partitioning
-# --------------*
-
-
-# variance partition of PC axes by predictors
-var_part <- lapply(c("PC1","PC2","PC3"), function(x) {
-    y = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
-    tibble(var = c("midges_z", "time_z", "dist_z"),
-           pc = x,
-           cont = anova(lm(y, data = pred_pca$axes))[,2] %>%
-               {.[1:3]/sum(.[1:3])})
-    }) %>%
-    bind_rows() %>%
-    spread(pc, cont) %>%
-    mutate(var = gsub("_z$", "", var))
-
-
-# variance accounted for by predictors and PCs:
-var_df <- var_part %>%
-    mutate(PC1 = PC1 * pred_pca$obs_exp$PC1[1],
-           PC2 = PC2 * pred_pca$obs_exp$PC2[1],
-           PC3 = PC3 * pred_pca$obs_exp$PC3[1],
-           var = make_coef_fct(var)) %>%
-    pivot_longer(starts_with("PC"), names_to = "pc") %>%
-    mutate(pc = gsub("PC", "", pc) %>% as.integer()) %>%
-    arrange(pc, var) %>%
-    mutate(cumvalue = cumsum(value),
-           lag_cumvalue = lag(cumvalue, default = 0))
-
-
-
-
-var_part_p <- var_df %>%
-    mutate(y = pc - 1,
-           ymax = 0 - y * 0.5,
-           ymin = ymax - 1) %>%
-    ggplot() +
-    geom_rect(aes(xmin = lag_cumvalue, xmax = cumvalue,
-                  ymax = ymax, ymin = ymin, fill = var)) +
-    geom_text(data = var_df %>%
-                  group_by(pc) %>%
-                  summarize(value = (min(lag_cumvalue) + max(cumvalue)) / 2,
-                            .groups = "drop") %>%
-                  add_row(pc = 4, value = (1 + sum(var_df$value)) / 2) %>%
-                  mutate(y = 0 - (pc-1) * 0.5,
-                         lab = ifelse(pc < 4, paste0("PC", pc), "")),
-              aes(value, y, label = lab),
-              nudge_y = 0.3, size = 8 / 2.83465) +
-    geom_point(data = tibble(var = var_df$var %>% unique() %>% sort(),
-                             value = 0.79,
-                             y = 0.25 - 0:2 * 0.5),
-              aes(value, y, color = var),
-              size = 2, shape = 15) +
-    geom_text(data = tibble(var = var_df$var %>% unique() %>% sort(),
-                            value = 0.82,
-                            y = 0.25 - 0:2 * 0.5),
-              aes(value, y, label = var, color = var),
-              size = 8 / 2.83465, hjust = 0, vjust = 0.5) +
-    scale_color_viridis_d(end = 0.75, aesthetics = c("fill", "color"),
-                          guide = FALSE) +
-    scale_x_continuous("Proportion of variance", breaks = seq(0, 1, 0.2)) +
-    coord_cartesian(xlim = c(0, 1),
-                    ylim = c(-2.1, 0.7),
-                    expand = FALSE) +
-    pca_theme +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank(),
-          axis.title.x = element_text(margin = margin(0,0,0,b=6)),
-          # panel.border = element_blank(),
-          plot.margin = margin(0,0,r=8,l=27)) +
-    NULL
-
-
-
-
-
-# --------------*
-# Combine them all into fig 3
-# --------------*
-fig3 <- plot_grid(ggarrange(plots = c(taxon_pca_p, pred_pca_p),
-                            nrow = 3, labels = letters[c(1,3,5,2,4,6)],
-                            draw = FALSE, byrow = FALSE,
-                            label.args = list(gp = gpar(font = 1, fontsize = 16),
-                                              x = unit(0,"line"), hjust = 0)),
-                  var_part_p,
-                  labels = c("", "g"),
-                  label_fontface = "plain", label_size = 16,
-                  label_x = 0, label_y = 1.3,
-                  ncol = 1, rel_heights = c(5.5, 1))
-
-# fig3
-
-
-save_file(fig3, "fig3", width = 3, height = 6.5)
-
-
-
-
-
-# ==================================================*
-# ==================================================*
-
-# Fig S1 - colored by predictor ----
-
-# ==================================================*
-# ==================================================*
-
-
-pred_color_pca_fun <- function(.xPC, .yPC) {
-
-    stopifnot(isTRUE(length(.xPC) == 1) && isTRUE(length(.yPC) == 1))
-
-    .PCs <- c(.xPC, .yPC)
-
-    vars <- c("time", "distance", "midges")
-
-    var_z_ <- paste0(gsub("^distance$", "dist", vars), "_z")
-
-    pc_axes <- paste0("PC", .PCs)
-
-    .obs_rot <- pred_pca$obs_rot %>%
-        mutate(PC1 = sign(pc_mults$pred[1]) * PC1,
-               PC2 = sign(pc_mults$pred[2]) * PC2,
-               PC3 = sign(pc_mults$pred[3]) * PC3) %>%
-        select(all_of(c(var_z_, pc_axes))) %>%
-        pivot_longer(all_of(var_z_), names_to = "var", values_to = "value") %>%
-        mutate(var = str_replace(var, "_z$", "") %>%
-                   factor(levels = gsub("^distance$", "dist", vars),
-                          labels = vars))
-
-    .pred_vec <- pred_vec %>%
-        mutate(PC1 = pc_mults$pred[1] * PC1,
-               PC2 = pc_mults$pred[2] * PC2,
-               PC3 = pc_mults$pred[3] * PC3) %>%
-        mutate(var = factor(var, levels = gsub("^distance$", "dist", vars),
-                            labels = vars))
-
-
-    .obs_rot %>%
-        ggplot(aes_string(x = pc_axes[1], y = pc_axes[2]))+
-        geom_hline(yintercept = 0, color = "gray90", size = 0.5) +
-        geom_vline(xintercept = 0, color = "gray90", size = 0.5) +
-        geom_point(aes(color = value), alpha = 0.25, size = 1)+
-        geom_segment(data = .pred_vec,
-                     aes_string(x = 0, xend = pc_axes[1],
-                                y = 0, yend = pc_axes[2]),
-                     arrow = arrow(length = unit(6, "pt")),
-                     size = 0.8, color = "black") +
-        facet_grid(~ var) +
-        scale_colour_gradient2("Predictor\nvalue", low =  pca_palette[1],
-                               mid = pca_palette[2],
-                               high = pca_palette[3],
-                               midpoint = -0.5, limits = c(-3,2),
-                               breaks = c(-3,-0.5,2))+
-        scale_x_continuous(paste0("PC", .PCs[1]), breaks = 3*-1:1) +
-        scale_y_continuous(paste0("PC", .PCs[2]), breaks = 3*-1:1) +
-        coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
-                    ylim = c(-pc_axis_lim, pc_axis_lim)) +
-        pca_theme +
-        theme(plot.margin = margin(0,0,0,t=8)) +
-        guides(color = guide_colorbar(
-            title.hjust = 0,
-            title.theme = element_text(size = 10,
-                                       margin = margin(0,4,4,0),
-                                       lineheight = 0.75),
-            label.theme = element_text(size = 8),
-            barwidth = unit(0.15, "inches"),
-            barheight = unit(1, "inches")))
-}
-
-
-figS1 <- ggarrange(pred_color_pca_fun(1, 2) %>% no_leg(),
-                   pred_color_pca_fun(1, 3),
-                   pred_color_pca_fun(2, 3) %>% no_leg(),
-                   labels = letters[1:3],
-                   draw = FALSE,
-                   label.args = list(gp = gpar(font = 1, fontsize = 16),
-                                     x = unit(0,"line"), hjust = 0))
-
-
-
-# save_file(figS1, "figS1", width = 6, height = 7)
-
-
-
-
-
-
-
-
-
-
-
-# =============================================================================*
-# =============================================================================*
-
-# Map ----
-
-# =============================================================================*
-# =============================================================================*
-
-
-
-# From decimal degrees to UTM, assuming it's Iceland and using WGS84
-to_utm <- function(.df, .lat = "lat", .lon = "long") {
-    .cord.dec <- SpatialPoints(cbind(.df[[.lon]], .df[[.lat]]),
-                               proj4string=CRS("+proj=longlat"))
-    .cord.UTM <- spTransform(.cord.dec, CRS("+proj=utm +zone=28 ellps=WGS84"))
-    .df[[.lon]] <- .cord.UTM@coords[,1]
-    .df[[.lat]] <- .cord.UTM@coords[,2]
-    return(.df)
-}
-
-
-
-pit_df <- "site,coord,5m,50m,150m,500m
-BTL,x,407123,407104,407094,NA
-BTL,y,7273389,7273347,7273251,NA
-HAG,x,405379,405309,405209,404938
-HAG,y,7274913,7274902,7274870,7274731
-SKF,x,403834,403818,403655,403497
-SKF,y,7277920,7277952,7278041,7278150
-VIN,x,406346,406358,406375,NA
-VIN,y,7278620,7278676,7278767,NA
-FLG,x,410828,410859,410930,411208
-FLG,y,7281762,7281789,7281863,7282065
-NON,x,410707,410695,410690,NA
-NON,y,7276185,7276145,7276040,NA
-KAL,x,409441,409448,409461,NA
-KAL,y,7274132,7274078,7273987,NA" %>%
-    read_csv() %>%
-    pivot_longer(`5m`:`500m`, names_to = "dist") %>%
-    pivot_wider(names_from = coord) %>%
-    mutate(site = tolower(site),
-           dist = str_remove(dist, "m") %>%
-               as.integer() %>%
-               factor(levels = c(5, 50, 150, 500))) %>%
-    filter(site %in% unique(read_csv("analysis/data_fit.csv")[["trans"]])) %>%
-    mutate(site = factor(site, levels = c("vin", "kal", "hag", "non", "btl"),
-                         labels = c("Vindbelgur", "Kálfaströnd", "Haganes",
-                                    "Nóntangi", "Fellshóll")))
-
-
-myvatn_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/myvatn",
-                     layer = "Myvatn_WSGUTM28") %>%
-    tidy() %>%
-    rename(x = long, y = lat)
-
-# Iceland outline is from GADM data (version 3.6; https://gadm.org/)
-iceland_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/iceland",
-                      layer = "gadm36_ISL_0") %>%
-    tidy() %>%
-    to_utm() %>%
-    # -----------`
-    # Shown below are two ways to filter this dataset, to avoid
-    # plotting islands far from shore:
-    # -----------`
-    # 1. You can filter out islands that are very far from shore:
-    # filter(!piece %in% c(90, 133, 143, 157, 215, 244, 257, 258, 260, 262))
-    # 2. Filter for just the mainland:
-    filter(piece == 1) %>%
-    rename(x = long, y = lat)
-
-
-
-
-myvatn_pit_p <- myvatn_df %>%
-    ggplot(aes(x, y)) +
-    geom_polygon(aes(group = group, fill = hole), color = "black", size = 0.1) +
-    geom_point(data = filter(pit_df, dist == 5), aes(color = site), size = 4) +
-    geom_point(data = filter(pit_df, dist == 5), size = 4, shape = 1) +
-    geom_segment(data = tibble(xe = 405.5e3, x = xe - 1e3, y = 7271.5e3),
-                 aes(xend = xe, yend = y), size = 1) +
-    geom_text(data = tibble(x = 405.5e3-500, y = 7271.5e3 + 200),
-              label = "1 km", vjust = 0, hjust = 0.5, size = 10 / 2.83465) +
-    north(rename(myvatn_df, long = x, lat = y), "bottomleft", symbol = 12) +
-    geom_text(data = filter(pit_df, dist == 5) %>%
-                  mutate(x = case_when(site == "Kálfaströnd" ~ x + 2000,
-                                       site == "Haganes" ~ x - 1400,
-                                       site == "Vindbelgur" ~ x - 1200,
-                                       site == "Nóntangi" ~ x + 600,
-                                       site == "Fellshóll" ~ x - 400,
-                                       TRUE ~ x),
-                         y = case_when(site == "Nóntangi" |
-                                           site == "Fellshóll" ~ y - 600,
-                                       site == "Vindbelgur" ~ y + 600,
-                                       TRUE ~ y)),
-              aes(label = site), size = 10 / 2.83465, fontface = "plain") +
-    scale_fill_manual(values = c("lightblue", "white"), guide = FALSE) +
-    scale_color_viridis_d(begin = 0.1, end = 0.9, guide = FALSE) +
-    coord_equal(xlim = c(NA, 411932 + 700)) +
-    theme_minimal() +
-    theme(axis.title = element_blank(),
-          axis.text = element_blank(),
-          axis.ticks = element_blank(),
-          panel.grid = element_blank()) +
-    NULL
-
-
-
-
-
-myvatn_pit_inset_p <- iceland_df %>%
-    ggplot(aes(x, y)) +
-    geom_polygon(aes(group = group), color = "black", size = 0.1,
-                 fill = "gray80") +
-    geom_point(data = tibble(x = 403118.1, y = 7271491),
-               size = 2, color = "black", shape = 16) +
-    coord_equal() +
-    theme_minimal() +
-    theme(axis.title = element_blank(),
-          axis.text = element_blank(),
-          axis.ticks = element_blank(),
-          panel.grid = element_blank()) +
-    NULL
-
-
-
-
-
-sites_p <- ggdraw() +
-    draw_plot(myvatn_pit_p) +
-    draw_plot(myvatn_pit_inset_p, x = 0, y = 1, hjust = 0, vjust = 1,
-              width = 0.55, height = 0.3)
-
-
-
-
-save_file(sites_p, "sites", width = 3.21, height = 3.6)
 
