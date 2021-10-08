@@ -12,8 +12,8 @@ library(lubridate)
 # ✖ dplyr::lag()    masks stats::lag()
 
 # load data
-pit = read_csv("data/myvatn_pitfalls.csv")
-inf = read_csv("data/myvatn_infalls.csv")
+pit = read_csv("data/myvatn_pitfalls_08-19.csv")
+inf = read_csv("data/myvatn_infalls_08-19.csv")
 
 # clean piftall data
 pit_clean = pit %>%
@@ -60,4 +60,4 @@ inf_clean = inf %>%
 
 # merge data frames and save
 myv_arth = left_join(pit_clean, inf_clean)
-# write_csv(myv_arth, "data/myv_arth.csv")
+# write_csv(myv_arth, "data/myv_arth_08-19.csv")
