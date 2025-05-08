@@ -653,7 +653,7 @@ list(full_model_summ %>%
          .[["fixef"]] %>%
          rownames_to_column("Parameter") %>%
          mutate(Parameter = make_summ_coef_fct(Parameter)) %>%
-         mutate(`Fixed effect` = sprintf("$%.3f \\, (%.3f)$", Median,
+         mutate(`Fixed effect` = sprintf("$%.3f \\pm %.3f$", Median,
                                          `Std.Error`)) %>%
          select(-Median, -`Std.Error`),
      full_model_summ %>%
@@ -661,7 +661,7 @@ list(full_model_summ %>%
          filter(Groups == "taxon") %>%
          mutate(Parameter = make_summ_coef_fct(Name)) %>%
          select(-Groups, -Name) %>%
-         mutate(`Random effect SD` = sprintf("$%.3f \\, (%.3f)$", Median,
+         mutate(`Random effect SD` = sprintf("$%.3f \\pm %.3f$", Median,
                                              `Std.Error`)) %>%
          select(-Median, -`Std.Error`)) %>%
     c(by = "Parameter") %>%
