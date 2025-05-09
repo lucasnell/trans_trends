@@ -29,22 +29,7 @@ st_geometry(iceland_map) <- iceland_map$geometry[[1]][[which(geom_nrows == max(g
     st_polygon() |>
     st_sfc(crs = st_crs(iceland_map))
 
-pit_df <- "site,coord,5m,50m,150m,500m
-BTL,x,407123,407104,407094,NA
-BTL,y,7273389,7273347,7273251,NA
-HAG,x,405379,405309,405209,404938
-HAG,y,7274913,7274902,7274870,7274731
-SKF,x,403834,403818,403655,403497
-SKF,y,7277920,7277952,7278041,7278150
-VIN,x,406346,406358,406375,NA
-VIN,y,7278620,7278676,7278767,NA
-FLG,x,410828,410859,410930,411208
-FLG,y,7281762,7281789,7281863,7282065
-NON,x,410707,410695,410690,NA
-NON,y,7276185,7276145,7276040,NA
-KAL,x,409441,409448,409461,NA
-KAL,y,7274132,7274078,7273987,NA" |>
-    read_csv(col_types = cols()) |>
+pit_df <- read_csv("data/pitfall_locations.csv", col_types = cols()) |>
     pivot_longer(`5m`:`500m`, names_to = "dist") |>
     pivot_wider(names_from = coord) |>
     mutate(site = tolower(site),
