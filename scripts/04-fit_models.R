@@ -25,7 +25,7 @@ data_fit_nolag <- read_rds(data_rds$nolag)
 
 if (! file.exists(model_rds$lag) || .REFIT_MODELS) {
 
-    # Takes ~11 min on my machine with >= 4 threads:
+    # Takes ~6 min on my machine with >= 4 threads:
     fit_lag <- armm(formula = y ~ small_midges_z + small_midges_lag_z +
                               big_midges_z + big_midges_lag_z +
                               time_z + dist_z +
@@ -72,7 +72,7 @@ nolag_formula <- y ~ small_midges_z + big_midges_z + time_z + dist_z +
 
 if (! file.exists(model_rds$nolag) || .REFIT_MODELS) {
 
-    # Takes ~8 min on my machine with >= 4 threads:
+    # Takes ~6 min on my machine with >= 4 threads:
     fit_nolag <- armm(formula = nolag_formula,
                       time_form = ~ time | trans + distf + taxon,
                       ar_form = ~ taxon,
@@ -95,36 +95,6 @@ if (! file.exists(model_rds$nolag) || .REFIT_MODELS) {
 # # examine fit
 # summary(fit_nolag)
 # coef(fit_nolag)
-
-
-
-
-## BELOW IS IN CASE YOU WANT TO RUN THE VERSION WITH THE TRUNCATED DATASET
-## (AS USED IN THE LAGGED VERSION) BUT WITHOUT LAGS:
-#
-# using "slim" data missing first year (prepared for lag model even though lags aren't included)
-# fit_nolag_slim <- armm(formula = y ~ small_midges_z + big_midges_z + time_z + dist_z +
-#                       (1 | taxon + taxon_plot + taxon_trans) +
-#                       (small_midges_z + big_midges_z + time_z + dist_z | taxon),
-#                   time_form = ~ time | trans + distf + taxon,
-#                   ar_form = ~ taxon,
-#                   obs_error = TRUE,
-#                   distr = "normal",
-#                   data = data_fit_nolag,
-#                   x_scale = FALSE,
-#                   y_scale = NULL,
-#                   hmc = TRUE,
-#                   change = TRUE,
-#                   rstan_control = list(iter = 3000, chains = 4, seed = 254498293,
-#                                        control = list(adapt_delta = 0.99)))
-#
-# export
-# write_rds(fit_nolag_slim, "fit_nolag_slim.rds")
-#
-# examine fit
-# summary(fit_nolag_slim)
-# coef(fit_nolag_slim)
-
 
 
 
@@ -170,21 +140,26 @@ stopifnot(identical(sort(names(reduced_seeds)), sort(names(reduced_forms))))
 
 if (! file.exists(model_rds$nolag_reds) || .REFIT_MODELS) {
 
-    # Takes ~31 min on my machine with >= 4 threads:
+    # Takes ~22 min on my machine with >= 4 threads:
     fit_nolag_reds <- map2(reduced_forms, reduced_seeds,
                            \(red_form, seed) {
                                call_ <- fit_nolag$call
                                call_$formula <- red_form
                                call_$rstan_control$seed <- seed
+                               # turns off printing for individual model fits:
+                               call_$rstan_control$refresh <- 0L
+                               # Do the model fitting:
                                fit <- eval(call_)
                                return(fit)
-                           })
+                           }, .progress = TRUE)
     write_rds(fit_nolag_reds, model_rds$nolag_reds)
+
     # Because the file with all the fits is quite large, I'm also going to
     # save just the loo and waic objects
     red_mod_comps <- list(loo = map(c(list(full = fit_nolag), fit_nolag_reds), loo),
                           waic = map(c(list(full = fit_nolag), fit_nolag_reds), waic))
     write_rds(red_mod_comps, model_rds$nolag_red_comps)
+
 } else {
     fit_nolag_reds <- read_rds(model_rds$nolag_reds)
     red_mod_comps <- read_rds(model_rds$nolag_red_comps)

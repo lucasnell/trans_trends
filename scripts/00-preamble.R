@@ -53,7 +53,7 @@ model_rds <- list(lag = "rds_files/lag-model.rds",
 save_plot <- function(n, p, w, h, .pdf = TRUE, .png = FALSE,
                       pdf_args = list(), png_args = list()) {
     stopifnot(is.character(n) && length(n) == 1)
-    stopifnot(is.ggplot(p) || is.function(p))
+    stopifnot(is_ggplot(p) || is.function(p))
     stopifnot(is.numeric(w) && length(w) == 1)
     stopifnot(is.numeric(h) && length(h) == 1)
     stopifnot(is.logical(.pdf) && length(.pdf) == 1)

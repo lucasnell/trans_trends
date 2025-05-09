@@ -58,7 +58,7 @@ data_fit_lag <- myv_arth |>
            plot = factor(paste0(trans, dist)),
            taxon_plot = factor(paste0(taxon, plot)),
            taxon_trans = factor(paste0(taxon, trans)),
-           taxon_plot = factor(taxon, levels = taxa_lvls, labels = taxa_labs)) |>
+           taxon_pretty = factor(taxon, levels = taxa_lvls, labels = taxa_labs)) |>
     arrange(trans, distance, taxon, year)
 
 
@@ -89,32 +89,9 @@ data_fit_nolag <- myv_arth |>
            plot = factor(paste0(trans, dist)),
            taxon_plot = factor(paste0(taxon, plot)),
            taxon_trans = factor(paste0(taxon, trans)),
-           taxon_plot = factor(taxon, levels = taxa_lvls, labels = taxa_labs)) |>
+           taxon_pretty = factor(taxon, levels = taxa_lvls, labels = taxa_labs)) |>
     arrange(trans, distance, taxon, year)
 
-
-# # graph to check
-# # use full data
-# data_fit_nolag |>
-#     ggplot(aes(x = year,
-#                y = y))+
-#     facet_wrap(~taxon)+
-#     geom_line(aes(group = plot),
-#               alpha =0.3,
-#               size = 0.3)+
-#     geom_line(data = data_fit_nolag |>
-#                   group_by(year, taxon) |>
-#                   summarize(y = mean(small_midges_z), .groups = "drop"),
-#               size = 0.7, color = "firebrick")+
-#     geom_line(data = data_fit_nolag |>
-#                   group_by(year, taxon) |>
-#                   summarize(y = mean(big_midges_z), .groups = "drop"),
-#               size = 0.7, color = "dodgerblue")+
-#     geom_line(data = data_fit_nolag |>
-#                   group_by(year, taxon) |>
-#                   summarize(y = mean(y), .groups = "drop"),
-#               size = 0.7, color = "black")+
-#     theme_classic()
 
 
 
