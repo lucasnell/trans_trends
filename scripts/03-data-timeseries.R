@@ -20,7 +20,7 @@ inv_trans_fun <- function(x) x / 0.25 + 3
 
 
 time_summ_df <- data_df |>
-    select(taxon_plot, year, y_noz, small_midges, big_midges) |>
+    select(taxon_pretty, year, y_noz, small_midges, big_midges) |>
     mutate(across(small_midges:big_midges, log1p)) |>
     pivot_longer(y_noz:big_midges, names_to = "type", values_to = "y_noz") |>
     mutate(type = factor(type,
@@ -28,13 +28,13 @@ time_summ_df <- data_df |>
                          labels = c("Mean by year/distance",
                                     "Small midges",
                                     "Large midges"))) |>
-    group_by(taxon_plot, year, type) |>
+    group_by(taxon_pretty, year, type) |>
     summarize(y_noz = mean(y_noz), .groups = "drop") |>
     # group_by(type) |> summarize(min = min(y_noz), max = max(y_noz))
     mutate(y_noz = ifelse(type == "Mean by year/distance", y_noz,
                           trans_fun(y_noz)))
 dist_summ_df <- data_df |>
-    select(taxon_plot, distance, y_noz, small_midges, big_midges) |>
+    select(taxon_pretty, distance, y_noz, small_midges, big_midges) |>
     mutate(across(small_midges:big_midges, log1p)) |>
     pivot_longer(y_noz:big_midges, names_to = "type", values_to = "y_noz") |>
     mutate(type = factor(type,
@@ -42,7 +42,7 @@ dist_summ_df <- data_df |>
                          labels = c("Mean by year/distance",
                                     "Small midges",
                                     "Large midges"))) |>
-    group_by(taxon_plot, distance, type) |>
+    group_by(taxon_pretty, distance, type) |>
     summarize(y_noz = mean(y_noz), .groups = "drop") |>
     # group_by(type) |> summarize(min = min(y_noz), max = max(y_noz))
     mutate(y_noz = ifelse(type == "Mean by year/distance", y_noz,
@@ -57,7 +57,7 @@ type_pal <- viridis(100)[c(70, 90, 80)]
 # by time
 time_p <- data_df |>
     ggplot(aes(year, y_noz))+
-    facet_wrap(~taxon_plot, nrow = 4)+
+    facet_wrap(~taxon_pretty, nrow = 4)+
     geom_hline(yintercept = 0, color = "gray50")+
     # geom_line(aes(group = plot), linewidth = 0.2, color = "gray70") +
     geom_line(aes(group = plot), linewidth = 0.2, color = "gray30", alpha = 0.25) +
@@ -88,7 +88,7 @@ time_p <- data_df |>
 dist_p <- data_df |>
     mutate(id = interaction(trans, year)) |>
     ggplot(aes(dist, y_noz))+
-    facet_wrap(~taxon_plot, nrow = 4)+
+    facet_wrap(~taxon_pretty, nrow = 4)+
     geom_hline(yintercept = 0, color = "gray50")+
     # geom_point(aes(group = plot), size = 1, alpha = 0.5, shape = 1)+
     geom_line(aes(group = id), linewidth = 0.2, color = "gray30", alpha = 0.25) +

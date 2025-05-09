@@ -227,4 +227,4 @@ for (i in 1:2) coef_p[[i]] <- coef_p[[i]] & theme(plot.tag.position = c(-0.02, 0
 
 # coef_p
 
-save_plot("coefficients", coef_p, w = 5, h = 6)
+# save_plot("coefficients", coef_p, w = 5, h = 6)

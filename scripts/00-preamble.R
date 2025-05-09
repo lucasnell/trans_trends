@@ -2,7 +2,6 @@ suppressPackageStartupMessages({
     library(TransTrendsPkg)
     library(tidyverse)
     library(patchwork)
-    library(grid)
     library(viridisLite)
 })
 
