@@ -1,0 +1,149 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = NA,
+  echo = FALSE,
+  eval = TRUE
+)
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(remotes)
+})
+```
+
+
+# trans_trends
+
+[![DOI](https://zenodo.org/badge/227422889.svg)](https://zenodo.org/badge/latestdoi/227422889)
+
+
+Code and data for the paper, "Heterogeneous responses of tundra 
+arthropods to spatiotemporal variation in resource subsidies."
+The R package that fits the models can be found at 
+<https://github.com/lucasnell/trans_trends_pkg>.
+
+This repository was created and is maintained by
+[Lucas A. Nell](https://github.com/lucasnell).
+
+
+
+# Organization
+
+These are the top-level files/folders:
+
+```{bash, echo = TRUE, eval = FALSE}
+.
+├── README.md
+├── trans_trends.Rproj
+├── data
+├── figures
+├── rds_files
+└── scripts
+```
+
+The following files/folders should be present:
+
+- `README.md`: this file
+- `trans_trends.Rproj`: file saving this RStudio Project's preferences
+- `data`: Folder containing all datasets associated with this paper.
+- `figures`: Folder containing figures created from this paper.
+  Note that this folder should be empty and is populated by running the
+  R scripts.
+- `rds_files`: Folder containing RDS files created for model fits and 
+  cleaned data.
+  Note that this folder should be empty and is populated by running the
+  R scripts.
+- `scripts`: Folder containing R scripts for data cleanup, model fitting, and 
+  creating figures / tables.
+
+Note that all folders have their own `README.md` files that should be
+referenced for specific files.
+
+
+
+# Replicating the R environment
+
+I used `r R.version.string` (platform: `r R.version[["platform"]]`) for all my scripts.
+
+This project uses the `renv` package, so if you want to use this, you must
+first install it:
+
+```{r, echo = TRUE, eval = FALSE}
+install.packages("renv")
+```
+
+Then to install all the packages I used for these analyses, you can simply run
+the following while having this project's main directory as your working
+directory:
+
+```{r, echo = TRUE, eval = FALSE}
+renv::restore()
+```
+
+
+If you'd rather avoid `renv`, then you can install all the packages 
+(in the versions I used) this way:
+
+```{r, results = "asis"}
+loaded_pkgs  <- c("ggspatial", "patchwork", "sf", "tidyverse", "viridisLite") |> 
+    map_chr(\(p) sprintf("%s@%s", p, packageVersion(p)))
+# packages required for `TransTrendsPkg`:
+tt_pkgs <- dev_package_deps("../trans_trends_pkg/") |> 
+    as_tibble() |> 
+    select("package","installed") |> 
+    pmap_chr(paste, sep = "@")
+all_pkgs <- c(loaded_pkgs, tt_pkgs) |> unique() |> sort()
+# Turn into two columns:
+pkg_2cols <- map_chr(seq(1:ceiling(length(all_pkgs)/2)),
+                     \(i) {
+                         j <- (i-1)*2 + 1
+                         k <- min(j+1, length(all_pkgs))
+                         sp <- ifelse(i == 1, "", "          ")
+                         paste0(sp, paste(sprintf('"%s"', all_pkgs[j:k]), 
+                                          collapse = ", "))
+                     }) |> 
+    paste(collapse = ",\n") |> 
+    sprintf(fmt = "pkgs <- c(%s)\n")
+cat("```r\n")
+cat(pkg_2cols)
+cat('install.packages(pkgs)\n')
+cat('install.packages("remotes")\n')
+cat(sprintf('remotes::install_github("lucasnell/trans_trends_pkg@%s")\n',
+            packageVersion("TransTrendsPkg")))
+cat("```\n")
+```
+
+
+Note that these only install the proper versions of the packages I manually 
+installed (or were dependencies of `TransTrendsPkg`),
+so dependencies might vary from what I used.
+
+
+Similarly, but without version numbers at all:
+
+```{r, results = "asis"}
+pkg_2cols <- map_chr(seq(1:ceiling(length(all_pkgs)/4)),
+        \(i) {
+            j <- (i-1)*4 + 1
+            k <- min(j+3, length(all_pkgs))
+            sp <- ifelse(i == 1, "", "          ")
+            p <- str_split(all_pkgs[j:k],"@") |> 
+                map_chr(\(x) x[1])
+            paste0(sp, paste(sprintf('"%s"', p), 
+                             collapse = ", "))
+        }) |> 
+    paste(collapse = ",\n") |> 
+    sprintf(fmt = "pkgs <- c(%s)\n")
+cat("```r\n")
+cat(pkg_2cols)
+cat('install.packages(pkgs)\n')
+cat('install.packages("remotes")\n')
+cat('remotes::install_github("lucasnell/trans_trends_pkg")\n')
+cat("```\n")
+```
