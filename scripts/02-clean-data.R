@@ -44,7 +44,7 @@ data_fit_lag <- myv_arth |>
            big_midges_lag = lag(big_midges)) |>
     ungroup() |>
     na.omit() |>
-    mutate(across(contains("midges"), \(x) z_trans(x / midge_days),
+    mutate(across(contains("midges"), \(x) z_trans(log(x / midge_days)),
                   .names = "{.col}_z"),
            time = factor(year, levels = c(1:max(year))) |>
                as.numeric() |>
@@ -76,7 +76,7 @@ data_fit_nolag <- myv_arth |>
     mutate(y_noz = log1p(count / season_days),
            y = z_trans(y_noz)) |>
     ungroup() |>
-    mutate(across(contains("midges"), \(x) z_trans(x / midge_days),
+    mutate(across(contains("midges"), \(x) z_trans(log(x / midge_days)),
                   .names = "{.col}_z"),
            time = factor(year, levels = c(1:max(year))) |> as.numeric(),
            time = time - min(time),
