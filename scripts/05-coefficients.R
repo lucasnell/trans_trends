@@ -11,12 +11,16 @@
 
 source("scripts/00-preamble.R")
 
-model_fit <- read_rds(model_rds$nolag)
+# Standard deviation of log-transformed midge catch rate:
+midges_sd <- with(read_rds(data_rds), sd(log(midges / midge_days)))
+
+
+model_fit <- read_rds(model_rds)
 
 # Order levels of coefficient factor:
 make_coef_fct <- function(.coef) {
     factor(paste(.coef),
-           levels = c("time", "dist", "small_midges", "big_midges"))
+           levels = c("time", "dist", "midges"))
 }
 
 
@@ -40,7 +44,7 @@ slope_density_df <- model_fit$stan |>
     rstan::extract(pars = "alpha") |>
     do.call(what = cbind) |>
     as.data.frame() |>
-    set_names(c("int", "small_midges", "big_midges", "time", "dist")) |>
+    set_names(c("int", "midges", "time", "dist")) |>
     as_tibble() |>
     select(-int) |>  # intercept not necessary
     pivot_longer(everything(), names_to = "coef") |>
@@ -52,10 +56,9 @@ slope_sd_density_df <- model_fit$stan |>
     rstan::extract(pars = "sig_beta") |>
     do.call(what = cbind) |>
     as.data.frame() |>
-    set_names(c("int_tax", "int_plot", "int_trans", "small_midges",
-                "big_midges", "time", "dist")) |>
+    set_names(c("int_tax", "int_plot", "int_trans", "midges", "time", "dist")) |>
     as_tibble() |>
-    select(ends_with("midges"), time, dist) |>
+    select(midges, time, dist) |>
     pivot_longer(everything(), names_to = "coef") |>
     mutate(coef = make_coef_fct(coef)) |>
     split(~ coef) |>
@@ -121,23 +124,13 @@ re_au_draws <- get_re_au_draws(model_fit) |>
 
 
 
-
-
-
-
-# >> LEFT OFF #2 ----
-#' Add autoregressive parameter into this function below so that the axes
-#' are standardized and can be combined easily
-
 # Creates subpanels for each predictor and autoregressive parameter
 slope_p_fun <- function(.coef) {
 
     .coef <- match.arg(tolower(.coef), c("autoreg", levels(slope_density_df$coef)))
 
     .ylab <- list(time = "Time response", dist = "Distance response",
-         small_midges = "Small midge response",
-         big_midges = "Large midge response",
-         autoreg = "AR parameter")[[.coef]]
+                  midges = "Midge response", autoreg = "AR parameter")[[.coef]]
 
     .plot <- re_au_draws |>
         filter(coef == .coef) |>
@@ -149,8 +142,8 @@ slope_p_fun <- function(.coef) {
         select(-iters) |>
         ggplot()
     if (.coef == "autoreg") {
-        .ybreaks <- c(0, 0.5, 1)
-        .ylims <- c(-0.1, 1.1)
+        .ybreaks <- c(0, 0.1, 0.2)
+        .ylims <- c(-0.01, 0.25)
     } else {
         .plot <- .plot +
             # main density curves:
@@ -172,20 +165,27 @@ slope_p_fun <- function(.coef) {
                              mutate(y = 7 - y / max(y) * (3.5 - 0.5)) |>
                              filter(coef == .coef, ui),
                          aes(x = y, y = x), fill = "gray60")
-        .ybreaks <- c(-0.4, 0, 0.4)
-        .ylims <- c(-0.5, 0.5)
+        .ybreaks <- c(-1, 0, 1)
+        .ylims <- c(-1.5, 1.5)
     }
+    if (.coef == "midges") {
+        y_scale <- scale_y_continuous(.ylab,  breaks = .ybreaks,
+                                      sec.axis = sec_axis(\(x) 2^(midges_sd * x),
+                                               breaks = 1:5,
+                                               "Effect of 2-fold\nmidge increase"))
+    } else y_scale <- scale_y_continuous(.ylab,  breaks = .ybreaks)
+
 
     .plot <- .plot +
         geom_hline(yintercept = 0, color = "gray50")+
         geom_point(aes(taxon, med), size = 1.5, color = "black")+
         geom_linerange(aes(taxon, ymin = lo, ymax = hi), color = "black")+
-        scale_y_continuous(.ylab,  breaks = .ybreaks)+
-        scale_x_continuous(breaks = 1:6, labels = taxa_labs, position = "top") +
-        # scale_x_continuous(breaks = 1:6, labels = taxa_labs,
-        #                    sec.axis =
-        #                        sec_axis(~ .,
-        #                                 breaks = 1:6, labels = taxa_labs)) +
+        y_scale +
+        # scale_x_continuous(breaks = 1:6, labels = taxa_labs, position = "top") +
+        scale_x_continuous(breaks = 1:6, labels = taxa_labs, position = "top",
+                           sec.axis =
+                               sec_axis(identity,
+                                        breaks = 1:6, labels = taxa_labs)) +
         coord_cartesian(ylim = .ylims, xlim = c(0.5, 7),
                         expand = FALSE) +
         theme(axis.text.y = element_text(size = 8,
@@ -203,28 +203,29 @@ slope_p_fun <- function(.coef) {
     if (.coef == "time") {
         .plot <- .plot +
             geom_text(data = tibble(x = c(1.2,    5.5),
-                                    y = c(-0.30, 0.35),
+                                    y = c(-1.0,  0.50),
                                     lab = c("among taxa mean", "among taxa SD")),
                       aes(x, y, label = lab), size = 8 / 2.83465,
-                      hjust = c(0, 1), vjust = 0.5, color = "gray50")
+                      hjust = c(0, 1), vjust = c(1, 0), color = "gray50")
     }
 
     return(.plot)
 }
 
 
-slope_p <- lapply(c("autoreg", levels(slope_density_df$coef)), slope_p_fun)
+coef_plots <- lapply(c("autoreg", levels(slope_density_df$coef)), slope_p_fun)
 
 
 
-coef_p <- do.call(patchwork::wrap_plots, slope_p) +
+
+coef_p <- do.call(patchwork::wrap_plots, coef_plots) +
     plot_layout(ncol = 2, axes = "collect_x") +
     plot_annotation(tag_levels = "a") &
     theme(plot.tag.position = c(-0.02, 1))
 # This prevents tags for top panels from being way higher than the others
 # due to the large x-axis that's on top:
-for (i in 1:2) coef_p[[i]] <- coef_p[[i]] & theme(plot.tag.position = c(-0.02, 0.7))
+for (i in 1:2) coef_p[[i]] <- coef_p[[i]] & theme(plot.tag.position = c(-0.02, 0.6))
 
-# coef_p
+coef_p
 
-# save_plot("coefficients", coef_p, w = 5, h = 6)
+# save_plot("coefficients", coef_p, w = 5, h = 4.5)

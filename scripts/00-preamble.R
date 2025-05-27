@@ -43,11 +43,8 @@ taxa_labs <- paste(taxa_map)
 # Names of RDS file created in `scripts/02-clean-data.R` that contains cleaned data:
 data_rds <- "rds_files/data_fit.rds"
 
-# Names of RDS files created in `scripts/analysis.R` that contain model fits:
-model_rds <- list(lag = "rds_files/lag-model.rds",
-                  nolag = "rds_files/no_lag-model.rds",
-                  nolag_reds = "rds_files/no_lag-reduced-models.rds",
-                  nolag_red_comps = "rds_files/no_lag-reduced-models-compares.rds")
+# Names of RDS file created in `scripts/analysis.R` that contains the model fit:
+model_rds <- "rds_files/model-fit.rds"
 
 # Save figure file into `./figures/` using cairo_pdf (that embeds fonts by default)
 # Can save as PNG file in addition to or in lieu of a PDF
