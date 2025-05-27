@@ -1,4 +1,5 @@
 suppressPackageStartupMessages({
+    library(rlang) # load before tidyverse to prevent masking some purrr functions
     library(TransTrendsPkg)
     library(tidyverse)
     library(patchwork)
@@ -30,16 +31,17 @@ theme_set(theme_bw() %+replace%
 options(mc.cores = max(1, parallel::detectCores()-2))
 
 
-# Standardize taxa order
-taxa_order <- c(5:6, 4, 1, 3, 2)
-taxa_lvls <- c("gnap","lyco","sheet","opil","cara", "stap")[taxa_order]
-taxa_labs <- c("Ground spiders","Wolf spiders","Sheet weavers",
-               "Harvestmen","Ground beetles", "Rove beetles")[taxa_order]
+# Standardize taxa order and pretty names for plotting:
+taxa_map <- list(cara = "Ground beetles", stap = "Rove beetles",
+                 opil = "Harvestmen", gnap = "Ground spiders",
+                 sheet = "Sheet weavers", lyco = "Wolf spiders")
+taxa_lvls <- names(taxa_map)
+taxa_labs <- paste(taxa_map)
 
 
-# Names of RDS files created in `scripts/02-clean-data.R` that contain cleaned data:
-data_rds <- list(lag = "rds_files/data_fit_lag.rds",
-                 nolag = "rds_files/data_fit_nolag.rds")
+
+# Names of RDS file created in `scripts/02-clean-data.R` that contains cleaned data:
+data_rds <- "rds_files/data_fit.rds"
 
 # Names of RDS files created in `scripts/analysis.R` that contain model fits:
 model_rds <- list(lag = "rds_files/lag-model.rds",
