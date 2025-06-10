@@ -46,7 +46,8 @@ slope_density_df <- model_fit$stan |>
     pivot_longer(everything(), names_to = "coef") |>
     mutate(coef = make_coef_fct(coef)) |>
     split(~ coef) |>
-    map_dfr(extract_posteriors)
+    map(extract_posteriors) |>
+    list_rbind()
 
 slope_sd_density_df <- model_fit$stan |>
     rstan::extract(pars = "sig_beta") |>
@@ -58,7 +59,8 @@ slope_sd_density_df <- model_fit$stan |>
     pivot_longer(everything(), names_to = "coef") |>
     mutate(coef = make_coef_fct(coef)) |>
     split(~ coef) |>
-    map_dfr(extract_posteriors)
+    map(extract_posteriors) |>
+    list_rbind()
 
 
 
@@ -179,6 +181,10 @@ coef_p[[1]] <- coef_p[[1]] & theme(plot.tag.position = c(0.29, 1))
 # Mean and SD of estimates ----
 # =============================================================================*
 
+
+
+
+
 coef_mean_p <- slope_density_df |>
     filter(!ui) |>
     ggplot(aes(x, y)) +
@@ -224,6 +230,8 @@ coef_sd_p <- slope_sd_density_df |>
 coef_among_p <- (coef_mean_p | coef_sd_p) +
     plot_annotation(tag_levels = "a") &
     theme(plot.tag.position = c(0.06, 1))
+
+# coef_among_p
 
 # save_plot("coefs-mean-sd", coef_among_p, w = 5, h = 3)
 

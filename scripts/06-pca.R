@@ -39,7 +39,7 @@ fit_sum <- rstan::summary(model_fit$stan, probs = c()) |>
     rownames_to_column() |>
     as_tibble() |>
     rename(var = rowname) |>
-    (\(x) left_join(x, map_dfr(x$var, get_fit_info), by = "var"))() |>
+    (\(x) left_join(x, map(x$var, get_fit_info) |> list_rbind(), by = "var"))() |>
     select(var, lo, mi, hi, n_eff, Rhat)
 
 # taxon-specific slopes
@@ -223,26 +223,26 @@ pred_pca$obs_exp
 
 
 # predictor vectors
-pred_vec <- map_dfr(c("time", "dist", "midges"),
-                    function(pred_) {
-                        sym_ <- sym(paste0(pred_, "_z"))
-                        pred_pca$axes |>
-                            filter(!!sym_ %in% range(!!sym_)) |>
-                            group_by(!!sym_) |>
-                            summarize(PC1 = mean(PC1),
-                                      PC2 = mean(PC2),
-                                      PC3 = mean(PC3),
-                                      .groups = "drop") |>
-                            rename(val = !!sym_) |>
-                            arrange(val) |>
-                            mutate(coef = pred_)  |>
-                            mutate(PC1 = PC1 - PC1[1],
-                                   PC2 = PC2 - PC2[1],
-                                   PC3 = PC3 - PC3[1]) |>
-                            filter(PC1 != 0 | PC2 != 0 | PC3 != 0) |>
-                            select(coef, starts_with("PC"))
-                    })
-
+pred_vec <- map(c("time", "dist", "midges"),
+                function(pred_) {
+                    sym_ <- sym(paste0(pred_, "_z"))
+                    pred_pca$axes |>
+                        filter(!!sym_ %in% range(!!sym_)) |>
+                        group_by(!!sym_) |>
+                        summarize(PC1 = mean(PC1),
+                                  PC2 = mean(PC2),
+                                  PC3 = mean(PC3),
+                                  .groups = "drop") |>
+                        rename(val = !!sym_) |>
+                        arrange(val) |>
+                        mutate(coef = pred_)  |>
+                        mutate(PC1 = PC1 - PC1[1],
+                               PC2 = PC2 - PC2[1],
+                               PC3 = PC3 - PC3[1]) |>
+                        filter(PC1 != 0 | PC2 != 0 | PC3 != 0) |>
+                        select(coef, starts_with("PC"))
+                }) |>
+    list_rbind()
 
 
 # =============================================================================*
@@ -253,203 +253,14 @@ pc_axis_lim <- 4.1
 #' #' We're scaling some of the projections. This is to keep that consistent.
 pc_mults <- list(pred = 6 * c(-1, 1, 1), taxon = 5 * c(-1, 1, 1))
 
-# pc_axis_lim <- 6
-# pc_mults <- list(pred = c(1, 1, 1), taxon = c(1, 1, 1))
-
 stopifnot(identical(sign(pc_mults$pred), sign(pc_mults$taxon)))
 
-
-pca_theme <- theme(plot.margin = margin(t=8,r=8,b=0,l=8),
-                   axis.text.y = element_text(size = 8,
-                                              margin = margin(0,0,0,r=2)),
-                   axis.title.y = element_text(size = 10,
-                                               margin = margin(0,0,0,0)),
-                   axis.text.x = element_text(size = 8,
-                                              margin = margin(0,0,0,t=2)),
-                   axis.title.x = element_text(size = 10,
-                                               margin = margin(0,0,0,b=8)))
-
-
-
-
-
-# =============================================================================*
-# Plots of taxon response vectors ----
-# =============================================================================*
-
-
-taxon_pca_fun <- function(.xPC, .yPC,
-                          .nudge_x = NULL,
-                          .nudge_y = NULL,
-                          .segment_df = NULL) {
-
-    stopifnot(isTRUE(length(.xPC) == 1) && isTRUE(length(.yPC) == 1))
-
-    .PCs <- c(.xPC, .yPC)
-
-    .dd <- pred_pca$taxon_vec |>
-        mutate(taxon = factor(taxon, levels = taxa_lvls |> rev(),
-                              labels = taxa_labs |> rev() |> tolower() |>
-                                  str_replace_all(" ", "\n"))) |>
-        arrange(taxon) |>
-        mutate(PC1 = pc_mults$taxon[1] * PC1,
-               PC2 = pc_mults$taxon[2] * PC2,
-               PC3 = pc_mults$taxon[3] * PC3)
-
-    if (!is.null(.nudge_x) && !is.null(.nudge_y)) {
-        .labs <- paste0("PC", .PCs, "_lab")
-        .rto <- length(taxa_labs):1
-        .dd[[.labs[1]]] <- .dd[[paste0("PC", .PCs[1])]] + .nudge_x[.rto]
-        .dd[[.labs[2]]] <- .dd[[paste0("PC", .PCs[2])]] + .nudge_y[.rto]
-    }
-
-    .dd <- .dd |>
-        arrange(desc(taxon))
-
-    .p <- .dd |>
-        ggplot()+
-        geom_hline(yintercept = 0, color = "gray90", linewidth = 0.5) +
-        geom_vline(xintercept = 0, color = "gray90", linewidth = 0.5) +
-        geom_segment(aes(x = 0, xend = .data[[paste0("PC", .PCs[1])]],
-                         y = 0, yend = .data[[paste0("PC", .PCs[2])]],
-                         group = taxon, color = taxon),
-                     arrow = arrow(length = unit(6, "pt")),
-                     linewidth = 1) +
-        scale_x_continuous(paste0("PC", .PCs[1]), breaks = 3*-1:1) +
-        scale_y_continuous(paste0("PC", .PCs[2]), breaks = 3*-1:1) +
-        coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
-                    ylim = c(-pc_axis_lim, pc_axis_lim)) +
-        scale_color_manual(values = RColorBrewer::brewer.pal(9, "RdYlBu") |>
-                               base::`[`(c(1:3, 7:9)),
-                           guide = "none") +
-        pca_theme
-
-    if (!is.null(.nudge_x) && !is.null(.nudge_y)) {
-        .p <- .p +
-            geom_text(aes(label = taxon, x = .data[[.labs[1]]], y = .data[[.labs[2]]],
-                          color = taxon),
-                      size = 7 / 2.83465, lineheight = 0.75)
-    }
-
-    if (!is.null(.segment_df)) {
-        .p <- .p +
-            geom_segment(data = .segment_df,
-                         aes(x = x, y = y, xend = xend, yend = yend),
-                         color = "black", linewidth = 0.25)
-    }
-
-    return(.p)
-}
-
-
-
-
-
-taxon_pca_p <- list(
-    taxon_pca_fun(1, 2,
-                  .nudge_x = rep(0, 6),  # c(-0.4,  0.5, -1.5,  2.7, -1.0,  0.5),
-                  .nudge_y = rep(0, 6),  # c( 1.0, -1.4, -3.0, -2.6,  0.8, -1.3),
-                  # .segment_df = tibble(x = c(1.25,  -1.3),
-                  #                      y = c(-0.6,   -1.3),
-                  #                      xend = c(-0.4, -0.4),
-                  #                      yend = c(1.2,   0.6))),
-                  .segment_df = NULL),
-    taxon_pca_fun(1, 3),
-    taxon_pca_fun(2, 3))
-
-
-# wrap_plots(taxon_pca_p)
-
-
-
-# =============================================================================*
-# Plots of model predictors and observed data ----
-# =============================================================================*
-
-predictor_pca_fun <- function(.xPC, .yPC, .label_df = NULL, ...) {
-
-    # .xPC = 1; .yPC = 2; .label_df = NULL
-
-    stopifnot(isTRUE(length(.xPC) == 1) && isTRUE(length(.yPC) == 1))
-
-    .PCs <- c(.xPC, .yPC)
-
-    .obs_rot <- pred_pca$obs_rot |>
-        mutate(PC1 = sign(pc_mults$pred[1]) * PC1,
-               PC2 = sign(pc_mults$pred[2]) * PC2,
-               PC3 = sign(pc_mults$pred[3]) * PC3)
-
-    coefs <- c("time", "distance", "midges")
-
-    .pred_vec <- pred_vec |>
-        mutate(PC1 = pc_mults$pred[1] * PC1,
-               PC2 = pc_mults$pred[2] * PC2,
-               PC3 = pc_mults$pred[3] * PC3) |>
-        mutate(coef = factor(coef, levels = gsub("^distance$", "dist", coefs),
-                            labels = coefs))
-
-
-    pc_axes <- paste0("PC", .PCs)
-
-    .p <- .obs_rot |>
-        ggplot(aes(x = .data[[pc_axes[1]]], y = .data[[pc_axes[2]]]))+
-        geom_hline(yintercept = 0, color = "gray90", linewidth = 0.5) +
-        geom_vline(xintercept = 0, color = "gray90", linewidth = 0.5) +
-        geom_point(alpha = 0.25, size = 1, shape = 1,
-                   # color = "gray60") +
-                   color = viridis::viridis(1, begin = 0.9, end = 0.9)) +
-        geom_segment(data = .pred_vec,
-                     aes(x = 0, xend = .data[[pc_axes[1]]],
-                         y = 0, yend = .data[[pc_axes[2]]], color = var),
-                     arrow = arrow(length = unit(6, "pt")),
-                     linewidth = 1) +
-        scale_x_continuous(pc_axes[1], breaks = 3*-1:1) +
-        scale_y_continuous(pc_axes[2], breaks = 3*-1:1) +
-        scale_color_viridis_d(end = 0.75, guide = "none") +
-        coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
-                    ylim = c(-pc_axis_lim, pc_axis_lim)) +
-        pca_theme +
-        theme(axis.title.y = element_blank(),
-              axis.text.y = element_blank())
-
-    if (!is.null(.label_df)) {
-        stopifnot(is.data.frame(.label_df) && nrow(.label_df) == 3)
-        stopifnot(identical(c("lab", "x", "y"), sort(colnames(.label_df))))
-        stopifnot(all(c("time", "midges") %in% .label_df$lab))
-        stopifnot(any(grepl("^dist", .label_df$lab)))
-
-        .p <- .p +
-            geom_text(data = .label_df |>
-                          mutate(var = ifelse(grepl("^dist", lab),
-                                              "distance", lab) |>
-                                     factor(levels = vars)),
-                      aes(x = x, y = y, label = lab, color = var),
-                      size = 8 / 2.83465,
-                      ...)
-    }
-
-    return(.p)
-
-}
-
-
-
-pred_pca_p <- list(
-    predictor_pca_fun(1, 2,
-                      # .label_df = tibble(x = c(-0.8, -1, pc_axis_lim),
-                      #                    y = c(2.5, -1, 1),
-                      #                    lab = c("midges", "time", "dist.")),
-                      hjust = 1, vjust = 0.5),
-    predictor_pca_fun(1, 3),
-    predictor_pca_fun(2, 3))
-
-wrap_plots(pred_pca_p)
 
 
 
 
 # --------------*
-# NEW Plots of taxon response vectors and model predictors ----
+# Plots of taxon response vectors and model predictors ----
 # --------------*
 
 pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
@@ -461,14 +272,16 @@ pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
     yPC_str <- paste0("PC", .yPC)
 
     taxon_p_df <- pred_pca$taxon_vec |>
-        mutate(taxon2 = factor(taxon, levels = taxa_lvls |> rev(),
-                               labels = taxa_labs |> rev() |> tolower() |>
-                                   str_replace_all(" ", "\n"))) |>
         arrange(taxon) |>
         mutate(PC1 = pc_mults$taxon[1] * PC1,
                PC2 = pc_mults$taxon[2] * PC2,
                PC3 = pc_mults$taxon[3] * PC3) |>
-        arrange(desc(taxon))
+        arrange(desc(taxon)) |>
+        mutate(taxon2 = factor(taxon, levels = taxa_lvls |> rev(),
+                               labels = taxa_labs |> rev() |> tolower() |>
+                                   str_replace_all(" ", "\n")),
+               taxon_pretty = factor(paste(taxon), levels = taxa_lvls,
+                                     labels = taxa_labs))
     pred_p_df <- pred_vec |>
         mutate(PC1 = pc_mults$pred[1] * PC1,
                PC2 = pc_mults$pred[2] * PC2,
@@ -496,8 +309,9 @@ pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
     p <- p +
         geom_point(aes(x =.data[[xPC_str]],
                        y = .data[[yPC_str]],
-                       fill = taxon),
-                   size = 3, shape = 21) +
+                       fill = taxon_pretty,
+                       shape = taxon_pretty),
+                   size = 3) +
         geom_segment(data = pred_p_df,
                      aes(x = 0, xend = .data[[xPC_str]],
                          y = 0, yend = .data[[yPC_str]],
@@ -509,8 +323,18 @@ pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
         coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
                     ylim = c(-pc_axis_lim, pc_axis_lim)) +
         scale_color_manual(values = coef_pal, guide = "none") +
-        scale_fill_manual(values = taxon_pal, guide = "none") +
-        pca_theme
+        scale_fill_manual(NULL, values = taxa_pal) +
+        scale_shape_manual(NULL, values = rep(c(21, 22, 24), 2)) +
+        theme(axis.text.y = element_text(size = 8,
+                                         margin = margin(0,0,0,r=2)),
+              axis.title.y = element_text(size = 10,
+                                          margin = margin(0,0,0,0)),
+              axis.text.x = element_text(size = 8,
+                                         margin = margin(0,0,0,t=2)),
+              axis.title.x = element_text(size = 10,
+                                          margin = margin(0,0,0,b=8)),
+              legend.position = "none",
+              plot.margin = margin(0,0,0,0))
 
     return(p)
 }
@@ -519,11 +343,11 @@ pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
 
 
 
-pca_plots <- list(pca_plotter(1, 2, TRUE),
-                  pca_plotter(1, 3, TRUE),
-                  pca_plotter(2, 3, TRUE))
+pca_plots <- list(pca_plotter(1, 2),
+                  pca_plotter(1, 3),
+                  pca_plotter(2, 3))
 
-wrap_plots(pca_plots)
+# wrap_plots(pca_plots) + plot_layout(guides = "collect") & theme(legend.position = "right")
 
 
 
@@ -536,28 +360,25 @@ wrap_plots(pca_plots)
 # --------------*
 
 
-# variance partition of PC axes by predictors
-var_part <- lapply(c("PC1","PC2","PC3"), function(x) {
+# variance accounted for by predictors and PCs:
+var_df <- lapply(c("PC1","PC2","PC3"), function(x) {
     form = as.formula(paste(x, "~ midges_z + time_z + dist_z"))
-    tibble(var = c("midges_z", "time_z", "dist_z"),
+    tibble(coef = c("midges_z", "time_z", "dist_z"),
            pc = x,
            cont = anova(lm(form, data = pred_pca$axes))[,2] |>
                (\(x) x[1:3]/sum(x[1:3]))())
 }) |>
     bind_rows() |>
-    spread(pc, cont) |>
-    mutate(var = gsub("_z$", "", var))
-
-
-# variance accounted for by predictors and PCs:
-var_df <- var_part |>
+    pivot_wider(names_from = pc, values_from = cont) |>
+    mutate(coef = gsub("_z$", "", coef)) |>
     mutate(PC1 = PC1 * pred_pca$obs_exp$PC1[1],
            PC2 = PC2 * pred_pca$obs_exp$PC2[1],
            PC3 = PC3 * pred_pca$obs_exp$PC3[1],
-           var = make_coef_fct(var)) |>
+           coef = factor(coef, levels = c("time", "dist", "midges"),
+                         labels = c("time", "distance", "midges"))) |>
     pivot_longer(starts_with("PC"), names_to = "pc") |>
     mutate(pc = gsub("PC", "", pc) |> as.integer()) |>
-    arrange(pc, var) |>
+    arrange(pc, coef) |>
     mutate(cumvalue = cumsum(value),
            lag_cumvalue = lag(cumvalue, default = 0))
 
@@ -570,40 +391,27 @@ var_part_p <- var_df |>
            ymin = ymax - 1) |>
     ggplot() +
     geom_rect(aes(xmin = lag_cumvalue, xmax = cumvalue,
-                  ymax = ymax, ymin = ymin, fill = var)) +
+                  ymax = ymax, ymin = ymin, fill = coef)) +
     geom_text(data = var_df |>
                   group_by(pc) |>
                   summarize(value = (min(lag_cumvalue) + max(cumvalue)) / 2,
                             .groups = "drop") |>
-                  add_row(pc = 4, value = (1 + sum(var_df$value)) / 2) |>
                   mutate(y = 0 - (pc-1) * 0.5,
-                         lab = ifelse(pc < 4, paste0("PC", pc), "")),
+                         lab = paste0("PC", pc)),
               aes(value, y, label = lab),
-              nudge_y = 0.3, size = 8 / 2.83465) +
-    geom_point(data = tibble(var = var_df$var |> unique() |> sort(),
-                             value = 0.95,
-                             y = 0.25 - 0:2 * 0.5),
-               aes(value, y, color = var),
-               size = 2, shape = 15) +
-    geom_text(data = tibble(var = var_df$var |> unique() |> sort(),
-                            value = 0.98,
-                            y = 0.25 - 0:2 * 0.5),
-              aes(value, y, label = var, color = var),
-              size = 8 / 2.83465, hjust = 0, vjust = 0.5) +
-    scale_color_manual(values = coef_pal, guide = "none",
-                       aesthetics = c("color", "fill")) +
+              nudge_y = 0.2, size = 10 / 2.83465) +
+    scale_color_manual(NULL, values = coef_pal, aesthetics = c("color", "fill")) +
     scale_x_continuous("Proportion of variance", breaks = seq(0, 1, 0.2)) +
-    coord_cartesian(xlim = c(-0.1, 1.1),
+    coord_cartesian(xlim = c(-0.02, 1.02),
                     ylim = c(-2.1, 0.7),
                     expand = FALSE) +
-    pca_theme +
     theme(axis.text.y = element_blank(),
           axis.title.y = element_blank(),
           axis.ticks.y = element_blank(),
+          axis.text.x = element_text(size = 8, margin = margin(0,0,0,t=2)),
           axis.title.x = element_text(margin = margin(0,0,0,b=6)),
-          # panel.border = element_blank(),
-          plot.margin = margin(0,0,r=8,l=27)) +
-    NULL
+          legend.position = "none",
+          plot.margin = margin(0,0,0,0))
 
 
 
@@ -613,18 +421,25 @@ var_part_p <- var_df |>
 # Combine them all into single figure
 # --------------*
 
-pca_p <- wrap_plots(c(taxon_pca_p, pred_pca_p, list(var_part_p))[c(1,4,2,5,3,6,7)]) +
-    plot_layout(design = "AB\nCD\nEF\nGG") +
-    plot_annotation(tag_levels = "a") &
-    theme(plot.tag = element_text(size = 16),
-          plot.tag.position = c(-0.1, 1))
-# This prevents tag for left panel from being further from plot than the others
-# due to the large y-axis that's on the left:
-for (i in c(1,3,5,7)) pca_p[[i]] <- pca_p[[i]]  & theme(plot.tag.position = c(0.05, 1))
-pca_p[[7]] <- pca_p[[7]]  & theme(plot.tag.position = c(0.025, 1))
+# # This version has a legend instead of labels in the plot itself.
+# # I added labels in Illustrator, but this one shows all the relevant info:
+# simple_pca_p <- wrap_plots(c(pca_plots, list(var_part_p))) +
+#     plot_layout(design = "ABC\nDDD", heights = c(1, 0.5), guides = "collect") +
+#     plot_annotation(tag_levels = "a") &
+#     theme(plot.tag = element_text(size = 16),
+#           plot.tag.position = c(0.015, 1),
+#           legend.position = "right")
+# # This prevents tag for bottom panel from being further from plot
+# # than the others due to its lack of a y-axis:
+# simple_pca_p[[4]] <- simple_pca_p[[4]] & theme(plot.tag.position = c(0.005, 1))
+# simple_pca_p
 
-pca_p
-
-# save_file(pca_p, "pca", width = 3, height = 6.5)
 
 
+#' For the version in the paper, I saved each panel separately, then stitched
+#' them together and added labels in Illustrator:
+for (i in seq_along(pca_plots)) {
+    save_plot(sprintf("pca-%s", letters[i]), pca_plots[[i]], w = 2, h = 2)
+}; rm(i)
+
+save_plot("pca-var", var_part_p, w = 6, h = 2)

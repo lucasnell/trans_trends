@@ -1,9 +1,11 @@
+
 suppressPackageStartupMessages({
     library(rlang) # load before tidyverse to prevent masking some purrr functions
     library(TransTrendsPkg)
     library(tidyverse)
     library(patchwork)
     library(viridisLite)
+    library(RColorBrewer)
 })
 
 
@@ -43,15 +45,13 @@ taxa_labs <- paste(taxa_map)
 
 
 # Palette for coefficients:
-coef_pal <- viridis(100)[c(10, 50, 50, 80)] |>
+coef_pal <- brewer.pal(4, "YlGnBu")[c(2,3,3,4)] |>
     set_names(c("time", "dist", "distance", "midges"))
 
 # Palette for taxa:
-taxon_pal <- RColorBrewer::brewer.pal(9, "RdYlBu") |>
-    base::`[`(c(1:3, 7:9)) |>
-    set_names(taxa_lvls)
-taxon_pretty_pal <- taxon_pal |>
-    set_names(taxa_labs)
+taxa_pal <- plasma(6, begin = 0.2, end = 0.9) |>
+    rep(2) |>
+    set_names(c(taxa_lvls, taxa_labs))
 
 # Order levels of coefficient factor:
 make_coef_fct <- function(.coef) {
