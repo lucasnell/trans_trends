@@ -30,6 +30,9 @@ theme_set(theme_bw() %+replace%
 # Set up parallel processing
 options(mc.cores = max(1, parallel::detectCores()-2))
 
+# for reporting more sigfigs in tibbles:
+options(pillar.sigfig = 5)
+
 
 # Standardize taxa order and pretty names for plotting:
 taxa_map <- list(cara = "Ground beetles", stap = "Rove beetles",
@@ -37,6 +40,17 @@ taxa_map <- list(cara = "Ground beetles", stap = "Rove beetles",
                  sheet = "Sheet weavers", lyco = "Wolf spiders")
 taxa_lvls <- names(taxa_map)
 taxa_labs <- paste(taxa_map)
+
+
+# Palette for coefficients:
+coef_pal <- viridis(100)[c(10, 50, 50, 80)] |>
+    set_names(c("time", "dist", "distance", "midges"))
+
+# Order levels of coefficient factor:
+make_coef_fct <- function(.coef) {
+    factor(paste(.coef),
+           levels = c("time", "dist", "midges"))
+}
 
 
 
