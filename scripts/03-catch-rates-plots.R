@@ -22,20 +22,6 @@ midges_sd <- with(read_rds(data_rds), sd(log(midges / midge_days)))
 
 
 
-with_options(pillar.sigfig = 7,
-             data_df |>
-                 filter(taxon_pretty == "Ground spiders") |>
-                 select(taxon_pretty, year, midges, midge_days) |>
-                 group_by(taxon_pretty, year) |>
-                 summarize(midges = mean(midges / midge_days), .groups = "drop"))
-with_options(pillar.sigfig = 7,
-             data_df |>
-                 filter(taxon_pretty == "Ground spiders") |>
-                 select(taxon_pretty, dist, midges, midge_days) |>
-                 group_by(taxon_pretty, dist) |>
-                 summarize(midges = mean(midges / midge_days), .groups = "drop"))
-
-
 
 # Make summary data for plotting means of midge abundance and catch rates
 make_summ_df <- function(grp_var, taxa = NA, .trans_fun = NA) {
@@ -66,33 +52,6 @@ make_summ_df <- function(grp_var, taxa = NA, .trans_fun = NA) {
 
 
 
-
-with_options(pillar.sigfig = 7,
-             make_summ_df(year) |>
-                 filter(type == "Midge abundance") |>
-                 summarize(lo = min(y_noz), hi = max(y_noz), diff = hi - lo) |>
-                 print())
-# # A tibble: 1 × 3
-#          lo        hi     diff
-#       <dbl>     <dbl>    <dbl>
-# 1 -1.648319 0.7983331 2.446652
-
-
-with_options(pillar.sigfig = 7,
-             data_df |>
-                 group_by(taxon, taxon_pretty) |>
-                 summarize(y_noz = max(y_noz), .groups = "drop") |>
-                 arrange(desc(y_noz)) |>
-                 print())
-# # A tibble: 6 × 3
-#   taxon taxon_pretty      y_noz
-#   <fct> <fct>             <dbl>
-# 1 lyco  Wolf spiders   2.568725
-# 2 opil  Harvestmen     1.683546
-# 3 sheet Sheet weavers  1.449808
-# 4 cara  Ground beetles 1.329136
-# 5 stap  Rove beetles   1.170071
-# 6 gnap  Ground spiders 1.130506
 
 
 cr_plotter <- function(.df, x_var, grp_var) {

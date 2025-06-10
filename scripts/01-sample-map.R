@@ -50,7 +50,7 @@ pit_df <- read_csv("data/pitfall_locations.csv", col_types = cols()) |>
 myvatn_p <- myvatn_map |>
     ggplot(aes(x, y)) +
     geom_sf(color = "gray20", linewidth = 0.25, fill = "lightskyblue1", inherit.aes = FALSE) +
-    geom_point(data = filter(pit_df, dist == 5), aes(color = site), size = 4) +
+    geom_point(data = filter(pit_df, dist == 5), color = "#A1E44D", size = 4) +
     geom_point(data = filter(pit_df, dist == 5), size = 4, shape = 1) +
     geom_text(data = filter(pit_df, dist == 5) %>%
                   mutate(x = case_when(site == "Kálfaströnd" ~ x + 2000,
@@ -96,6 +96,8 @@ sites_p <- myvatn_p +
     inset_element(iceland_p, left = -0.09, right = -0.09 + 0.55,
                   bottom = 0.7 + 0.03, top = 1 + 0.03,
                   align_to = "full", clip = FALSE)
+
+# sites_p
 
 # save_plot("sample-map", sites_p, w = 3.21, h = 3.6)
 
