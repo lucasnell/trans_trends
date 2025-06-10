@@ -46,6 +46,13 @@ taxa_labs <- paste(taxa_map)
 coef_pal <- viridis(100)[c(10, 50, 50, 80)] |>
     set_names(c("time", "dist", "distance", "midges"))
 
+# Palette for taxa:
+taxon_pal <- RColorBrewer::brewer.pal(9, "RdYlBu") |>
+    base::`[`(c(1:3, 7:9)) |>
+    set_names(taxa_lvls)
+taxon_pretty_pal <- taxon_pal |>
+    set_names(taxa_labs)
+
 # Order levels of coefficient factor:
 make_coef_fct <- function(.coef) {
     factor(paste(.coef),
