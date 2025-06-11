@@ -324,7 +324,7 @@ pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
                     ylim = c(-pc_axis_lim, pc_axis_lim)) +
         scale_color_manual(values = coef_pal, guide = "none") +
         scale_fill_manual(NULL, values = taxa_pal) +
-        scale_shape_manual(NULL, values = rep(c(21, 22, 24), 2)) +
+        scale_shape_manual(NULL, values = taxa_shapes) +
         theme(axis.text.y = element_text(size = 8,
                                          margin = margin(0,0,0,r=2)),
               axis.title.y = element_text(size = 10,

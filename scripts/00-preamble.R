@@ -52,6 +52,10 @@ coef_pal <- brewer.pal(4, "YlGnBu")[c(2,3,3,4)] |>
 taxa_pal <- plasma(6, begin = 0.2, end = 0.9) |>
     rep(2) |>
     set_names(c(taxa_lvls, taxa_labs))
+# Same but for shapes:
+taxa_shapes <- rep(c(21, 22, 24), 2) |>
+    rep(2) |>
+    set_names(c(taxa_lvls, taxa_labs))
 
 # Order levels of coefficient factor:
 make_coef_fct <- function(.coef) {
