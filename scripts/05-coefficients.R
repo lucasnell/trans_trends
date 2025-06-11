@@ -24,16 +24,9 @@ model_fit <- read_rds(model_rds)
 
 #' Extract posterior densities for the fixed effects
 #' and for the random effect SDs
-#' Column `ui` indicates whether the densities are for the 68%
-#' uncertainty intervals.
 extract_posteriors <- function(z) {
-    .ui <- unname(quantile(z[["value"]], c(0.16, 0.84)))
     X <- density(z[["value"]], n = 2048)
-    Z <- density(z[["value"]], from = .ui[1], to = .ui[2])
-    tibble(coef = z[["coef"]][1],
-           x = c(X$x, c(Z$x[1], Z$x, tail(Z$x, 1))),
-           y = c(X$y, c(0, Z$y, 0)),
-           ui = c(rep(FALSE, length(X$x)), rep(TRUE, length(Z$x)+2)))
+    tibble(coef = z[["coef"]][1], x = X$x, y = X$y)
 }
 
 slope_density_df <- model_fit$stan |>
@@ -48,7 +41,6 @@ slope_density_df <- model_fit$stan |>
     split(~ coef) |>
     map(extract_posteriors) |>
     list_rbind()
-
 slope_sd_density_df <- model_fit$stan |>
     rstan::extract(pars = "sig_beta") |>
     do.call(what = cbind) |>
@@ -63,6 +55,43 @@ slope_sd_density_df <- model_fit$stan |>
     list_rbind()
 
 
+#' Extract uncertainty intervals (68% and 95%) for the fixed effects
+#' and for the random effect SDs
+extract_ui <- function(z) {
+    ui68 <- unname(quantile(z[["value"]], c(0.16, 0.84)))
+    ui95 <- unname(quantile(z[["value"]], c(0.025, 0.975)))
+    tibble(coef = z[["coef"]][1],
+           x = c(ui68[1], ui95[1]),
+           xend = c(ui68[2], ui95[2]),
+           type = factor(c(68, 95)))
+}
+
+slope_ui_df <- model_fit$stan |>
+    rstan::extract(pars = "alpha") |>
+    do.call(what = cbind) |>
+    as.data.frame() |>
+    set_names(c("int", "midges", "time", "dist")) |>
+    as_tibble() |>
+    select(-int) |>  # intercept not necessary
+    pivot_longer(everything(), names_to = "coef") |>
+    mutate(coef = make_coef_fct(coef)) |>
+    split(~ coef) |>
+    map(extract_ui) |>
+    list_rbind() |>
+    mutate(y = -0.2 - 0.2 * (as.integer(coef)-1))
+slope_sd_ui_df <- model_fit$stan |>
+    rstan::extract(pars = "sig_beta") |>
+    do.call(what = cbind) |>
+    as.data.frame() |>
+    set_names(c("int_tax", "int_plot", "int_trans", "midges", "time", "dist")) |>
+    as_tibble() |>
+    select(midges, time, dist) |>
+    pivot_longer(everything(), names_to = "coef") |>
+    mutate(coef = make_coef_fct(coef)) |>
+    split(~ coef) |>
+    map(extract_ui) |>
+    list_rbind() |>
+    mutate(y = -0.2 - 0.2 * (as.integer(coef)-1))
 
 
 #'
@@ -102,7 +131,8 @@ re_draws <- model_fit |>
             filter(Name != "(Intercept)", Groups == "taxon") |>
             select(-Groups) |>
             rename(taxon = Level, coef = Name) |>
-            mutate(coef = str_remove(coef, "_z$"))
+            mutate(coef = str_remove(coef, "_z$")) |>
+            mutate(coef = make_coef_fct(coef))
 
         return(out)
     })()
@@ -121,27 +151,39 @@ re_draws <- model_fit |>
 #'
 coef_indiv_plotter <- function(.coef) {
 
-    .coef <- match.arg(tolower(.coef), levels(slope_density_df$coef))
+    .coef <- match.arg(tolower(.coef), levels(re_draws$coef))
 
-    .ylab <- list(time = "Time response", dist = "Distance response",
+    .xlab <- list(time = "Time response", dist = "Distance response",
                   midges = "Midge response")[[.coef]]
 
-    .plot <- re_draws |>
+    .dd <- re_draws |>
         filter(coef == .coef) |>
-        mutate(taxon = factor(taxon, levels = taxa_lvls) |>
-                   as.integer()) |>
         mutate(med = map_dbl(iters, ~ median(.x)),
                lo = map_dbl(iters, ~ unname(quantile(.x, 0.16))),
-               hi = map_dbl(iters, ~ unname(quantile(.x, 0.84)))) |>
-        select(-iters) |>
-        ggplot(aes(med, taxon)) +
+               hi = map_dbl(iters, ~ unname(quantile(.x, 0.84))),
+               lo2 = map_dbl(iters, ~ unname(quantile(.x, 0.025))),
+               hi2 = map_dbl(iters, ~ unname(quantile(.x, 0.975)))) |>
+        mutate(taxon = factor(taxon, levels = taxa_lvls, labels = taxa_labs),
+               taxon = fct_reorder(taxon, desc(med)),
+               taxon_int = as.integer(taxon))
+
+    .plot <- .dd |>
+        ggplot(aes(med, taxon_int)) +
         geom_vline(xintercept = 0, color = "gray50")+
-        geom_point(size = 1.5, color = "black")+
-        geom_linerange(aes(xmin = lo, xmax = hi), color = "black") +
-        scale_y_continuous(breaks = 1:6, labels = taxa_labs) +
-        scale_x_continuous(.ylab, breaks = c(-1, 0, 1)) +
-        coord_cartesian(xlim = c(-1.3, 1.3), ylim = c(0.5, 7),
-                        expand = FALSE) +
+        geom_violin(data = .dd |> select(taxon_int, taxon, iters) |> unnest(iters),
+                    aes(x = iters, fill = taxon),
+                    position = "identity", alpha = 0.25, color = NA) +
+        geom_segment(aes(x = lo2, xend = hi2, yend = taxon_int, color = taxon),
+                     linewidth = 0.5) +
+        geom_linerange(aes(xmin = lo, xmax = hi, color = taxon),
+                       linewidth = 1.5) +
+        geom_point(aes(fill = taxon, shape = taxon), size = 3)+
+        scale_y_continuous(breaks = 1:6, labels = levels(.dd$taxon)) +
+        scale_x_continuous(.xlab, breaks = c(-1, 0, 1)) +
+        scale_color_manual(NULL, values = taxa_pal) +
+        scale_fill_manual(NULL, values = taxa_pal) +
+        scale_shape_manual(NULL, values = taxa_shapes) +
+        coord_cartesian(xlim = c(-1.45, 1.45), ylim = c(0.5, 7), expand = FALSE) +
         theme(axis.text.x = element_text(size = 8,
                                          margin = margin(0,0,0,t=2)),
               axis.title.x = element_text(size = 10,
@@ -149,28 +191,24 @@ coef_indiv_plotter <- function(.coef) {
               axis.title.y = element_blank(),
               axis.text.y = element_text(size = 8,
                                          margin = margin(0,0,0,r=3)),
-              plot.margin = margin(t=0, r=0, b=0, l=24))
+              plot.margin = margin(t=12, r=0, b=0, l=0),
+              legend.position = "none")
 
     return(.plot)
 }
 
 
 
-
-
-coef_p <- levels(slope_density_df$coef) |>
+coef_p <- levels(re_draws$coef) |>
     map(coef_indiv_plotter) |>
     do.call(what = patchwork::wrap_plots) +
-    plot_layout(nrow = 1, axes = "collect_y") +
+    plot_layout(ncol = 1) +
     plot_annotation(tag_levels = "a") &
-    theme(plot.tag.position = c(-0.06, 1))
-# This prevents tag for left panel from being way higher than the others
-# due to the large y-axis that's on the left:
-coef_p[[1]] <- coef_p[[1]] & theme(plot.tag.position = c(0.29, 1))
+    theme(plot.tag.position = c(0, 1))
 
-# coef_p
+coef_p
 
-# save_plot("coeffs-indiv", coef_p, w = 6.5, h = 3)
+# save_plot("coeffs-indiv", coef_p, w = 3.5, h = 6)
 
 
 
@@ -182,49 +220,40 @@ coef_p[[1]] <- coef_p[[1]] & theme(plot.tag.position = c(0.29, 1))
 # =============================================================================*
 
 
-
-
-
 coef_mean_p <- slope_density_df |>
-    filter(!ui) |>
     ggplot(aes(x, y)) +
     geom_vline(xintercept = 0, color = "gray50")+
     geom_hline(yintercept = 0, color = "gray50")+
-    geom_path(data = slope_density_df |> filter(ui) |>
-                  group_by(coef) |> filter(x %in% range(x)) |>
-                  ungroup() |> distinct(coef, x) |>
-                  mutate(y = -0.2 - ifelse(coef == "dist", 0.1, 0)),
-              aes(color = coef), linewidth = 1) +
-    geom_polygon(aes(fill = coef, color = coef), alpha = 0.5, linewidth = 0.5) +
-    scale_fill_manual(values = coef_pal, aesthetics = c("color", "fill"),
-                      guide = "none") +
-    ylab("Density") +
-    scale_x_continuous("Mean for among-taxa response", breaks = -1:1) +
-    coord_cartesian(xlim = c(-1.3, 1.3))
-
-
-coef_sd_p <- slope_sd_density_df |>
-    filter(!ui) |>
-    ggplot(aes(x, y)) +
-    geom_vline(xintercept = 0, color = "gray50")+
-    geom_hline(yintercept = 0, color = "gray50")+
-    geom_path(data = slope_sd_density_df |> filter(ui) |>
-                  group_by(coef) |> filter(x %in% range(x)) |>
-                  ungroup() |> distinct(coef, x) |>
-                  mutate(y = -0.2 - ifelse(coef == "time", 0.1, 0)),
-              aes(color = coef), linewidth = 1) +
+    geom_segment(data = slope_ui_df,
+              aes(xend = xend, yend = y, color = coef, linewidth = type)) +
     geom_polygon(aes(fill = coef, color = coef), alpha = 0.5, linewidth = 0.5) +
     geom_text(data = tibble(coef = factor(c("time", "dist", "midges")),
-                            x = c(0.4, 0.8, 0.2),
-                            y = c(3,   1.5, 4.2),
+                            x = rep(-1.3, 3),
+                            y = 4.6 - (0:2 * 0.4),
                             lab = c("time", "distance", "midges")),
-              aes(label = lab, color = coef), hjust = 0,
+              aes(label = lab, color = coef), hjust = 0, vjust = 1,
               fontface = "bold", size = 10 / 2.8) +
     scale_fill_manual(values = coef_pal, aesthetics = c("color", "fill"),
                       guide = "none") +
+    scale_linewidth_manual(values = c(1.5, 0.5), guide = "none") +
+    ylab("Density") +
+    scale_x_continuous("Mean for among-taxa response", breaks = -1:1) +
+    coord_cartesian(xlim = c(-1.3, 1.3), ylim = c(-0.6, 4.6))
+
+
+coef_sd_p <- slope_sd_density_df |>
+    ggplot(aes(x, y)) +
+    geom_vline(xintercept = 0, color = "gray50")+
+    geom_hline(yintercept = 0, color = "gray50")+
+    geom_segment(data = slope_sd_ui_df,
+                 aes(xend = xend, yend = y, color = coef, linewidth = type)) +
+    geom_polygon(aes(fill = coef, color = coef), alpha = 0.5, linewidth = 0.5) +
+    scale_fill_manual(values = coef_pal, aesthetics = c("color", "fill"),
+                      guide = "none") +
+    scale_linewidth_manual(values = c(1.5, 0.5), guide = "none") +
     ylab("Density") +
     scale_x_continuous("SD for among-taxa response") +
-    coord_cartesian(xlim = c(0, 1.5))
+    coord_cartesian(xlim = c(0, 1.5), ylim = c(-0.6, 4.6))
 
 
 coef_among_p <- (coef_mean_p | coef_sd_p) +
