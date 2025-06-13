@@ -251,7 +251,7 @@ pred_vec <- map(c("time", "dist", "midges"),
 
 pc_axis_lim <- 4.1
 #' #' We're scaling some of the projections. This is to keep that consistent.
-pc_mults <- list(pred = 6 * c(-1, 1, 1), taxon = 5 * c(-1, 1, 1))
+pc_mults <- list(pred = 6.5 * c(-1, 1, 1), taxon = 5 * c(-1, 1, 1))
 
 stopifnot(identical(sign(pc_mults$pred), sign(pc_mults$taxon)))
 
@@ -316,8 +316,8 @@ pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
                      aes(x = 0, xend = .data[[xPC_str]],
                          y = 0, yend = .data[[yPC_str]],
                          group = coef, color = coef),
-                     arrow = arrow(length = unit(6, "pt")),
-                     linewidth = 1) +
+                     arrow = arrow(length = unit(6, "pt"), type = "closed"),
+                     linewidth = 1.5, lineend = "butt", linejoin = "mitre") +
         scale_x_continuous(xPC_str, breaks = 3*-1:1) +
         scale_y_continuous(yPC_str, breaks = 3*-1:1) +
         coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
@@ -401,7 +401,8 @@ var_part_p <- var_df |>
               aes(value, y, label = lab),
               nudge_y = 0.2, size = 10 / 2.83465) +
     scale_color_manual(NULL, values = coef_pal, aesthetics = c("color", "fill")) +
-    scale_x_continuous("Proportion of variance", breaks = seq(0, 1, 0.2)) +
+    scale_x_continuous("Proportion of variance in observed data",
+                       breaks = seq(0, 1, 0.2)) +
     coord_cartesian(xlim = c(-0.02, 1.02),
                     ylim = c(-2.1, 0.7),
                     expand = FALSE) +
