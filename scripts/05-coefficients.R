@@ -22,76 +22,11 @@ model_fit <- read_rds(model_rds)
 
 
 
-#' Extract posterior densities for the fixed effects
-#' and for the random effect SDs
-extract_posteriors <- function(z) {
-    X <- density(z[["value"]], n = 2048)
-    tibble(coef = z[["coef"]][1], x = X$x, y = X$y)
-}
 
-slope_density_df <- model_fit$stan |>
-    rstan::extract(pars = "alpha") |>
-    do.call(what = cbind) |>
-    as.data.frame() |>
-    set_names(c("int", "midges", "time", "dist")) |>
-    as_tibble() |>
-    select(-int) |>  # intercept not necessary
-    pivot_longer(everything(), names_to = "coef") |>
-    mutate(coef = make_coef_fct(coef)) |>
-    split(~ coef) |>
-    map(extract_posteriors) |>
-    list_rbind()
-slope_sd_density_df <- model_fit$stan |>
-    rstan::extract(pars = "sig_beta") |>
-    do.call(what = cbind) |>
-    as.data.frame() |>
-    set_names(c("int_tax", "int_plot", "int_trans", "midges", "time", "dist")) |>
-    as_tibble() |>
-    select(midges, time, dist) |>
-    pivot_longer(everything(), names_to = "coef") |>
-    mutate(coef = make_coef_fct(coef)) |>
-    split(~ coef) |>
-    map(extract_posteriors) |>
-    list_rbind()
+# =============================================================================*
+# Individual estimates ----
+# =============================================================================*
 
-
-#' Extract uncertainty intervals (68% and 95%) for the fixed effects
-#' and for the random effect SDs
-extract_ui <- function(z) {
-    ui68 <- unname(quantile(z[["value"]], c(0.16, 0.84)))
-    ui95 <- unname(quantile(z[["value"]], c(0.025, 0.975)))
-    tibble(coef = z[["coef"]][1],
-           x = c(ui68[1], ui95[1]),
-           xend = c(ui68[2], ui95[2]),
-           type = factor(c(68, 95)))
-}
-
-slope_ui_df <- model_fit$stan |>
-    rstan::extract(pars = "alpha") |>
-    do.call(what = cbind) |>
-    as.data.frame() |>
-    set_names(c("int", "midges", "time", "dist")) |>
-    as_tibble() |>
-    select(-int) |>  # intercept not necessary
-    pivot_longer(everything(), names_to = "coef") |>
-    mutate(coef = make_coef_fct(coef)) |>
-    split(~ coef) |>
-    map(extract_ui) |>
-    list_rbind() |>
-    mutate(y = -0.2 - 0.2 * (as.integer(coef)-1))
-slope_sd_ui_df <- model_fit$stan |>
-    rstan::extract(pars = "sig_beta") |>
-    do.call(what = cbind) |>
-    as.data.frame() |>
-    set_names(c("int_tax", "int_plot", "int_trans", "midges", "time", "dist")) |>
-    as_tibble() |>
-    select(midges, time, dist) |>
-    pivot_longer(everything(), names_to = "coef") |>
-    mutate(coef = make_coef_fct(coef)) |>
-    split(~ coef) |>
-    map(extract_ui) |>
-    list_rbind() |>
-    mutate(y = -0.2 - 0.2 * (as.integer(coef)-1))
 
 
 #'
@@ -137,14 +72,6 @@ re_draws <- model_fit |>
         return(out)
     })()
 
-
-
-
-
-
-# =============================================================================*
-# Individual estimates ----
-# =============================================================================*
 
 #'
 #' Creates subpanels for taxon-specific values for each predictor parameter
@@ -220,18 +147,92 @@ coef_p
 # =============================================================================*
 
 
+
+
+#' Process data and use one of extract posterior densities or uncertainty
+#' intervals on either fixed effects or random effect SDs:
+extract_effect_info <- function(model, effect_type, output) {
+
+    stopifnot(inherits(model, "armmMod"))
+
+    effect_type <- match.arg(tolower(effect_type), c("fixed", "random"))
+    output <- match.arg(tolower(output), c("density", "ui"))
+
+    rnd <- effect_type == "random"
+
+    #' Extract uncertainty intervals (68% and 95%) for the fixed effects
+    #' and for the random effect SDs
+    extract_post_ui <- function(z) {
+        ui68 <- unname(quantile(z[["value"]], c(0.16, 0.84)))
+        ui95 <- unname(quantile(z[["value"]], c(0.025, 0.975)))
+        tibble(coef = z[["coef"]][1],
+               x = c(ui68[1], ui95[1]),
+               xend = c(ui68[2], ui95[2]),
+               type = factor(c(68, 95)))
+    }
+
+    out_fn <- switch(output,
+                     density = identity,
+                     ui = extract_post_ui)
+
+    if (effect_type == "fixed") {
+        out <- model$stan |>
+            rstan::extract(pars = "alpha") |>
+            do.call(what = cbind) |>
+            as.data.frame() |>
+            set_names(c("int", "midges", "time", "dist")) |>
+            as_tibble() |>
+            select(-int) |>  # intercept not necessary
+            pivot_longer(everything(), names_to = "coef") |>
+            mutate(coef = make_coef_fct(coef)) |>
+            split(~ coef) |>
+            map(out_fn) |>
+            list_rbind()
+    } else {
+        out <- model$stan |>
+            rstan::extract(pars = "sig_beta") |>
+            do.call(what = cbind) |>
+            as.data.frame() |>
+            set_names(c("int_tax", "int_plot", "int_trans", "midges", "time", "dist")) |>
+            as_tibble() |>
+            select(midges, time, dist) |>
+            pivot_longer(everything(), names_to = "coef") |>
+            mutate(coef = make_coef_fct(coef)) |>
+            split(~ coef) |>
+            map(out_fn) |>
+            list_rbind()
+    }
+
+    return(out)
+
+}
+
+
+
+
+
+slope_density_df <- extract_effect_info(model_fit, "fixed", "density")
+slope_sd_density_df <- extract_effect_info(model_fit, "random", "density")
+
+slope_ui_df <- extract_effect_info(model_fit, "fixed", "ui") |>
+    mutate(y = -0.2 - 0.2 * (as.integer(coef)-1))
+slope_sd_ui_df <- extract_effect_info(model_fit, "random", "ui") |>
+    mutate(y = -0.2 - 0.2 * (as.integer(coef)-1))
+
+
 coef_mean_p <- slope_density_df |>
-    ggplot(aes(x, y)) +
+    ggplot(aes(value)) +
     geom_vline(xintercept = 0, color = "gray50")+
     geom_hline(yintercept = 0, color = "gray50")+
     geom_segment(data = slope_ui_df,
-              aes(xend = xend, yend = y, color = coef, linewidth = type)) +
-    geom_polygon(aes(fill = coef, color = coef), alpha = 0.5, linewidth = 0.5) +
+              aes(x = x, y = y, xend = xend, yend = y, color = coef, linewidth = type)) +
+    stat_density(aes(fill = coef, color = coef),
+                 alpha = 0.5, linewidth = 0.5, position = "identity") +
     geom_text(data = tibble(coef = factor(c("time", "dist", "midges")),
-                            x = rep(-1.3, 3),
+                            value = rep(-1.3, 3),
                             y = 4.6 - (0:2 * 0.4),
                             lab = c("time", "distance", "midges")),
-              aes(label = lab, color = coef), hjust = 0, vjust = 1,
+              aes(y = y, label = lab, color = coef), hjust = 0, vjust = 1,
               fontface = "bold", size = 10 / 2.8) +
     scale_fill_manual(values = coef_pal, aesthetics = c("color", "fill"),
                       guide = "none") +
@@ -242,12 +243,13 @@ coef_mean_p <- slope_density_df |>
 
 
 coef_sd_p <- slope_sd_density_df |>
-    ggplot(aes(x, y)) +
-    geom_vline(xintercept = 0, color = "gray50")+
-    geom_hline(yintercept = 0, color = "gray50")+
-    geom_segment(data = slope_sd_ui_df,
-                 aes(xend = xend, yend = y, color = coef, linewidth = type)) +
-    geom_polygon(aes(fill = coef, color = coef), alpha = 0.5, linewidth = 0.5) +
+    ggplot(aes(value)) +
+    geom_vline(xintercept = 0, color = "gray50") +
+    geom_hline(yintercept = 0, color = "gray50") +
+    geom_segment(data = slope_sd_ui_df, aes(x = x, y = y, xend = xend, yend = y,
+                                            color = coef, linewidth = type)) +
+    stat_density(aes(fill = coef, color = coef), bounds = c(0, Inf),
+                 alpha = 0.5, linewidth = 0.5, position = "identity") +
     scale_fill_manual(values = coef_pal, aesthetics = c("color", "fill"),
                       guide = "none") +
     scale_linewidth_manual(values = c(1.5, 0.5), guide = "none") +
