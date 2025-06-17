@@ -418,7 +418,7 @@
     },
     "TransTrendsPkg": {
       "Package": "TransTrendsPkg",
-      "Version": "1.0.0",
+      "Version": "1.0.2",
       "Source": "GitHub",
       "Type": "Package",
       "Title": "Fit models for trans_trends",
@@ -467,8 +467,8 @@
       "RemoteRepo": "trans_trends_pkg",
       "RemoteUsername": "lucasnell",
       "Roxygen": "list(markdown = TRUE)",
-      "RemoteRef": "v1.0.1",
-      "RemoteSha": "0cd82c447bd694ecc05c109eed8f35516981658f",
+      "RemoteRef": "v1.0.2",
+      "RemoteSha": "f1e91afb230076bf99f83f183269720e5d1b7e2d",
       "Author": "Joseph S Phillips [aut], Lucas A Nell [aut, cre]",
       "Maintainer": "Lucas A Nell <lucas@lucasnell.com>"
     },

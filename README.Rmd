@@ -35,7 +35,7 @@ This repository was created and is maintained by
 
 # Organization
 
-These are the top-level files/folders:
+These are the main top-level files/folders:
 
 ```{bash, echo = TRUE, eval = FALSE}
 .
@@ -91,7 +91,7 @@ If you'd rather avoid `renv`, then you can install all the packages
 (in the versions I used) this way:
 
 ```{r, results = "asis"}
-loaded_pkgs  <- c("ggspatial", "patchwork", "sf", "tidyverse", "viridisLite") |> 
+loaded_pkgs  <- c("ggspatial", "patchwork", "RColorBrewer", "remotes", "rlang", "sf", "tidyverse", "viridisLite") |> 
     map_chr(\(p) sprintf("%s@%s", p, packageVersion(p)))
 # packages required for `TransTrendsPkg`:
 tt_pkgs <- dev_package_deps("../trans_trends_pkg/") |> 
@@ -113,7 +113,6 @@ pkg_2cols <- map_chr(seq(1:ceiling(length(all_pkgs)/2)),
 cat("```r\n")
 cat(pkg_2cols)
 cat('install.packages(pkgs)\n')
-cat('install.packages("remotes")\n')
 cat(sprintf('remotes::install_github("lucasnell/trans_trends_pkg@%s")\n',
             packageVersion("TransTrendsPkg")))
 cat("```\n")
@@ -122,13 +121,13 @@ cat("```\n")
 
 Note that these only install the proper versions of the packages I manually 
 installed (or were dependencies of `TransTrendsPkg`),
-so dependencies might vary from what I used.
+so other dependencies might vary from what I used.
 
 
 Similarly, but without version numbers at all:
 
 ```{r, results = "asis"}
-pkg_2cols <- map_chr(seq(1:ceiling(length(all_pkgs)/4)),
+pkg_4cols <- map_chr(seq(1:ceiling(length(all_pkgs)/4)),
         \(i) {
             j <- (i-1)*4 + 1
             k <- min(j+3, length(all_pkgs))
@@ -141,9 +140,8 @@ pkg_2cols <- map_chr(seq(1:ceiling(length(all_pkgs)/4)),
     paste(collapse = ",\n") |> 
     sprintf(fmt = "pkgs <- c(%s)\n")
 cat("```r\n")
-cat(pkg_2cols)
+cat(pkg_4cols)
 cat('install.packages(pkgs)\n')
-cat('install.packages("remotes")\n')
 cat('remotes::install_github("lucasnell/trans_trends_pkg")\n')
 cat("```\n")
 ```
