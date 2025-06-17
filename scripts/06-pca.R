@@ -307,6 +307,10 @@ pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
     }
 
     p <- p +
+        geom_segment(aes(x = 0, xend =.data[[xPC_str]],
+                         y = 0, yend = .data[[yPC_str]],
+                         color = taxon_pretty),
+                   linewidth = 0.5, alpha = 0.5) +
         geom_point(aes(x =.data[[xPC_str]],
                        y = .data[[yPC_str]],
                        fill = taxon_pretty,
@@ -322,7 +326,7 @@ pca_plotter <- function(.xPC, .yPC, incl_data = FALSE) {
         scale_y_continuous(yPC_str, breaks = 3*-1:1) +
         coord_equal(xlim = c(-pc_axis_lim, pc_axis_lim),
                     ylim = c(-pc_axis_lim, pc_axis_lim)) +
-        scale_color_manual(values = coef_pal, guide = "none") +
+        scale_color_manual(values = c(coef_pal, taxa_pal), guide = "none") +
         scale_fill_manual(NULL, values = taxa_pal) +
         scale_shape_manual(NULL, values = taxa_shapes) +
         theme(axis.text.y = element_text(size = 8,
@@ -399,7 +403,7 @@ var_part_p <- var_df |>
                   mutate(y = 0 - (pc-1) * 0.5,
                          lab = paste0("PC", pc)),
               aes(value, y, label = lab),
-              nudge_y = 0.2, size = 10 / 2.83465) +
+              nudge_y = 0.25, size = 10 / 2.83465) +
     scale_color_manual(NULL, values = coef_pal, aesthetics = c("color", "fill")) +
     scale_x_continuous("Proportion of variance in observed data",
                        breaks = seq(0, 1, 0.2)) +
@@ -422,18 +426,18 @@ var_part_p <- var_df |>
 # Combine them all into single figure
 # --------------*
 
-# # This version has a legend instead of labels in the plot itself.
-# # I added labels in Illustrator, but this one shows all the relevant info:
-# simple_pca_p <- wrap_plots(c(pca_plots, list(var_part_p))) +
-#     plot_layout(design = "ABC\nDDD", heights = c(1, 0.5), guides = "collect") +
-#     plot_annotation(tag_levels = "a") &
-#     theme(plot.tag = element_text(size = 16),
-#           plot.tag.position = c(0.015, 1),
-#           legend.position = "right")
-# # This prevents tag for bottom panel from being further from plot
-# # than the others due to its lack of a y-axis:
-# simple_pca_p[[4]] <- simple_pca_p[[4]] & theme(plot.tag.position = c(0.005, 1))
-# simple_pca_p
+# This version has a legend instead of labels in the plot itself.
+# I added labels in Illustrator, but this one shows all the relevant info:
+simple_pca_p <- wrap_plots(c(pca_plots, list(var_part_p))) +
+    plot_layout(design = "ABC\nDDD", heights = c(1, 0.5), guides = "collect") +
+    plot_annotation(tag_levels = "a") &
+    theme(plot.tag = element_text(size = 16),
+          plot.tag.position = c(0.06, 1),
+          legend.position = "right")
+# This prevents tag for bottom panel from being further from plot
+# than the others due to its lack of a y-axis:
+simple_pca_p[[4]] <- simple_pca_p[[4]] & theme(plot.tag.position = c(0.03, 1))
+simple_pca_p
 
 
 
@@ -443,4 +447,4 @@ for (i in seq_along(pca_plots)) {
     save_plot(sprintf("pca-%s", letters[i]), pca_plots[[i]], w = 2, h = 2)
 }; rm(i)
 
-save_plot("pca-var", var_part_p, w = 6, h = 2)
+save_plot("pca-var", var_part_p, w = 5.61, h = 1.87)

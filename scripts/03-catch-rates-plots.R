@@ -101,11 +101,11 @@ cr_plotter <- function(.df, x_var, grp_var) {
         scale_color_manual(NULL, values = type_pal) +
         coord_cartesian(ylim = c(0, y_max)) +
         x_scale +
-        scale_y_continuous(expression("Catch rate (day"*{}^{-1}*")"),
+        scale_y_continuous(expression("Catch rate (ind. day"*{}^{-1}*")"),
                            breaks = log1p(y_labs),
                            labels = y_labs,
                            sec.axis = sec_axis(inv_trans_fun,
-                                               expression("Midge catch rate (day"*{}^{-1}*")"),
+                                               expression("Midge catch rate (ind. day"*{}^{-1}*")"),
                                                breaks = 10^(0:2))) +
         theme(axis.title.y.right = element_text(color = type_pal[2]),
               axis.text.y.right = element_text(color = type_pal[2]),

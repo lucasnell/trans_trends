@@ -231,7 +231,7 @@ coef_mean_p <- slope_density_df |>
     geom_text(data = tibble(coef = factor(c("time", "dist", "midges")),
                             value = rep(-1.3, 3),
                             y = 4.6 - (0:2 * 0.4),
-                            lab = c("time", "distance", "midges")),
+                            lab = c("Time", "Distance", "Midges")),
               aes(y = y, label = lab, color = coef), hjust = 0, vjust = 1,
               fontface = "bold", size = 10 / 2.8) +
     scale_fill_manual(values = coef_pal, aesthetics = c("color", "fill"),
