@@ -1,5 +1,5 @@
 #'
-#' This file contains PC analyses.
+#' This file conducts PC analyses and creates resulting plots
 #'
 
 

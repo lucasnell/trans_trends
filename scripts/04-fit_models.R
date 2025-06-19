@@ -1,7 +1,9 @@
 
 #'
 #' This file fits the model using the `TransTrendsPkg` package,
-#' and saves these objects to `*.rds` files.
+#' and saves the resulting `armmMod` object to a `*.rds` file.
+#'
+#'
 #' Below, change the `.REFIT_MODELS` object to `TRUE` if you want to refit
 #' these models even if the `rds` files exist.
 #'
