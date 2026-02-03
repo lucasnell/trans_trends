@@ -1,5 +1,6 @@
 
 suppressPackageStartupMessages({
+    library(pillar) # num() for setting sig figs in tibble printing
     library(rlang) # load before tidyverse to prevent masking some purrr functions
     library(TransTrendsPkg)
     library(tidyverse)

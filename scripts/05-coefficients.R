@@ -110,7 +110,7 @@ coef_indiv_plotter <- function(.coef) {
         scale_color_manual(NULL, values = taxa_pal) +
         scale_fill_manual(NULL, values = taxa_pal) +
         scale_shape_manual(NULL, values = taxa_shapes) +
-        coord_cartesian(xlim = c(-1.45, 1.45), ylim = c(0.5, 7), expand = FALSE) +
+        coord_cartesian(xlim = 1.1 * c(-1, 1), ylim = c(0, 7), expand = FALSE) +
         theme(axis.text.x = element_text(size = 8,
                                          margin = margin(0,0,0,t=2)),
               axis.title.x = element_text(size = 10,
@@ -230,16 +230,16 @@ coef_mean_p <- slope_density_df |>
                  alpha = 0.5, linewidth = 0.5, position = "identity") +
     geom_text(data = tibble(coef = factor(c("time", "dist", "midges")),
                             value = rep(-1.3, 3),
-                            y = 4.6 - (0:2 * 0.4),
+                            y = 5 - (0:2 * 0.4),
                             lab = c("Time", "Distance", "Midges")),
               aes(y = y, label = lab, color = coef), hjust = 0, vjust = 1,
               fontface = "bold", size = 10 / 2.8) +
     scale_fill_manual(values = coef_pal, aesthetics = c("color", "fill"),
                       guide = "none") +
     scale_linewidth_manual(values = c(1.5, 0.5), guide = "none") +
-    ylab("Density") +
+    scale_y_continuous("Density", breaks = c(0, 2, 4)) +
     scale_x_continuous("Mean for among-taxa response", breaks = -1:1) +
-    coord_cartesian(xlim = c(-1.3, 1.3), ylim = c(-0.6, 4.6))
+    coord_cartesian(xlim = c(-1.3, 1.3), ylim = c(-0.6, 5))
 
 
 coef_sd_p <- slope_sd_density_df |>
@@ -253,9 +253,9 @@ coef_sd_p <- slope_sd_density_df |>
     scale_fill_manual(values = coef_pal, aesthetics = c("color", "fill"),
                       guide = "none") +
     scale_linewidth_manual(values = c(1.5, 0.5), guide = "none") +
-    ylab("Density") +
+    scale_y_continuous("Density", breaks = c(0, 2, 4)) +
     scale_x_continuous("SD for among-taxa response") +
-    coord_cartesian(xlim = c(0, 1.5), ylim = c(-0.6, 4.6))
+    coord_cartesian(xlim = c(0, 1.5), ylim = c(-0.6, 5))
 
 
 coef_among_p <- (coef_mean_p | coef_sd_p) +
@@ -279,21 +279,27 @@ rstan::extract(model_fit$stan, "phi")[[1]] |>
     set_names(gsub("^taxon", "", model_fit$ar_names)) |>
     as_tibble() |>
     pivot_longer(everything(), names_to = "taxon") |>
-    mutate(taxon = factor(paste(taxon), levels = taxa_lvls, labels = taxa_labs)) |>
+    mutate(taxon = factor(paste(taxon), levels = taxa_lvls,
+                          labels = tolower(taxa_labs))) |>
     group_by(taxon) |>
     summarize(med = median(value),
               lo = quantile(value, 0.16),
-              hi = quantile(value, 0.84))
+              hi = quantile(value, 0.84)) |>
+    mutate(across(where(is.numeric), \(x) num(x, digits = 3)))
+
 
 # # A tibble: 6 × 4
-#   taxon               med       lo       hi
-#   <fct>             <dbl>    <dbl>    <dbl>
-# 1 Ground beetles 0.059817 0.026760 0.10946
-# 2 Rove beetles   0.049684 0.021062 0.094614
-# 3 Harvestmen     0.033496 0.014305 0.065400
-# 4 Ground spiders 0.11583  0.051896 0.19796
-# 5 Sheet weavers  0.024776 0.010810 0.046281
-# 6 Wolf spiders   0.032415 0.014248 0.061300
+#   taxon                med        lo        hi
+#   <fct>          <num:.3!> <num:.3!> <num:.3!>
+# 1 ground beetles     0.351     0.259     0.436
+# 2 rove beetles       0.351     0.271     0.428
+# 3 harvestmen         0.388     0.297     0.475
+# 4 ground spiders     0.040     0.017     0.075
+# 5 sheet weavers      0.159     0.076     0.268
+# 6 wolf spiders       0.480     0.366     0.581
+
+
+
 
 
 
@@ -303,16 +309,21 @@ rstan::extract(model_fit$stan, "phi")[[1]] |>
 
 re_draws |>
     filter(coef == "midges") |>
-    mutate(taxon = factor(paste(taxon), levels = taxa_lvls, labels = taxa_labs)) |>
+    mutate(taxon = factor(paste(taxon), levels = taxa_lvls,
+                          labels = tolower(taxa_labs))) |>
     mutate(midge_effect = 10^(map_dbl(iters, ~ median(.x)) / midges_sd)) |>
-    select(taxon, midge_effect)
+    select(taxon, midge_effect) |>
+    mutate(across(where(is.numeric), \(x) num(x, digits = 3)))
 
 # # A tibble: 6 × 2
 #   taxon          midge_effect
-#   <fct>                 <dbl>
-# 1 Ground beetles       1.3054
-# 2 Rove beetles         1.3058
-# 3 Harvestmen           1.2770
-# 4 Ground spiders       1.7054
-# 5 Sheet weavers        1.1188
-# 6 Wolf spiders         1.3630
+#   <fct>             <num:.3!>
+# 1 ground beetles        1.071
+# 2 rove beetles          1.044
+# 3 harvestmen            1.058
+# 4 ground spiders        1.590
+# 5 sheet weavers         0.850
+# 6 wolf spiders          0.985
+
+
+

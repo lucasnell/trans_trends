@@ -29,7 +29,7 @@ data_df <- read_rds(data_rds)
 
 if (! file.exists(model_rds) || .REFIT_MODELS) {
 
-    # Takes ~4.2 min on my machine with >= 4 threads:
+    # Takes ~15 min on my machine with >= 4 threads:
     model_fit <- armm(formula = count ~ midges_z + time_z + dist_z +
                           (1 | taxon + taxon_plot + taxon_trans) +
                           (midges_z + time_z + dist_z | taxon) +
@@ -43,7 +43,7 @@ if (! file.exists(model_rds) || .REFIT_MODELS) {
                       y_scale = NULL,
                       hmc = TRUE,
                       change = TRUE,
-                      rstan_control = list(iter = 3000, chains = 4, seed = 130748637,
+                      rstan_control = list(iter = 6000, chains = 4, seed = 130748637,
                                            control = list(adapt_delta = 0.99)))
     write_rds(model_fit, model_rds)
 
