@@ -274,7 +274,7 @@ coef_among_p <- (coef_mean_p | coef_sd_p) +
 # Autoregressive parameters ----
 # =============================================================================*
 
-rstan::extract(model_fit$stan, "phi")[[1]] |>
+autoreg_df <- rstan::extract(model_fit$stan, "phi")[[1]] |>
     as.data.frame() |>
     set_names(gsub("^taxon", "", model_fit$ar_names)) |>
     as_tibble() |>
@@ -284,7 +284,9 @@ rstan::extract(model_fit$stan, "phi")[[1]] |>
     group_by(taxon) |>
     summarize(med = median(value),
               lo = quantile(value, 0.16),
-              hi = quantile(value, 0.84)) |>
+              hi = quantile(value, 0.84))
+
+autoreg_df |>
     mutate(across(where(is.numeric), \(x) num(x, digits = 3)))
 
 
@@ -299,6 +301,49 @@ rstan::extract(model_fit$stan, "phi")[[1]] |>
 # 6 wolf spiders       0.480     0.366     0.581
 
 
+
+
+
+# Error SDs ----
+# =============================================================================*
+
+error_df <- rstan::extract(model_fit$stan, c("sig_proc", "sig_obs")) |>
+    do.call(what = cbind) |>
+    as_tibble() |>
+    pivot_longer(everything(), names_to = "type") |>
+    mutate(type = case_when(type == "sig_obs" ~ "observation",
+                            type == "sig_proc" ~ "process") |>
+               factor(levels = c("process", "observation"))) |>
+    group_by(type) |>
+    summarize(med = median(value),
+              lo = quantile(value, 0.16),
+              hi = quantile(value, 0.84))
+
+error_df |>
+    mutate(across(where(is.numeric), \(x) num(x, digits = 3)))
+
+
+# # A tibble: 2 × 4
+#   type              med        lo        hi
+#   <fct>       <num:.3!> <num:.3!> <num:.3!>
+# 1 process         0.387     0.254     0.483
+# 2 observation     0.838     0.786     0.888
+
+
+
+# Table w/ autoreg. & error ----
+# =============================================================================*
+
+
+bind_rows(autoreg_df |> rename(type = taxon) |> mutate(par = "Autoreg."),
+          error_df |> mutate(par = "Error SD")) |>
+    mutate(type = str_to_sentence(type)) |>
+    select(par, everything()) |>
+    mutate(par = ifelse(par == lag(par, default = "XX"), "", par),
+           med = sprintf("$%.2f$", med),
+           ui = sprintf("$(%.2f, %.2f)$", lo, hi)) |>
+    select(-lo, -hi) |>
+    knitr::kable("latex", booktabs = TRUE, escape = FALSE, linesep = "")
 
 
 
