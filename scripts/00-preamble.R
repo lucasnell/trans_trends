@@ -67,7 +67,7 @@ make_coef_fct <- function(.coef) {
 
 
 # Names of RDS file created in `scripts/02-clean-data.R` that contains cleaned data:
-data_rds <- "rds_files/data_fit.rds"
+data_rds <- "rds_files/data-fit.rds"
 
 # Names of RDS file created in `scripts/analysis.R` that contains the model fit:
 model_rds <- "rds_files/model-fit.rds"

@@ -8,11 +8,13 @@
 # Preliminaries ----
 # =============================================================================*
 
+# Note: these must be loaded first!
+library(sf)
+library(ggspatial) # annotation_scale and annotation_north_arrow
+
 source("scripts/00-preamble.R")
 
 
-library(sf)
-library(ggspatial) # annotation_scale and annotation_north_arrow
 
 
 # =============================================================================*

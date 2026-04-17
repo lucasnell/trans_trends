@@ -52,7 +52,8 @@ if (! file.exists(model_rds) || .REFIT_MODELS) {
 }
 
 
-# # examine fit
+# examine fit
 summary(model_fit)
 coef(model_fit)
+
 

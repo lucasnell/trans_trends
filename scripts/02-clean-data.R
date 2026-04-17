@@ -57,3 +57,4 @@ data_fit <- myv_arth |>
 
 
 write_rds(data_fit, data_rds)
+
