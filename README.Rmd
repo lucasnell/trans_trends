@@ -39,17 +39,26 @@ These are the main top-level files/folders:
 
 ```{bash, echo = TRUE, eval = FALSE}
 .
+├── .Rprofile
+├── README.Rmd
 ├── README.md
+├── renv.lock
 ├── trans_trends.Rproj
 ├── data
 ├── figures
 ├── rds_files
+├── renv
 └── scripts
 ```
 
 The following files/folders should be present:
 
-- `README.md`: this file
+- `.Rprofile`: small file that contains R code that is run when R is started.
+  Used for `renv` package.
+- `README.md` and `README.Rmd`: this file and the file that generates it,
+  respectively (only `README.Rmd` should be edited)
+- `renv.lock`: JSON file containg info about all the packages (and their 
+  versions) to install to replicate our R environment using the `renv` package
 - `trans_trends.Rproj`: file saving this RStudio Project's preferences
 - `data`: Folder containing all datasets associated with this paper.
 - `figures`: Folder containing figures created from this paper.
@@ -59,11 +68,13 @@ The following files/folders should be present:
   cleaned data.
   Note that this folder should be empty and is populated by running the
   R scripts.
+- `renv`: Largely empty folder containing the R package library if using
+  the `renv` package to replicate our R environment
 - `scripts`: Folder containing R scripts for data cleanup, model fitting, and 
   creating figures / tables.
 
-Note that all folders have their own `README.md` files that should be
-referenced for specific files.
+Note that all folders except `renv` have their own `README.md` files that 
+should be referenced for specific files.
 
 
 
@@ -90,58 +101,17 @@ renv::restore()
 If you'd rather avoid `renv`, then you can install all the packages 
 (in the versions I used) this way:
 
-```{r, results = "asis"}
-loaded_pkgs  <- c("ggspatial", "patchwork", "RColorBrewer", "remotes", "rlang", "sf", "tidyverse", "viridisLite") |> 
-    map_chr(\(p) sprintf("%s@%s", p, packageVersion(p)))
-# packages required for `TransTrendsPkg`:
-tt_pkgs <- dev_package_deps("../trans_trends_pkg/") |> 
-    as_tibble() |> 
-    select("package","installed") |> 
-    pmap_chr(paste, sep = "@")
-all_pkgs <- c(loaded_pkgs, tt_pkgs) |> unique() |> sort()
-# Turn into two columns:
-pkg_2cols <- map_chr(seq(1:ceiling(length(all_pkgs)/2)),
-                     \(i) {
-                         j <- (i-1)*2 + 1
-                         k <- min(j+1, length(all_pkgs))
-                         sp <- ifelse(i == 1, "", "          ")
-                         paste0(sp, paste(sprintf('"%s"', all_pkgs[j:k]), 
-                                          collapse = ", "))
-                     }) |> 
-    paste(collapse = ",\n") |> 
-    sprintf(fmt = "pkgs <- c(%s)\n")
-cat("```r\n")
-cat(pkg_2cols)
-cat('install.packages(pkgs)\n')
-cat(sprintf('remotes::install_github("lucasnell/trans_trends_pkg@%s")\n',
-            packageVersion("TransTrendsPkg")))
-cat("```\n")
+```{r, echo = TRUE, eval = FALSE}
+if (!requireNamespace("jsonlite", quietly = TRUE)) install.package("jsonlite")
+pkg_list <- jsonlite::read_json("renv.lock")[["Packages"]]
+pkg_vers <- lapply(pkg_list, \(x) paste0(x[["Package"]], "@", x[["Version"]]))
+pkg_vers[["TransTrendsPkg"]] <- NULL  # bc we're getting this one from github
+
+# Most packages from CRAN:
+install.packages(do.call(c, pkg_vers))
+
+# Now TransTrendsPkg from GitHub:
+remotes::install_github(paste0("lucasnell/trans_trends_pkg@",
+                               pkg_list[["TransTrendsPkg"]][["RemoteSha"]]))
 ```
 
-
-Note that these only install the proper versions of the packages I manually 
-installed (or were dependencies of `TransTrendsPkg`),
-so other dependencies might vary from what I used.
-
-
-Similarly, but without version numbers at all:
-
-```{r, results = "asis"}
-pkg_4cols <- map_chr(seq(1:ceiling(length(all_pkgs)/4)),
-        \(i) {
-            j <- (i-1)*4 + 1
-            k <- min(j+3, length(all_pkgs))
-            sp <- ifelse(i == 1, "", "          ")
-            p <- str_split(all_pkgs[j:k],"@") |> 
-                map_chr(\(x) x[1])
-            paste0(sp, paste(sprintf('"%s"', p), 
-                             collapse = ", "))
-        }) |> 
-    paste(collapse = ",\n") |> 
-    sprintf(fmt = "pkgs <- c(%s)\n")
-cat("```r\n")
-cat(pkg_4cols)
-cat('install.packages(pkgs)\n')
-cat('remotes::install_github("lucasnell/trans_trends_pkg")\n')
-cat("```\n")
-```
