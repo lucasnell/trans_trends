@@ -49,6 +49,11 @@ taxa_labs <- paste(taxa_map)
 coef_pal <- brewer.pal(4, "YlGnBu")[c(2,3,3,4)] |>
     set_names(c("time", "dist", "distance", "midges"))
 
+# ... and for error types:
+error_pal <- brewer.pal(4, "PiYG") |>
+    set_names(c("Taxon × site", "Taxon × plot",
+                "Process", "Observation"))
+
 # Palette for taxa:
 taxa_pal <- plasma(6, begin = 0.2, end = 0.9) |>
     rep(2) |>

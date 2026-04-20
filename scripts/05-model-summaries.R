@@ -34,33 +34,32 @@ model_fit <- read_rds(model_rds)
 #' (Using an inline function to avoid cluttering environment)
 #'
 re_draws <- model_fit |>
-    (function(object) {
+    (function(model) {
+        stopifnot(inherits(model, "armmMod"))
+        fef <- rstan::extract(model$stan, "alpha")[[1]]
+        colnames(fef) <- colnames(model$stan_data$x)
 
-        stopifnot(inherits(object, "armmMod"))
-        fef <- rstan::extract(object$stan, "alpha")[[1]]
-        colnames(fef) <- colnames(object$stan_data$x)
+        sigma_names <- names(model$stan)[grepl("^sig_beta\\[", names(model$stan))]
+        z_names <- names(model$stan)[grepl("^z\\[", names(model$stan))]
 
-        sigma_names <- names(object$stan)[grepl("^sig_beta\\[", names(object$stan))]
-        z_names <- names(object$stan)[grepl("^z\\[", names(object$stan))]
-
-        S <- rstan::extract(object$stan, sigma_names)
-        S <- lapply(1:length(S),
+        S <- lapply(1:length(sigma_names),
                     function(i) {
-                        matrix(as.numeric(S[[i]]), length(S[[i]]),
-                               object$stan_data$lev_per_g[i])
-                    })
-        S <- do.call(cbind, S)
-        Z <- do.call(cbind, rstan::extract(object$stan, z_names))
+                        Si <- rstan::extract(model$stan, sigma_names[i])[[1]]
+                        matrix(as.numeric(Si), length(Si),
+                               model$stan_data$lev_per_g[i])
+                    }) |>
+            do.call(what = cbind)
+        Z <- do.call(cbind, rstan::extract(model$stan, z_names))
         R <- S * Z
 
         # Combining random and fixed effects:
         E <- R
-        for (i in 1:nrow(object$rnd_lvl_names)) {
-            .f <- fef[,object$rnd_lvl_names$Name[i]]
+        for (i in 1:nrow(model$rnd_lvl_names)) {
+            .f <- fef[,model$rnd_lvl_names$Name[i]]
             E[,i] <- E[,i] + .f
         }
 
-        out <- object$rnd_lvl_names |>
+        out <- model$rnd_lvl_names |>
             as_tibble() |>
             mutate(iters = map(1:n(), ~ E[,.x])) |>
             filter(Name != "(Intercept)", Groups == "taxon") |>
@@ -133,7 +132,7 @@ coef_p <- levels(re_draws$coef) |>
     plot_annotation(tag_levels = "a") &
     theme(plot.tag.position = c(0, 1))
 
-coef_p
+# coef_p
 
 # save_plot("coeffs-indiv", coef_p, w = 3.5, h = 6)
 
@@ -153,12 +152,14 @@ coef_p
 #' intervals on either fixed effects or random effect SDs:
 extract_effect_info <- function(model, effect_type, output) {
 
+    # model = model_fit; effect_type = "error"; output = "density"
+    # rm(model, effect_type, output, extract_post_ui, out_fn, out)
+    # rm(par_name, all_cols)
+
     stopifnot(inherits(model, "armmMod"))
 
-    effect_type <- match.arg(tolower(effect_type), c("fixed", "random"))
+    effect_type <- match.arg(tolower(effect_type), c("fixed", "random", "error"))
     output <- match.arg(tolower(output), c("density", "ui"))
-
-    rnd <- effect_type == "random"
 
     #' Extract uncertainty intervals (68% and 95%) for the fixed effects
     #' and for the random effect SDs
@@ -175,33 +176,49 @@ extract_effect_info <- function(model, effect_type, output) {
                      density = identity,
                      ui = extract_post_ui)
 
-    if (effect_type == "fixed") {
+    if (effect_type == "error") {
         out <- model$stan |>
-            rstan::extract(pars = "alpha") |>
+            rstan::extract(pars = c("sig_proc", "sig_obs", "sig_beta")) |>
             do.call(what = cbind) |>
             as.data.frame() |>
-            set_names(c("int", "midges", "time", "dist")) |>
+            set_names(c("sig_proc", "sig_obs", "int_tax", "int_plot",
+                        "int_trans", "midges", "time", "dist")) |>
             as_tibble() |>
-            select(-int) |>  # intercept not necessary
+            select(sig_proc, sig_obs, int_plot, int_trans) |>
             pivot_longer(everything(), names_to = "coef") |>
-            mutate(coef = make_coef_fct(coef)) |>
+            mutate(coef = case_when(coef == "sig_proc" ~ "Process",
+                                    coef == "sig_obs" ~ "Observation",
+                                    coef == "int_plot" ~ "Taxon × plot",
+                                    coef == "int_trans" ~ "Taxon × site") |>
+                       factor(levels = c("Taxon × site", "Taxon × plot",
+                                         "Process", "Observation"))) |>
             split(~ coef) |>
             map(out_fn) |>
             list_rbind()
-    } else {
-        out <- model$stan |>
-            rstan::extract(pars = "sig_beta") |>
-            do.call(what = cbind) |>
-            as.data.frame() |>
-            set_names(c("int_tax", "int_plot", "int_trans", "midges", "time", "dist")) |>
-            as_tibble() |>
-            select(midges, time, dist) |>
-            pivot_longer(everything(), names_to = "coef") |>
-            mutate(coef = make_coef_fct(coef)) |>
-            split(~ coef) |>
-            map(out_fn) |>
-            list_rbind()
+
+        return(out)
     }
+
+    if (effect_type == "fixed") {
+        par_name <- "alpha"
+        all_cols <- c("int", "midges", "time", "dist")
+    } else {
+        par_name <- "sig_beta"
+        all_cols <- c("int_tax", "int_plot", "int_trans", "midges", "time", "dist")
+    }
+
+    out <- model$stan |>
+        rstan::extract(pars = par_name) |>
+        do.call(what = cbind) |>
+        as.data.frame() |>
+        set_names(all_cols) |>
+        as_tibble() |>
+        select(midges, time, dist) |>
+        pivot_longer(everything(), names_to = "coef") |>
+        mutate(coef = make_coef_fct(coef)) |>
+        split(~ coef) |>
+        map(out_fn) |>
+        list_rbind()
 
     return(out)
 
@@ -271,79 +288,94 @@ coef_among_p <- (coef_mean_p | coef_sd_p) +
 
 
 
-# Autoregressive parameters ----
-# =============================================================================*
-
-autoreg_df <- rstan::extract(model_fit$stan, "phi")[[1]] |>
-    as.data.frame() |>
-    set_names(gsub("^taxon", "", model_fit$ar_names)) |>
-    as_tibble() |>
-    pivot_longer(everything(), names_to = "taxon") |>
-    mutate(taxon = factor(paste(taxon), levels = taxa_lvls,
-                          labels = tolower(taxa_labs))) |>
-    group_by(taxon) |>
-    summarize(med = median(value),
-              lo = quantile(value, 0.16),
-              hi = quantile(value, 0.84))
-
-autoreg_df |>
-    mutate(across(where(is.numeric), \(x) num(x, digits = 3)))
-
-
-# # A tibble: 6 × 4
-#   taxon                med        lo        hi
-#   <fct>          <num:.3!> <num:.3!> <num:.3!>
-# 1 ground beetles     0.351     0.259     0.436
-# 2 rove beetles       0.351     0.271     0.428
-# 3 harvestmen         0.388     0.297     0.475
-# 4 ground spiders     0.040     0.017     0.075
-# 5 sheet weavers      0.159     0.076     0.268
-# 6 wolf spiders       0.480     0.366     0.581
-
-
-
-
-
-# Error SDs ----
-# =============================================================================*
-
-error_df <- rstan::extract(model_fit$stan, c("sig_proc", "sig_obs")) |>
-    do.call(what = cbind) |>
-    as_tibble() |>
-    pivot_longer(everything(), names_to = "type") |>
-    mutate(type = case_when(type == "sig_obs" ~ "observation",
-                            type == "sig_proc" ~ "process") |>
-               factor(levels = c("process", "observation"))) |>
-    group_by(type) |>
-    summarize(med = median(value),
-              lo = quantile(value, 0.16),
-              hi = quantile(value, 0.84))
-
-error_df |>
-    mutate(across(where(is.numeric), \(x) num(x, digits = 3)))
-
-
-# # A tibble: 2 × 4
-#   type              med        lo        hi
-#   <fct>       <num:.3!> <num:.3!> <num:.3!>
-# 1 process         0.387     0.254     0.483
-# 2 observation     0.838     0.786     0.888
-
-
-
-# Table w/ autoreg. & error ----
+# SD & Autoreg. plot ----
 # =============================================================================*
 
 
-bind_rows(autoreg_df |> rename(type = taxon) |> mutate(par = "Autoreg."),
-          error_df |> mutate(par = "Error SD")) |>
-    mutate(type = str_to_sentence(type)) |>
-    select(par, everything()) |>
-    mutate(par = ifelse(par == lag(par, default = "XX"), "", par),
-           med = sprintf("$%.2f$", med),
-           ui = sprintf("$(%.2f, %.2f)$", lo, hi)) |>
-    select(-lo, -hi) |>
-    knitr::kable("latex", booktabs = TRUE, escape = FALSE, linesep = "")
+autoreg_p <- tibble(taxon = factor(gsub("^taxon", "", model_fit$ar_names),
+                                   levels = taxa_lvls, labels = taxa_labs),
+                    iters = map(1:length(taxa_lvls),
+                                \(i) rstan::extract(model_fit$stan, "phi")[[1]][,i])) |>
+    mutate(med = map_dbl(iters, ~ median(.x)),
+           lo = map_dbl(iters, ~ unname(quantile(.x, 0.16))),
+           hi = map_dbl(iters, ~ unname(quantile(.x, 0.84))),
+           lo2 = map_dbl(iters, ~ unname(quantile(.x, 0.025))),
+           hi2 = map_dbl(iters, ~ unname(quantile(.x, 0.975)))) |>
+    mutate(taxon = fct_reorder(taxon, desc(med)),
+           taxon_int = as.integer(taxon)) |>
+    (\(.dd) {
+        .dd |>
+            ggplot(aes(med, taxon_int)) +
+            geom_vline(xintercept = 0, color = "gray50")+
+            geom_violin(data = .dd |>
+                            select(taxon_int, taxon, iters) |>
+                            unnest(iters),
+                        aes(x = iters, fill = taxon), bounds = c(0, Inf),
+                        position = "identity", alpha = 0.25, color = NA) +
+            geom_segment(aes(x = lo2, xend = hi2, yend = taxon_int, color = taxon),
+                         linewidth = 0.5) +
+            geom_linerange(aes(xmin = lo, xmax = hi, color = taxon),
+                           linewidth = 1.5) +
+            geom_point(aes(fill = taxon, shape = taxon), size = 3)+
+            scale_y_continuous(breaks = 1:6, labels = levels(.dd$taxon)) +
+            scale_x_continuous("Autoregressive parameter",
+                               breaks = c(0, 0.3, 0.6)) +
+            scale_color_manual(NULL, values = taxa_pal) +
+            scale_fill_manual(NULL, values = taxa_pal) +
+            scale_shape_manual(NULL, values = taxa_shapes) +
+            coord_cartesian(xlim = c(-0.01, 0.7), ylim = c(0, 7), expand = FALSE) +
+            theme(axis.text.x = element_text(size = 8,
+                                             margin = margin(0,0,0,t=2)),
+                  axis.title.x = element_text(size = 10, margin = margin(0,0,0,t=0)),
+                  axis.title.y = element_blank(),
+                  axis.text.y = element_text(size = 8,
+                                             margin = margin(0,0,0,r=3)),
+                  plot.margin = margin(t=12, r=0, b=0, l=0),
+                  legend.position = "none")
+    })()
+
+
+
+
+int_error_sd_density_df <- extract_effect_info(model_fit, "error", "density")
+
+int_error_sd_ui_df <- extract_effect_info(model_fit, "error", "ui") |>
+    mutate(y = -0.2 - 0.2 * (as.integer(coef)-1))
+
+int_error_p <- int_error_sd_density_df |>
+    ggplot(aes(value)) +
+    geom_vline(xintercept = 0, color = "gray50") +
+    geom_hline(yintercept = 0, color = "gray50") +
+    geom_segment(data = int_error_sd_ui_df,
+                 aes(x = x, y = y, xend = xend, yend = y,
+                     color = coef, linewidth = type)) +
+    stat_density(aes(fill = coef, color = coef), bounds = c(0, Inf),
+                 alpha = 0.5, linewidth = 0.5, position = "identity") +
+    scale_fill_manual(values = error_pal, aesthetics = c("color", "fill"),
+                      guide = "none") +
+    geom_text(data = int_error_sd_density_df |> distinct(coef) |>
+                  mutate(value = 0.04,
+                         y = 7.2 - (0:(n()-1) * 0.5821429)),
+              aes(y = y, label = paste(coef) |> str_remove_all("\\s+"),
+                  color = coef), hjust = 0, vjust = 1,
+              fontface = "bold", size = 10 / 2.8) +
+    scale_linewidth_manual(values = c(1.5, 0.5), guide = "none") +
+    scale_y_continuous("Density", breaks = c(0, 3, 6)) +
+    scale_x_continuous("Standard deviation") +
+    coord_cartesian(xlim = c(-0.03, 1.01), ylim = c(-1, 7.55), expand = FALSE)
+
+
+
+
+autoreg_int_error_p <- autoreg_p + int_error_p +
+    plot_layout(nrow = 1, widths = c(0.8, 1)) +
+    plot_annotation(tag_levels = "a") &
+    theme(plot.tag.position = c(0.06, 1))
+
+# autoreg_int_error_p
+
+# save_plot("autoreg-int-error", autoreg_int_error_p, w = 6, h = 3)
+
 
 
 
