@@ -403,4 +403,69 @@ re_draws |>
 # 6 wolf spiders          0.985
 
 
+# =============================================================================*
+# Percent change through time ----
+# =============================================================================*
+
+#'
+#' LaTeX code showing math for relative change through time.
+#' Below, T is time, T hat is transformed time (used in model fitting),
+#' sigma_T is the standard deviation of time,
+#' y_t is counts at time t, beta_0 is intercept, and
+#' beta_1 is coefficient for time.
+#'
+#' ```latex
+#' \begin{align}
+#' \textrm{Let } \hat{T} &=: \frac{T - \min(T)}{\sigma_T} \\
+#' \log(y) &= \beta_0 + \beta_1 \, \hat{T} \\
+#' y &= \textrm{e}^{\beta_0 + \beta_1 \, \hat{T}} \\
+#' \end{align}
+#'
+#' At initial time, $\hat{T} = 0$:
+#' \begin{align}
+#' y_0 &= \textrm{e}^{\beta_0} \\
+#' \end{align}
+#'
+#' At last time, $m$:
+#' \begin{align}
+#' y_m &= \textrm{e}^{\beta_0 + \beta_1 \, \hat{T}_m} \\
+#' \end{align}
+#'
+#' Relative change between these times:
+#' \begin{align}
+#' \frac{y_m - y_0}{y_0} &= \frac{\textrm{e}^{\beta_0 + \beta_1 \, \hat{T}_m} - \textrm{e}^{\beta_0}}{
+#'     \textrm{e}^{\beta_0}}\\
+#'     &= \textrm{e}^{\beta_1 \, \hat{T}_m} - 1
+#' \end{align}
+#' ```
+#'
+
+# Max transformed time (`\hat{T}_m` above)
+max_time_z <- read_rds(data_rds) |>
+    group_by(trans, distance, taxon) |>
+    filter(time_z == max(time_z)) |>
+    ungroup() |>
+    getElement("time_z") |>
+    unique()
+
+stopifnot(length(max_time_z) == 1L)
+
+re_draws |>
+    filter(coef == "time") |>
+    mutate(taxon = factor(paste(taxon), levels = taxa_lvls,
+                          labels = tolower(taxa_labs))) |>
+    mutate(time_coef = map_dbl(iters, median)) |>
+    mutate(time_effect = 100 * (exp(time_coef * max_time_z) - 1)) |>
+    select(taxon, time_effect) |>
+    mutate(across(where(is.numeric), \(x) num(x, digits = 3)))
+
+# # A tibble: 6 × 2
+#   taxon          time_effect
+#   <fct>            <num:.3!>
+# 1 ground beetles      58.529
+# 2 rove beetles        27.688
+# 3 harvestmen         -12.403
+# 4 ground spiders     -23.274
+# 5 sheet weavers      -58.855
+# 6 wolf spiders       -74.187
 
