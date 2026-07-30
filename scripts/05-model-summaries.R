@@ -408,6 +408,8 @@ re_draws |>
 # =============================================================================*
 
 #'
+#' ~~~~ Over the entire time series ~~~~
+#'
 #' LaTeX code showing math for relative change through time.
 #' Below, T is time, T hat is transformed time (used in model fitting),
 #' sigma_T is the standard deviation of time,
@@ -469,3 +471,61 @@ re_draws |>
 # 5 sheet weavers      -58.855
 # 6 wolf spiders       -74.187
 
+
+
+
+#'
+#' ~~~~ Over one year ~~~~
+#'
+#' LaTeX code showing same as above but for just one year.
+#' All parameters are the same except that T tilde is partially transformed
+#' time, where the minimum is subtracted but the standard deviation is not
+#' included.
+#'
+#' ```latex
+#' \begin{align}
+#' \textrm{Let } \tilde{T} &=: T - \min(T) \\
+#' \log(y) &= \beta_0 + \beta_1 \, \tilde{T} / \sigma_T \\
+#' y &= \textrm{e}^{\beta_0 + \beta_1 \, \tilde{T} / \sigma_T} \\
+#' \end{align}
+#'
+#' At initial time, $\tilde{T} = 0$:
+#' \begin{align}
+#' y_0 &= \textrm{e}^{\beta_0} \\
+#' \end{align}
+#'
+#' At the next time point, $\tilde{T} = 1$:
+#' \begin{align}
+#' y_1 &= \textrm{e}^{\beta_0 + \beta_1 / \sigma_T} \\
+#' \end{align}
+#'
+#' Relative change between these times:
+#' \begin{align}
+#' \frac{y_1 - y_0}{y_0} &= \frac{\textrm{e}^{\beta_0 + \beta_1  / \sigma_T} - \textrm{e}^{\beta_0}}{
+#'     \textrm{e}^{\beta_0}}\\
+#'     &= \textrm{e}^{\beta_1 / \sigma_T} - 1
+#' \end{align}
+#' ```
+#'
+
+
+time_sd <- with(read_rds(data_rds), sd(time))
+
+
+re_draws |>
+    filter(coef == "time") |>
+    mutate(taxon = factor(paste(taxon), levels = taxa_lvls,
+                          labels = tolower(taxa_labs))) |>
+    mutate(time_coef = map_dbl(iters, median)) |>
+    mutate(time_effect = 100 * (exp(time_coef / time_sd) - 1)) |>
+    select(taxon, time_effect) |>
+    mutate(across(where(is.numeric), \(x) num(x, digits = 3)))
+# # A tibble: 6 × 2
+#   taxon          time_effect
+#   <fct>            <num:.3!>
+# 1 ground beetles       4.278
+# 2 rove beetles         2.247
+# 3 harvestmen          -1.197
+# 4 ground spiders      -2.380
+# 5 sheet weavers       -7.756
+# 6 wolf spiders       -11.584
