@@ -1,17 +1,19 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # trans_trends
 
 [![DOI](https://zenodo.org/badge/227422889.svg)](https://zenodo.org/badge/latestdoi/227422889)
 
-Code and data for the paper, “Heterogeneous responses of tundra
-arthropods to spatiotemporal variation in resource subsidies.” The R
-package that fits the models can be found at
+
+Code and data for the paper, "Heterogeneous responses of tundra 
+arthropods to spatiotemporal variation in resource subsidies."
+The R package that fits the models can be found at 
 <https://github.com/lucasnell/trans_trends_pkg>.
 
-This repository was created and is maintained by [Lucas A.
-Nell](https://github.com/lucasnell).
+This repository was created and is maintained by
+[Lucas A. Nell](https://github.com/lucasnell).
+
+
 
 # Organization
 
@@ -33,44 +35,44 @@ These are the main top-level files/folders:
 
 The following files/folders should be present:
 
-- `.Rprofile`: small file that contains R code that is run when R is
-  started. Used for `renv` package.
-- `README.md` and `README.Rmd`: this file and the file that generates
-  it, respectively (only `README.Rmd` should be edited)
-- `renv.lock`: JSON file containg info about all the packages (and their
-  versions) to install to replicate our R environment using the `renv`
-  package
-- `trans_trends.Rproj`: file saving this RStudio Project’s preferences
+- `.Rprofile`: small file that contains R code that is run when R is started.
+  Used for `renv` package.
+- `README.md` this file
+- `renv.lock`: JSON file containg info about all the packages (and their 
+  versions) to install to replicate our R environment using the `renv` package
+- `trans_trends.Rproj`: file saving this RStudio Project's preferences
 - `data`: Folder containing all datasets associated with this paper.
-- `figures`: Folder containing figures created from this paper. Note
-  that this folder should be empty and is populated by running the R
-  scripts.
-- `rds_files`: Folder containing RDS files created for model fits and
-  cleaned data. Note that this folder should be empty and is populated
-  by running the R scripts.
+- `figures`: Folder containing figures created from this paper.
+  Note that this folder should be empty and is populated by running the
+  R scripts.
+- `rds_files`: Folder containing RDS files created for model fits and 
+  cleaned data.
+  Note that this folder should be empty and is populated by running the
+  R scripts.
 - `renv`: Largely empty folder containing the R package library if using
   the `renv` package to replicate our R environment
-- `scripts`: Folder containing R scripts for data cleanup, model
-  fitting, and creating figures / tables.
+- `scripts`: Folder containing R scripts for data cleanup, model fitting, and 
+  creating figures / tables.
 
-Note that all folders except `renv` have their own `README.md` files
-that should be referenced for specific files.
+Note that all folders except `renv` have their own `README.md` files that 
+should be referenced for specific files.
+
+
 
 # Replicating the R environment
 
-I used R version 4.5.2 (2025-10-31) (platform: aarch64-apple-darwin20)
-for all my scripts.
+I used R version 4.6.1 (platform: aarch64-apple-darwin23) for all my scripts.
 
-This project uses the `renv` package, so if you want to use this, you
-must first install it:
+This project uses the `renv` package, so if you want to use this, you must
+first install it:
 
 ``` r
 install.packages("renv")
 ```
 
-Then to install all the packages I used for these analyses, you can
-simply run the following while having this project’s main directory as
-your working directory:
+Then to install all the packages I used for these analyses, you can simply run
+the following while having this project's main directory as your working
+directory:
 
 ``` r
 renv::restore()
@@ -92,3 +94,16 @@ install.packages(do.call(c, pkg_vers))
 remotes::install_github(paste0("lucasnell/trans_trends_pkg@",
                                pkg_list[["TransTrendsPkg"]][["RemoteSha"]]))
 ```
+
+If you've downloaded the `trans_trends_pkg` repo, you can also install from source:
+
+``` r
+# If using `renv`:
+renv::install("/PATH/TO/trans_trends_pkg")
+
+# If not using `renv`:
+if (!requireNamespace("devtools", quietly = TRUE)) install.package("devtools")
+pkg <- devtools::build("/PATH/TO/trans_trends_pkg")
+install.packages(pkg, repos = NULL, type = "source")
+```
+

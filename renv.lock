@@ -516,7 +516,7 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "trans_trends_pkg",
       "RemoteUsername": "lucasnell",
-      "RemoteRef": "master",
+      "RemoteRef": "v1.0.5",
       "RemoteSha": "29e4ffb0125d289f459e24ba0efe74ab45955bc0"
     },
     "abind": {
