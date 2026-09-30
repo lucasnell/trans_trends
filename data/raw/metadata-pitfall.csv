@@ -1,0 +1,41 @@
+﻿Parameter,Definition,Units
+lakeid,lake name abbreviation,string
+trans,transect,string
+dist,distance from shoreline,meters
+setdate,date trap was set,YYYY-MM-DD
+coldate,date trap was collected,YYYY-MM-DD
+andate,date of analysis,YYYY-MM-DD
+daysout,number of days trap was collecting,days
+aran,Araneae (otherwise not identified) count,numeric
+lyco_pal_m,Pardosa palustris male,numeric
+lyco_pal_f,Pardosa palustris female,numeric
+lyco_sph_m,Pardosa sphagnicola male,numeric
+lyco_sph_f,Pardosa sphagnicola female,numeric
+lyco_hyp_m,"Pardosa hyperborea, male",numeric
+lyco_hyp_f,"Pardosa hyperborea, female",numeric
+lyco_alp_m,"Arctosa alpigena, male",numeric
+lyco_alp_f,"Arctosa alpigena, female",numeric
+lyco_unid_m,Lycosid male unable to be identified to species,numeric
+lyco_unid_f,Lycosid female unable to be identified to species,numeric
+lyco_male,total number of male Lycosids,numeric
+lyco_female,total number of female Lycosids,numeric
+lyco_juv,Juvenile Lycosid,numeric
+lyco_total,nuber of lycosids,numeric
+egsa,egg sacs count,numeric
+liny,Linyphiidae count,numeric
+gnap,Gnaphosidae count,numeric
+thom,Thomisidae count,numeric
+opil,Opiliones count,numeric
+acar,Acari (otherwise not identified) count,numeric
+trom_adult,Trombidiidae adult count,numeric
+trom_juv,Trombidiidae juvenile count,numeric
+trom,Trombidiidae count,numeric
+cole,Coleoptera (otherwise not identified) count,numeric
+cryp,Cryptophagidae count,numeric
+stap,Staphylinidae count,numeric
+cara,Carabidae count,numeric
+curc,Curculionidae count,numeric
+colj,Juvenille coleoptera count,numeric
+clmb,Collembola,numeric
+comments,any observations of importance identified during data collection,string
+comments2,any observations of importance identified during entry or organization of data,string

@@ -1,0 +1,19 @@
+﻿Parameter,Definition,Units
+lakeid,lake name abbreviation,string
+trans,transect,string
+dist,distance from shoreline,meters
+setdate,date trap was set,YYYY-MM-DD
+coldate,date trap was collected,YYYY-MM-DD
+andate,date of analysis,YYYY-MM-DD
+daysout,number of days trap was collecting,days
+trayweight,weight of the tray,milligram
+dw_tray,dry weight with tray,milligram
+dw,dry weight,milligram
+fract_bgch,fraction of sample counted for big chironomids,numeric
+fract_smch,fraction of sample counted for small chironomids,numeric
+fract_simu,fraction of sample counted for simuliids,numeric
+bgch,big chironomid count,numeric
+smch,small chironomid count,numeric
+simu,simuliid count,numeric
+comments,any observations of importance identified during data collection,string
+comments2,any observations of importance identified during entry or organization of data,string

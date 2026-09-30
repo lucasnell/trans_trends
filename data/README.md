@@ -10,21 +10,45 @@ Folder contents:
 ├── myv_arth.csv
 ├── Myvatn_WSGUTM28.geojson
 ├── pitfall_locations.csv
+├── raw
+│   ├── infalls-08-17.csv
+│   ├── infalls-13-19.csv
+│   ├── metadata-infalls.csv
+│   ├── metadata-pitfalls.csv
+│   ├── pitfalls-08-17.csv
+│   └── pitfalls-11-19.csv
 └── README.md
 ```
+
 
 
 
 File descriptions:
 
 - `gadm41_ISL_0.geojson`: outline of Iceland
-- `myv_arth.csv`: raw dataset; see below for column descriptions
+- `myv_arth.csv`: cleaned dataset; see below for column descriptions
 - `Myvatn_WSGUTM28.geojson`: outline of Lake Myvatn, Iceland
 - `pitfall_locations.csv`: UTM (zone 28, WGS84) locations of all pitfall traps 
   by site and distance from the lake
+- `raw/infalls-08-17.csv`: raw data for infall traps catching midge emergences
+  (2008-06-03 to 2017-07-29);
+  many rows are duplicated with `raw/infalls-13-19.csv`
+- `raw/infalls-13-19.csv`: raw data for infall traps catching midge emergences
+  (2013-06-18 to 2019-08-08);
+  many rows are duplicated with `raw/infalls-08-17.csv`
+- `raw/metadata-infalls.csv`: column names and descriptions for
+  `raw/infalls*.csv` files
+- `raw/metadata-pitfalls.csv`: column names and descriptions for
+  `raw/pitfalls*.csv` files
+- `raw/pitfalls-08-17.csv`: raw data for pitfall traps catching ground-dwelling 
+  predatory arthropods (2008-06-25 to 2017-07-29);
+  many rows are duplicated with `raw/pitfalls-11-19.csv`
+- `raw/pitfalls-11-19.csv`: raw data for pitfall traps catching ground-dwelling 
+  predatory arthropods (2011-07-17 to 2019-08-08);
+  many rows are duplicated with `raw/pitfalls-08-17.csv`
 
 
-Raw data column descriptions:
+Cleaned data column descriptions:
 
 - `trans`: Transect location at Myvatn; unique values are
   `"btl"` (site Fellshóll), `"hag"` (Haganes), `"kal"` (Kálfaströnd),
