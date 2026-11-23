@@ -13,8 +13,8 @@ Folder contents:
 ├── raw
 │   ├── infalls-08-17.csv
 │   ├── infalls-13-19.csv
-│   ├── metadata-infalls.csv
-│   ├── metadata-pitfalls.csv
+│   ├── metadata-infall.csv
+│   ├── metadata-pitfall.csv
 │   ├── pitfalls-08-17.csv
 │   └── pitfalls-11-19.csv
 └── README.md
@@ -36,9 +36,9 @@ File descriptions:
 - `raw/infalls-13-19.csv`: raw data for infall traps catching midge emergences
   (2013-06-18 to 2019-08-08);
   many rows are duplicated with `raw/infalls-08-17.csv`
-- `raw/metadata-infalls.csv`: column names and descriptions for
+- `raw/metadata-infall.csv`: column names and descriptions for
   `raw/infalls*.csv` files
-- `raw/metadata-pitfalls.csv`: column names and descriptions for
+- `raw/metadata-pitfall.csv`: column names and descriptions for
   `raw/pitfalls*.csv` files
 - `raw/pitfalls-08-17.csv`: raw data for pitfall traps catching ground-dwelling 
   predatory arthropods (2008-06-25 to 2017-07-29);
