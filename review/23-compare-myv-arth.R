@@ -61,3 +61,12 @@ rd("data/raw/infalls-13-19.csv") |>
     pivot_wider(names_from = no_count, values_from = n, values_fill = 0,
                 names_prefix = "no_count_") |>
     print(n = Inf)
+
+cat("\n2017 pitfall samples (analysed sites) by file:\n")
+k <- c("lakeid", "dist", "trans", "setdate", "coldate")
+pp1 <- rd("data/raw/pitfalls-08-17.csv") |> select(all_of(k))
+pp2 <- rd("data/raw/pitfalls-11-19.csv") |> select(all_of(k))
+f <- \(d) d |> filter(lakeid == "myv", lubridate::year(coldate) == 2017,
+                      trans %in% c("btl","hag","kal","non","vin"), dist %in% c(5, 50, 150))
+cat("in 08-17 file:", nrow(f(pp1)), "| in 11-19 file:", nrow(f(pp2)),
+    "| in both:", nrow(semi_join(f(pp1), f(pp2), by = k)), "\n")

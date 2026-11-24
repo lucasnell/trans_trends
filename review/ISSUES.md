@@ -337,7 +337,8 @@ version (23):
   duplicated keys.
 - Pitfalls, 2013–2016: counts and trap-days are both halved at the analysed
   sites (E2), so catch per trap-day is unchanged. In 2017 both fall to
-  0.51–0.64 of their old values, because some samples there were NA (E3).
+  0.51–0.64 of their old values, because 59 of the 74 samples were in both
+  files and were counted twice, while the other 15 were not.
 - Pitfall trap-days fall in 2010 (0.96), 2012 (0.75, mainly E4), 2018 (0.88),
   and 2019 (0.97) with counts unchanged, so catch per trap-day rises in those
   years (E3 and E4).

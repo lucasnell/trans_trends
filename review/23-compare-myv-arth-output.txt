@@ -130,3 +130,6 @@ Midges: ratio new/old by year, analysed sites (one row per site-year):
 3 2014-06-22 2014-07-05              6            18
 4 2014-07-05 2014-07-19             24             0
 5 2014-07-19 2014-08-03             23             1
+
+2017 pitfall samples (analysed sites) by file:
+in 08-17 file: 59 | in 11-19 file: 74 | in both: 59 
