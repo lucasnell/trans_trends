@@ -25,6 +25,7 @@ root. Each script's output is saved next to it:
 | `14-e5-method-comparison.R` | `14-e5-method-comparison-output.txt` | E5 pairs 1–2: random forest vs. quantile forest vs. GAM on 20,000 test pairs |
 | `15-e5-drop-cost.R` | `15-e5-drop-cost-output.txt` | E5: cost of dropping both rows of pairs 1–2 |
 | `16-e5-method-comparison-2.R` | `16-e5-method-comparison-2-output.txt` | E5 pairs 1–2: variance-modelling GAM, joint scoring, stacked classifier |
+| `17-check-e3-fix.R` | `17-check-e3-fix-output.txt` | E3: checks the NA-sample filters in `00-clean-data-round1.R` |
 
 Status key: **Open**, **Resolved**, **Partly resolved**.
 
@@ -106,7 +107,7 @@ Effect on `data/myv_arth.csv` (02):
   mismatch. The known `acar_total` disagreement and the four E5 infall
   duplicates are explicitly allowed (uncommitted). Tests are in (09).
 
-### E3. Samples with NA counts still add their days to sampling effort — Open
+### E3. Samples with NA counts still add their days to sampling effort — Resolved in script (`myv_arth.csv` not regenerated)
 
 `summarize(count = sum(round(count), na.rm = TRUE), season_days = sum(daysout))`
 drops an NA count but keeps that sample's days, which is the same as treating
@@ -130,6 +131,16 @@ the same for midges.
   which can bias both the midge and time coefficients.
 
 **Fix:** drop NA samples before summing, or sum `daysout[!is.na(count)]`.
+
+- **Pitfalls: resolved** (committed in `0408d4b`). `filter(!is.na(count))`
+  before `summarize()` drops NA samples; hag 5 m 2018 sheet weavers now give
+  14 over 11 days (17).
+- **Infalls: resolved** (uncommitted). `filter(!is.na(midges))` before
+  `summarize()` drops NA samples. The rebuilt data have no zero or NA midge
+  values; hag 150 m 2014 is 73.6 midges/day (was 40.3), and btl 5 m 2013 is
+  9,117 over 70 days (17).
+- `data/myv_arth.csv` has not been regenerated, so it still has the original
+  problem for both trap types.
 
 ### E4. Overlapping pitfall deployments in 2012 — Open
 
@@ -173,7 +184,7 @@ as the old pitfall join. It currently creates no cross-file duplicates,
 because the two files agree on every overlapping sample (05), but a key-based
 join would protect against future edits.
 
-### E6. Overlapping infall deployment periods, including a mis-dated copy at btl 5 m in 2013 — Partly resolved
+### E6. Overlapping infall deployment periods, including a mis-dated copy at btl 5 m in 2013 — Resolved in script (`myv_arth.csv` not regenerated)
 
 The duplicate and mismatch checks compare samples by exact set and collection
 dates, so they can't see samples whose date ranges overlap. A within-plot
@@ -203,11 +214,15 @@ Pitfalls have no overlaps outside 2012 (E4).
 check to `00-clean-data-round1.R` with the known E4, E5, and E7 cases
 listed as allowed.
 
-- **Status:** `00-clean-data-round1.R` lines 168–171 now drop the mis-dated
-  btl 5 m row from `inf2` (uncommitted). Exactly one row is removed, and the
-  rebuilt btl 5 m 2013 values are 9,117 midges over 70 days, as expected (11).
-  `data/myv_arth.csv` isn't regenerated yet.
-- **Still open:** the within-plot date-overlap check.
+- **Status:** `00-clean-data-round1.R` lines 170–173 drop the mis-dated
+  btl 5 m row from `inf2` (committed in `0408d4b`). Exactly one row is
+  removed, and the rebuilt btl 5 m 2013 values are 9,117 midges over 70 days,
+  as expected (11, 17). `data/myv_arth.csv` isn't regenerated yet.
+- **Remaining overlaps** are tracked under E5 and E7. flg 500 m needs no
+  action. E6 is done once those are.
+- **Optional:** a within-plot date-overlap check in `00-clean-data-round1.R`
+  would catch new overlaps if the raw data change. It isn't needed for the
+  current data.
 
 ### E7. Overlapping Kálfaströnd infall dates in 2008 and 2011 — Open
 

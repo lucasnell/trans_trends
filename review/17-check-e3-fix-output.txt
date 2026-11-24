@@ -1,0 +1,20 @@
+- The project is out-of-sync -- use `renv::status()` for details.
+Warning message:
+One or more parsing issues, call `problems()` on your data frame for details,
+e.g.:
+  dat <- vroom(...)
+  problems(dat) 
+== Pitfalls ==
+pit_clean rows: 1344 | NA counts: 0 
+  trans dist year taxon count  first_day   last_day season_days
+1   hag    5 2018 sheet    14 2018-06-03 2018-06-14          11
+
+== Infalls ==
+inf_clean rows: 291 | sum of midges: 1818658 
+myv_arth rows: 1344 | rows with NA midges: 0 | rows with midges == 0: 0 
+
+== Spot checks against review/02 (corrected rates) and review/11 ==
+  trans dist year midges midge_days      rate
+1   btl    5 2013   9117         70 130.24286
+2   hag  150 2014   2577         35  73.62857
+Expected: hag 150 m 2014 about 73.6/day (02); btl 5 m 2013 9117 over 70 days (11).

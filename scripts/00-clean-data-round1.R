@@ -167,7 +167,7 @@ i1 <- inf1 |>
 
 i2 <- inf2 |>
     unique() |> # one row is duplicated
-    # This row is an duplicated version of another with a slight (erroneous)
+    # This row is a duplicated version of another with a slight (erroneous)
     # change:
     filter(!(trans == "btl" & dist == 5 & setdate == as.Date("2013-06-05") &
              coldate == as.Date("2013-08-14"))) |>
@@ -216,7 +216,7 @@ inf_clean <- inf |>
     # eliminate sample with missing set date
     filter(!is.na(setdate)) |>
     # remove rows with no midge counts
-    filter(is.na(midges)) |>
+    filter(!is.na(midges)) |>
     # calculate total year abundance for each taxon and site
     group_by(trans, dist, year) |>
     summarize(midges = sum(midges, na.rm = TRUE),
