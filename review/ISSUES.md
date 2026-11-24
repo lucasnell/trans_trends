@@ -29,7 +29,8 @@ root. Each script's output is saved next to it:
 | `18-check-e5-fix.R` | `18-check-e5-fix-output.txt` | E5: checks the pair 1–2 reassignment in `00-clean-data-round1.R` |
 | `19-check-e7-fix.R` | `19-check-e7-fix-output.txt` | E7: checks the Kálfaströnd set-date corrections; remaining overlaps |
 | `20-e4-infall-dates.R` | `20-e4-infall-dates-output.txt` | E4: pitfall versus infall service dates (all years and 2012) |
-| `21-check-e4-july-fix.R` | `21-check-e4-july-fix-output.txt` | E4: checks the July set-date correction; remaining 2012 overlaps and trap-days |
+| `21-check-e4-july-fix.R` | `21-check-e4-july-fix-output.txt` | E4: checks the July, 44-day, and June date corrections; remaining 2012 overlaps and trap-days |
+| `22-date-agreement-corrected.R` | `22-date-agreement-corrected-output.txt` | E4: pitfall versus infall service-date agreement after all corrections |
 
 Status key: **Open**, **Resolved**, **Partly resolved**.
 
@@ -146,7 +147,7 @@ the same for midges.
 - `data/myv_arth.csv` has not been regenerated, so it still has the original
   problem for both trap types.
 
-### E4. Overlapping pitfall deployments in 2012 — Partly resolved (July fixed in script; June and 44-day samples open)
+### E4. Overlapping pitfall deployments in 2012 — Resolved in script (`myv_arth.csv` not regenerated)
 
 31 samples in 2012 have a `setdate` earlier than the previous sample's
 `coldate` at the same plot (02). This is why 2012 has 85 sampling days inside
@@ -182,13 +183,33 @@ implies for each pattern:
   serviced on both dates.
 
 Status: the collaborator can't help, because the dataset predates him, so the
-remaining patterns must be decided from the data. The July correction is
-applied in `00-clean-data-round1.R`: the nine 2012 samples recorded 07/17–08/09
-now start 07/31 (21). That includes Nóntangi 50 m, which has no overlapping
-07/17–07/31 sample but whose infall trap was serviced on 07/31. Still open: the
-June overlaps (15 plots) and the 06/26–08/09 samples at Nóntangi 150 m and
-Vindbelgur, which give those plots 107 pitfall trap-days in 2012 against 54–72
-elsewhere. `E4-2012-overlaps.md` is kept as a record but won't be sent.
+remaining patterns must be decided from the data. Corrections applied in
+`00-clean-data-round1.R` (21):
+
+- The nine 2012 samples recorded 07/17–08/09 now start 07/31. That includes
+  Nóntangi 50 m, which has no overlapping 07/17–07/31 sample but whose infall
+  trap was serviced on 07/31.
+- The four 06/26–08/09 samples (Nóntangi 150 m and Vindbelgur 5, 50, and
+  150 m) now start 07/31. Those plots go from 107 to 72 pitfall trap-days in
+  2012, in line with 54–72 elsewhere. This is a guess about which sample it
+  is, not a typo fix, since 06/26 doesn't resemble 07/31.
+
+- At 15 plots, a June sample recorded 06/05–06/22 (Fellshóll, Haganes, and
+  Kálfaströnd) or 06/05–06/23 (Nóntangi and Vindbelgur) overlaps the next
+  sample, recorded 06/19–07/03. The pitfall collection dates are kept, and the
+  next sample now starts 06/22 or 06/23. Btl 5 m has no 06/05 sample but gets
+  the same 06/22 set date as the other Fellshóll plots (51 trap-days in 2012,
+  down from 54). This assumes pitfalls were serviced on a different day from
+  infalls, which were serviced on 06/19 at every plot. That also happened in
+  2011, 2014, and 2015, when pitfalls at 13–16 plots were serviced 1, 4, and
+  17 days from the nearest infall service date (22). The alternative (moving
+  the collection dates to 06/19) gives the same trap-days except at btl 5 m.
+
+No 2012 pitfall overlaps remain (21). After all corrections, 92.7% of pitfall
+service dates fall on an infall service date (70.4% in 2012, 95.2% in other
+years; 22). The 2012 mismatches are the June service dates above and the first
+set date (05/19 for pitfalls, 05/22 or 05/23 for infalls), which overlaps
+nothing and is left as recorded. `E4-2012-overlaps.md` is kept as a record but won't be sent.
 
 ### E5. Conflicting duplicate samples within `infalls-08-17.csv` — Resolved in script (`myv_arth.csv` not regenerated)
 

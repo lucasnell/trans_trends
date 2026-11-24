@@ -106,8 +106,29 @@ pit <- bind_rows(p1, anti_join(p2, p1, by = c("lakeid", "dist", "trans",
 e4_july <- with(pit, lakeid == "myv" & setdate == as.Date("2012-07-17") &
                     coldate == as.Date("2012-08-09")) %in% TRUE
 stopifnot(sum(e4_july) == 9)
+# Non 150 m and vin 5, 50, and 150 m have a 2012-06-26 to 08-09 sample (44
+# days) that overlaps three other samples, and no other sample ending 08-09.
+# No infall trap was serviced on 06-26, and counts are low, so these are also
+# taken to be 07-31 to 08-09 samples:
+e4_44d <- with(pit, lakeid == "myv" & setdate == as.Date("2012-06-26") &
+                   coldate == as.Date("2012-08-09")) %in% TRUE
+stopifnot(sum(e4_44d) == 4)
+# At 15 plots, a 2012-06-05 to 06-22 (btl, hag, kal) or 06-23 (non, vin)
+# sample overlaps the next sample, set 06-19. The pitfall collection dates are
+# kept, and the next sample's set date is moved to them. Infall traps were
+# serviced on 06-19 instead, so this assumes pitfalls and infalls were
+# serviced on different days, as in 2011, 2014, and 2015
+# (review/22-date-agreement-corrected-output.txt). Btl 5 m has no 06-05 sample
+# but gets the same set date as the other btl plots:
+e4_june <- with(pit, lakeid == "myv" & dist != 200 & setdate == as.Date("2012-06-19") &
+                    coldate == as.Date("2012-07-03")) %in% TRUE
+stopifnot(sum(e4_june) == 16)
 pit <- pit |>
-    mutate(setdate = if_else(e4_july, as.Date("2012-07-31"), setdate))
+    mutate(setdate = case_when(
+        e4_july | e4_44d ~ as.Date("2012-07-31"),
+        e4_june & trans %in% c("btl", "hag", "kal") ~ as.Date("2012-06-22"),
+        e4_june & trans %in% c("non", "vin") ~ as.Date("2012-06-23"),
+        .default = setdate))
 
 
 

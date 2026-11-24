@@ -1,12 +1,13 @@
-# Check the E4 July correction in scripts/00-clean-data-round1.R: 2012 pitfall
-# samples recorded 07/17-08/09 now start 07/31. Run from project root:
+# Check the E4 corrections in scripts/00-clean-data-round1.R: 2012 pitfall
+# samples recorded 07/17-08/09 or 06/26-08/09 now start 07/31, and samples
+# recorded 06/19-07/03 now start 06/22 or 06/23. Run from project root:
 #   Rscript review/21-check-e4-july-fix.R > review/21-check-e4-july-fix-output.txt 2>&1
 
 suppressPackageStartupMessages(library(tidyverse))
 invisible(capture.output(source("scripts/00-clean-data-round1.R")))
 
 cat("Corrected rows (pit, after correction):\n")
-pit |> filter(e4_july) |> select(trans, dist, setdate, coldate) |> print()
+pit |> filter(e4_july | e4_44d | e4_june) |> select(trans, dist, setdate, coldate) |> print(n = Inf)
 
 cat("\nRemaining 2012 pitfall overlap groups within a plot:\n")
 pit |>
