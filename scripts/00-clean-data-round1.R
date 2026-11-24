@@ -301,5 +301,5 @@ inf_clean <- inf |>
 myv_arth <- left_join(pit_clean, inf_clean, by = join_by(trans, dist, year)) |>
     # as.data.frame() |>
     select(trans, dist, year, contains("midges"), taxon, everything())
-# write_csv(myv_arth, "data/myv_arth.csv")
+write_csv(myv_arth, "data/myv_arth.csv")
 

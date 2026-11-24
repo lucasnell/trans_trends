@@ -31,6 +31,7 @@ root. Each script's output is saved next to it:
 | `20-e4-infall-dates.R` | `20-e4-infall-dates-output.txt` | E4: pitfall versus infall service dates (all years and 2012) |
 | `21-check-e4-july-fix.R` | `21-check-e4-july-fix-output.txt` | E4: checks the July, 44-day, and June date corrections; remaining 2012 overlaps and trap-days |
 | `22-date-agreement-corrected.R` | `22-date-agreement-corrected-output.txt` | E4: pitfall versus infall service-date agreement after all corrections |
+| `23-compare-myv-arth.R` | `23-compare-myv-arth-output.txt` | Regenerated `myv_arth.csv` versus the previous version |
 
 Status key: **Open**, **Resolved**, **Partly resolved**.
 
@@ -62,7 +63,7 @@ The script read `pitfalls-08-17.csv`, `pitfalls-11-19.csv`,
   (`metadata-infall.csv`, `metadata-pitfall.csv`); every file in its tree
   matches `data/` and `data/raw/`.
 
-### E2. Pitfall samples from 2013–2017 are counted twice — Resolved in script (uncommitted; `myv_arth.csv` not regenerated)
+### E2. Pitfall samples from 2013–2017 are counted twice — Resolved
 
 `full_join(p1, p2, by = ...)` (`00-clean-data-round1.R` lines 56–59) matches
 on every column, including `acar_total`. In `pitfalls-11-19.csv`,
@@ -109,10 +110,12 @@ Effect on `data/myv_arth.csv` (02):
   check that each sample appears once within each file; and they only print.
   These are now replaced in `00-clean-data-round1.R` by `check_unique_key()`
   and `compare_overlap()`, which stop the script on an unexpected duplicate or
-  mismatch. The known `acar_total` disagreement and the four E5 infall
-  duplicates are explicitly allowed (uncommitted). Tests are in (09).
+  mismatch. The known `acar_total` disagreement and the two 2008 infall
+  duplicates whose second copy is all NA are explicitly allowed (committed in
+  `0408d4b`; the allowed list was cut from four to two when E5 was resolved).
+  Tests are in (09).
 
-### E3. Samples with NA counts still add their days to sampling effort — Resolved in script (`myv_arth.csv` not regenerated)
+### E3. Samples with NA counts still add their days to sampling effort — Resolved
 
 `summarize(count = sum(round(count), na.rm = TRUE), season_days = sum(daysout))`
 drops an NA count but keeps that sample's days, which is the same as treating
@@ -140,14 +143,14 @@ the same for midges.
 - **Pitfalls: resolved** (committed in `0408d4b`). `filter(!is.na(count))`
   before `summarize()` drops NA samples; hag 5 m 2018 sheet weavers now give
   14 over 11 days (17).
-- **Infalls: resolved** (uncommitted). `filter(!is.na(midges))` before
+- **Infalls: resolved** (committed in `70268b1`). `filter(!is.na(midges))` before
   `summarize()` drops NA samples. The rebuilt data have no zero or NA midge
   values; hag 150 m 2014 is 73.6 midges/day (was 40.3), and btl 5 m 2013 is
   9,117 over 70 days (17).
-- `data/myv_arth.csv` has not been regenerated, so it still has the original
-  problem for both trap types.
+- `data/myv_arth.csv` has been regenerated with both fixes (see "Regenerated
+  data" below).
 
-### E4. Overlapping pitfall deployments in 2012 — Resolved in script (`myv_arth.csv` not regenerated)
+### E4. Overlapping pitfall deployments in 2012 — Resolved
 
 31 samples in 2012 have a `setdate` earlier than the previous sample's
 `coldate` at the same plot (02). This is why 2012 has 85 sampling days inside
@@ -211,7 +214,7 @@ years; 22). The 2012 mismatches are the June service dates above and the first
 set date (05/19 for pitfalls, 05/22 or 05/23 for infalls), which overlaps
 nothing and is left as recorded. `E4-2012-overlaps.md` is kept as a record but won't be sent.
 
-### E5. Conflicting duplicate samples within `infalls-08-17.csv` — Resolved in script (`myv_arth.csv` not regenerated)
+### E5. Conflicting duplicate samples within `infalls-08-17.csv` — Resolved
 
 Four Mývatn infall samples appear twice within `infalls-08-17.csv` with
 different values (05, 07). The current cleaning keeps both copies, so their
@@ -246,7 +249,7 @@ as the old pitfall join. It currently creates no cross-file duplicates,
 because the two files agree on every overlapping sample (05), but a key-based
 join would protect against future edits.
 
-### E6. Overlapping infall deployment periods, including a mis-dated copy at btl 5 m in 2013 — Resolved in script (`myv_arth.csv` not regenerated)
+### E6. Overlapping infall deployment periods, including a mis-dated copy at btl 5 m in 2013 — Resolved
 
 The duplicate and mismatch checks compare samples by exact set and collection
 dates, so they can't see samples whose date ranges overlap. A within-plot
@@ -279,7 +282,7 @@ listed as allowed.
 - **Status:** `00-clean-data-round1.R` lines 170–173 drop the mis-dated
   btl 5 m row from `inf2` (committed in `0408d4b`). Exactly one row is
   removed, and the rebuilt btl 5 m 2013 values are 9,117 midges over 70 days,
-  as expected (11, 17). `data/myv_arth.csv` isn't regenerated yet.
+  as expected (11, 17). `data/myv_arth.csv` has been regenerated.
 - **Remaining overlaps:** E5 and E7 are now handled in the script, and
   flg 500 m needs no action. At the analysed sites, the only overlaps left
   are the two 2008 E5 duplicates, whose all-NA copies are removed by the
@@ -288,7 +291,7 @@ listed as allowed.
   would catch new overlaps if the raw data change. It isn't needed for the
   current data.
 
-### E7. Overlapping Kálfaströnd infall dates in 2008 and 2011 — Resolved in script (`myv_arth.csv` not regenerated)
+### E7. Overlapping Kálfaströnd infall dates in 2008 and 2011 — Resolved
 
 At kal 5, 50, and 150 m, one infall sample starts before the previous one
 ends, in both 2008 and 2011. All rows are in `infalls-08-17.csv` (10):
@@ -323,6 +326,29 @@ comment.
   plot and dates; it stops unless exactly three rows match in each year. The
   samples are now consecutive, and midge-trap-days are 72 (2008, was 75) and
   77 (2011, was 78) (19).
+
+### Regenerated data
+
+`00-clean-data-round1.R` now writes `data/myv_arth.csv`, which was
+regenerated on 2026/11/24 with fixes E2–E7. Compared with the previous
+version (23):
+
+- Same 1,344 rows (site × distance × year × taxon) and columns, with no
+  duplicated keys.
+- Pitfalls, 2013–2016: counts and trap-days are both halved at the analysed
+  sites (E2), so catch per trap-day is unchanged. In 2017 both fall to
+  0.51–0.64 of their old values, because some samples there were NA (E3).
+- Pitfall trap-days fall in 2010 (0.96), 2012 (0.75, mainly E4), 2018 (0.88),
+  and 2019 (0.97) with counts unchanged, so catch per trap-day rises in those
+  years (E3 and E4).
+- Midges: totals change only in 2013 (0.992, E6). Trap-days fall in every year
+  except 2009, most in 2014 (0.60). In 2014, all 24 infall samples from
+  06/08–06/22 and 18 of 24 from 06/22–07/05 have no midge count, so the 2014
+  rate now comes from the remaining samples only. That gives correct trap-days
+  but leaves 2014 with little early-season coverage, which matters for S4.
+- `02-clean-data.R` and the model fit (`rds_files/`) have not been rerun
+  against the new file, so every model result in this document still uses the
+  old data.
 
 ---
 
