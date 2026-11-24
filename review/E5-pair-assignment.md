@@ -224,6 +224,23 @@ favoured the opposite assignment for pair 1 but was badly calibrated.
 
 In every case, drop the NA rows of pairs 3 and 4.
 
+## Decision
+
+Both pairs were assigned as predicted (option 2). `00-clean-data-round1.R`
+relabels line 863 as btl 50 m 2012/06/19–07/03 and line 944 as kal 5 m
+2012/07/17–07/31, identifying rows by their values rather than position.
+Lines 864 and 942 stay at hag 5 m and non 50 m. Pairs 3–4's NA copies are
+dropped by the NA-count filter added for E3.
+
+The rebuilt data match the expected values (18). The 2012 midge rates are
+hag 5 m 155.5, btl 50 m 46.9, non 50 m 40.6, and kal 5 m 77.8 midges/day.
+hag 5 m, btl 50 m, and non 50 m each have six samples and kal 5 m has four,
+with no duplicates or overlaps.
+
+When reporting this, say that the pair 1 assignment rests on weaker evidence
+(81–87% accuracy at that evidence strength) and a doubtful premise, but
+changes rates by under 0.05 log units.
+
 ## References
 
 Breiman, L. (1996). Stacked regressions. *Machine Learning* 24:49–64.
@@ -274,3 +291,4 @@ sections before citing one for a specific claim.
 | `14-e5-method-comparison.R` | `14-e5-method-comparison-output.txt` | Random forest vs. quantile forest vs. GAM, 20,000 test pairs |
 | `15-e5-drop-cost.R` | `15-e5-drop-cost-output.txt` | Cost of dropping both rows of pairs 1–2 |
 | `16-e5-method-comparison-2.R` | `16-e5-method-comparison-2-output.txt` | Variance-modelling GAM, joint scoring, stacked classifier |
+| `18-check-e5-fix.R` | `18-check-e5-fix-output.txt` | Checks the reassignment in `00-clean-data-round1.R` |

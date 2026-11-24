@@ -26,6 +26,7 @@ root. Each script's output is saved next to it:
 | `15-e5-drop-cost.R` | `15-e5-drop-cost-output.txt` | E5: cost of dropping both rows of pairs 1–2 |
 | `16-e5-method-comparison-2.R` | `16-e5-method-comparison-2-output.txt` | E5 pairs 1–2: variance-modelling GAM, joint scoring, stacked classifier |
 | `17-check-e3-fix.R` | `17-check-e3-fix-output.txt` | E3: checks the NA-sample filters in `00-clean-data-round1.R` |
+| `18-check-e5-fix.R` | `18-check-e5-fix-output.txt` | E5: checks the pair 1–2 reassignment in `00-clean-data-round1.R` |
 
 Status key: **Open**, **Resolved**, **Partly resolved**.
 
@@ -153,7 +154,7 @@ Details are in `E4-2012-overlaps.md`. Briefly, 54 samples fall into 23 overlap
 groups, all from `pitfalls-08-17.csv`. Counts differ within every group, so
 the samples are distinct catches, not duplicate entries (06). No 2012 sample equals the sum of two or more other samples from its plot, or the average of two, on any count column (08).
 
-### E5. Conflicting duplicate samples within `infalls-08-17.csv` — Open
+### E5. Conflicting duplicate samples within `infalls-08-17.csv` — Resolved in script (`myv_arth.csv` not regenerated)
 
 Four Mývatn infall samples appear twice within `infalls-08-17.csv` with
 different values (05, 07). The current cleaning keeps both copies, so their
@@ -175,9 +176,13 @@ Details, analyses, limitations, and references are in
   - **Pair 1:** line 864 = hag 5 m, at 81–87%. The premise is doubtful,
     because neither row looks like hag 5 m in early June, but the choice
     changes rates by under 0.05 log units.
-- **Decision pending:** drop pair 1 and assign pair 2 (the middle option),
-  assign both, or drop both. Dropping pair 2 leaves kal 5 m with no samples
-  after mid-July and probably halves its 2012 midge rate.
+- **Decision: both pairs assigned** as predicted. `00-clean-data-round1.R`
+  relabels line 863 as btl 50 m
+  2012/06/19–07/03 and line 944 as kal 5 m 2012/07/17–07/31, identifying
+  rows by their values. Pairs 3–4's NA copies are dropped by the E3
+  NA-count filter. The rebuilt 2012 midge rates match the expected values:
+  hag 5 m 155.5, btl 50 m 46.9, non 50 m 40.6, and kal 5 m 77.8 midges/day.
+  No samples are duplicated or overlapping at these plots (18).
 
 The infall `full_join` on all columns (lines 149–151) has the same weakness
 as the old pitfall join. It currently creates no cross-file duplicates,

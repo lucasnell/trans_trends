@@ -161,7 +161,32 @@ colnames(inf1)[which(!colnames(inf1) %in% colnames(inf2))]
 
 # pull columns used for future analyses
 i1 <- inf1 |>
-    unique() |>  # one row is duplicated
+    unique()  # one row is duplicated
+
+# Two 2012 samples appear twice under one plot and date (lines 863-864 and
+# 942/944 of infalls-08-17.csv). Curation notes say one copy of each is a
+# mislabelled sample from a plot whose sample is missing (btl 50 m
+# 2012-06-19 to 07-03, and kal 5 m 2012-07-17 to 07-31). Field sheets aren't
+# available, so each copy is assigned to the slot predicted from other
+# distances, neighbouring samples, and season (review/E5-pair-assignment.md;
+# about 81-87% and 92-95% accurate on known cases with similar evidence).
+# Rows are identified by their values, not row position:
+e5_to_btl50 <- with(i1, lakeid == "myv" & trans == "hag" & dist == 5 &
+                        setdate == as.Date("2012-06-05") &
+                        coldate == as.Date("2012-06-19") &
+                        bgch == 4 & smch == 291) %in% TRUE   # line 863
+e5_to_kal5 <- with(i1, lakeid == "myv" & trans == "non" & dist == 50 &
+                       setdate == as.Date("2012-07-17") &
+                       coldate == as.Date("2012-07-31") &
+                       bgch == 0 & smch == 601) %in% TRUE    # line 944
+stopifnot(sum(e5_to_btl50) == 1, sum(e5_to_kal5) == 1)
+i1 <- i1 |>
+    mutate(trans = case_when(e5_to_btl50 ~ "btl", e5_to_kal5 ~ "kal",
+                             .default = trans),
+           dist = case_when(e5_to_btl50 ~ 50, e5_to_kal5 ~ 5,
+                            .default = dist),
+           setdate = if_else(e5_to_btl50, as.Date("2012-06-19"), setdate),
+           coldate = if_else(e5_to_btl50, as.Date("2012-07-03"), coldate)) |>
     select(lakeid, dist, trans, setdate, coldate, daysout,
            contains("bgch"), contains("smch"))
 
@@ -176,13 +201,11 @@ i2 <- inf2 |>
 
 # check that each sample appears once per file (among rows kept below)
 inf_kept <- \(x) filter(x, lakeid == "myv", !is.na(setdate))
-# Four samples in infalls-08-17.csv appear twice with different values; they
-# are allowed here until they're resolved against the field sheets. Remove
-# each from this list once it's fixed in the raw file:
+# Two 2008 samples in infalls-08-17.csv appear twice, once with counts and once
+# all NA (a "missing data" placeholder and a possibly fallen trap). They are
+# allowed here; the NA copies are dropped by the NA-count filter below:
 inf_known_dups <- tribble(
     ~lakeid, ~dist, ~trans,                ~setdate,                ~coldate,
-    "myv",       5,  "hag", as.Date("2012-06-05"), as.Date("2012-06-19"),
-    "myv",      50,  "non", as.Date("2012-07-17"), as.Date("2012-07-31"),
     "myv",     150,  "non", as.Date("2008-06-04"), as.Date("2008-06-10"),
     "myv",       5,  "vin", as.Date("2008-05-30"), as.Date("2008-06-09"))
 check_unique_key(inf_kept(i1), known = inf_known_dups, label = "i1")

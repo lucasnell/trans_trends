@@ -1,0 +1,25 @@
+- The project is out-of-sync -- use `renv::status()` for details.
+Warning message:
+One or more parsing issues, call `problems()` on your data frame for details,
+e.g.:
+  dat <- vroom(...)
+  problems(dat) 
+p1: no unexpected duplicated samples
+p2: no unexpected duplicated samples
+i1: no unexpected duplicated samples
+i2: no unexpected duplicated samples
+
+== 2012 infall samples kept at the four plots ==
+  trans dist n                             periods overlaps
+1   btl   50 6 05/22 06/05 06/19 07/03 07/17 07/31        0
+2   hag    5 6 05/22 06/05 06/19 07/03 07/17 07/31        0
+3   kal    5 4             05/22 06/05 07/03 07/17        0
+4   non   50 6 05/23 06/05 06/19 07/03 07/17 07/31        0
+
+== 2012 midge rates in rebuilt myv_arth ==
+  trans dist year    midges midge_days  rate
+1   btl   50 2012  3705.000         79  46.9
+2   hag    5 2012 12288.172         79 155.5
+3   kal    5 2012  4356.996         56  77.8
+4   non   50 2012  3166.030         78  40.6
+myv_arth rows: 1344 | NA midges: 0 
