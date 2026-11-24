@@ -97,6 +97,18 @@ if (any(pit_mismatch$column != "acar_total")) {
 pit <- bind_rows(p1, anti_join(p2, p1, by = c("lakeid", "dist", "trans",
                                               "setdate", "coldate")))
 
+# In 2012, nine pitfall samples are recorded as 2012-07-17 to 08-09; at eight
+# plots this overlaps a 07-17 to 07-31 sample from the same trap. Infall traps
+# at these plots were serviced on 07-17, 07-31, and 08-09, so these are taken
+# to be 07-31 to 08-09 samples with a mis-entered set date. Non 50 m has no
+# 07-17 to 07-31 pitfall sample but gets the same correction, because its
+# infall trap was serviced on 07-31 (review/20-e4-infall-dates-output.txt):
+e4_july <- with(pit, lakeid == "myv" & setdate == as.Date("2012-07-17") &
+                    coldate == as.Date("2012-08-09")) %in% TRUE
+stopifnot(sum(e4_july) == 9)
+pit <- pit |>
+    mutate(setdate = if_else(e4_july, as.Date("2012-07-31"), setdate))
+
 
 
 # clean piftall data

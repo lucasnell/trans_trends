@@ -1,0 +1,101 @@
+- The project is out-of-sync -- use `renv::status()` for details.
+Rows: 933 Columns: 36
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr   (5): lakeid, trans, egsa, comments, comments 2
+dbl  (29): dist, daysout, aran_other, lyco_pal_m, lyco_pal_f, lyco_hyp_m, ly...
+date  (2): setdate, coldate
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 795 Columns: 41
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr   (4): lakeid, trans, comments, comments 2
+dbl  (34): dist, daysout, lyco_pal_m, lyco_pal_f, lyco_hyp_m, lyco_hyp_f, ly...
+date  (3): setdate, coldate, andate
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 1697 Columns: 17
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (4): lakeid, trans, comments, comments.2
+dbl  (8): dist, daysout, fract_bgch, fract_smch, fract_simu, bgch, smch, simu
+lgl  (3): trayweight, dw_tray, dw
+date (2): setdate, coldate
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+New names:
+• `` -> `...18`
+Rows: 1011 Columns: 18
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (6): lakeid, trans, trayweight, dw_tray, dw, comments
+dbl  (8): dist, daysout, fract_bgch, fract_smch, fract_simu, bgch, smch, simu
+lgl  (1): ...18
+date (3): setdate, coldate, andate
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Warning message:
+One or more parsing issues, call `problems()` on your data frame for details,
+e.g.:
+  dat <- vroom(...)
+  problems(dat) 
+Corrected rows (pit, after correction):
+# A tibble: 9 × 4
+  trans  dist setdate    coldate   
+  <chr> <dbl> <date>     <date>    
+1 btl       5 2012-07-31 2012-08-09
+2 btl      50 2012-07-31 2012-08-09
+3 btl     150 2012-07-31 2012-08-09
+4 hag       5 2012-07-31 2012-08-09
+5 hag      50 2012-07-31 2012-08-09
+6 hag     150 2012-07-31 2012-08-09
+7 hag     500 2012-07-31 2012-08-09
+8 non       5 2012-07-31 2012-08-09
+9 non      50 2012-07-31 2012-08-09
+
+Remaining 2012 pitfall overlap groups within a plot:
+# A tibble: 15 × 3
+   trans  dist samples                                           
+   <chr> <dbl> <chr>                                             
+ 1 btl      50 06/05-06/22; 06/19-07/03                          
+ 2 btl     150 06/05-06/22; 06/19-07/03                          
+ 3 hag       5 06/05-06/22; 06/19-07/03                          
+ 4 hag      50 06/05-06/22; 06/19-07/03                          
+ 5 hag     150 06/05-06/22; 06/19-07/03                          
+ 6 hag     500 06/05-06/22; 06/19-07/03                          
+ 7 kal       5 06/05-06/22; 06/19-07/03                          
+ 8 kal      50 06/05-06/22; 06/19-07/03                          
+ 9 kal     150 06/05-06/22; 06/19-07/03                          
+10 non       5 06/05-06/23; 06/19-07/03                          
+11 non      50 06/05-06/23; 06/19-07/03                          
+12 non     150 06/05-06/23; 06/19-07/03; 06/26-08/09; 07/17-07/31
+13 vin       5 06/05-06/23; 06/19-07/03; 06/26-08/09; 07/17-07/31
+14 vin      50 06/05-06/23; 06/19-07/03; 06/26-08/09; 07/17-07/31
+15 vin     150 06/05-06/23; 06/19-07/03; 06/26-08/09; 07/17-07/31
+
+2012 pitfall season_days per plot (same for every taxon):
+# A tibble: 17 × 5
+   trans  dist season_days first_day  last_day  
+   <chr> <dbl>       <dbl> <date>     <date>    
+ 1 btl       5          54 2012-05-19 2012-08-09
+ 2 btl      50          71 2012-05-19 2012-08-09
+ 3 btl     150          71 2012-05-19 2012-08-09
+ 4 hag       5          71 2012-05-19 2012-08-09
+ 5 hag       5          54 2012-06-05 2012-08-09
+ 6 hag      50          71 2012-05-19 2012-08-09
+ 7 hag     150          71 2012-05-19 2012-08-09
+ 8 hag     500          71 2012-05-19 2012-08-09
+ 9 kal       5          62 2012-05-19 2012-07-31
+10 kal      50          62 2012-05-19 2012-07-31
+11 kal     150          62 2012-05-19 2012-07-31
+12 non       5          72 2012-05-19 2012-08-09
+13 non      50          58 2012-05-19 2012-08-09
+14 non     150         107 2012-05-19 2012-08-09
+15 vin       5         107 2012-05-19 2012-08-09
+16 vin      50         107 2012-05-19 2012-08-09
+17 vin     150         107 2012-05-19 2012-08-09
