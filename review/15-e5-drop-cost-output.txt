@@ -1,0 +1,35 @@
+- The project is out-of-sync -- use `renv::status()` for details.
+== Samples with midge counts, by plot (periods are set dates) ==
+
+best_guess:
+  trans dist n days                             periods
+1   btl   50 6   79 05/22 06/05 06/19 07/03 07/17 07/31
+2   hag    5 6   79 05/22 06/05 06/19 07/03 07/17 07/31
+3   kal    5 4   56             05/22 06/05 07/03 07/17
+4   non   50 6   78 05/23 06/05 06/19 07/03 07/17 07/31
+
+drop_both:
+  trans dist n days                       periods
+1   btl   50 5   65 05/22 06/05 07/03 07/17 07/31
+2   hag    5 5   65 05/22 06/19 07/03 07/17 07/31
+3   kal    5 3   42             05/22 06/05 07/03
+4   non   50 5   64 05/23 06/05 06/19 07/03 07/31
+
+SD of log midge rate across all analysed plot-years (the midges_z scale): 1.646 
+
+== 2012 midge rate (midges/day, NA samples' days excluded) ==
+  trans dist best_guess drop_both log_diff midges_z_diff
+1   hag    5    155.546   181.741    0.156         0.095
+2   btl   50     46.899    52.462    0.112         0.068
+3   non   50     40.590    43.844    0.077         0.047
+4   kal    5     77.803    41.262   -0.634        -0.385
+
+== Same-period small-midge totals at the other distances (for context) ==
+  trans dist    setdate    coldate small_total
+1   hag    5 2012-06-05 2012-06-19         291
+2   hag    5 2012-06-05 2012-06-19         468
+3   hag   50 2012-06-05 2012-06-19         282
+4   hag  150 2012-06-05 2012-06-19         143
+5   hag  500 2012-06-05 2012-06-19         108
+6   kal   50 2012-07-17 2012-07-31         729
+7   kal  150 2012-07-17 2012-07-31         578

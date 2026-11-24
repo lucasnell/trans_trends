@@ -1,0 +1,133 @@
+Samples whose setdate precedes previous sample's coldate (same plot): 31 
+# A tibble: 1 × 2
+   year     n
+  <dbl> <int>
+1  2012    31
+
+Rows compared: 1152  (orig rows: 1152 )
+Ratio of original to corrected season_days, by year:
+# A tibble: 12 × 3
+    year days_ratio count_ratio
+   <dbl>      <dbl>       <dbl>
+ 1  2008       1           1   
+ 2  2009       1           1   
+ 3  2010       1           1   
+ 4  2011       1           1   
+ 5  2012       1           1   
+ 6  2013       2           2   
+ 7  2014       2           2   
+ 8  2015       2           2   
+ 9  2016       2           2   
+10  2017       1.73        1.91
+11  2018       1           1   
+12  2019       1           1   
+
+|change in log1p(rate)| > 0.05: 36 of 1152 
+# A tibble: 36 × 9
+   trans  dist  year taxon count0 days0 count season_days    diff
+   <chr> <dbl> <dbl> <chr>  <dbl> <dbl> <dbl>       <dbl>   <dbl>
+ 1 hag       5  2018 sheet     14    74    14          11  0.648 
+ 2 hag       5  2018 opil       9    74     9          11  0.483 
+ 3 hag       5  2018 lyco       7    74     7          11  0.402 
+ 4 kal       5  2010 opil      41    52    41          37  0.164 
+ 5 hag     150  2016 opil      66   110    33          38  0.155 
+ 6 hag     150  2018 lyco      10    74    10          33  0.138 
+ 7 btl      50  2018 sheet     36    74    36          52  0.130 
+ 8 kal       5  2010 lyco      25    52    25          37  0.124 
+ 9 hag       5  2012 lyco      75    85    75          68  0.111 
+10 hag     150  2016 lyco      82   110    41          72 -0.106 
+11 hag       5  2012 sheet     66    85    66          68  0.104 
+12 kal     150  2010 lyco      19    52    19          37  0.103 
+13 kal       5  2017 sheet    157   130   106          75  0.0891
+14 hag      50  2015 opil     160   125    80          54  0.0847
+15 btl      50  2018 cara      19    74    19          52  0.0829
+16 kal       5  2010 cara      14    52    14          37  0.0825
+17 hag       5  2019 cara      14    43    14          32  0.0811
+18 non      50  2017 sheet    232   100   155          60  0.0763
+19 vin     150  2013 lyco     328   126   164          70 -0.0750
+20 hag       5  2018 cara       1    74     1          11  0.0736
+21 hag       5  2018 gnap       1    74     1          11  0.0736
+22 hag       5  2018 stap       1    74     1          11  0.0736
+23 kal       5  2010 sheet     12    52    12          37  0.0733
+24 hag       5  2019 sheet     12    43    12          32  0.0723
+25 btl      50  2018 opil      15    74    15          52  0.0689
+26 kal       5  2010 stap      11    52    11          37  0.0684
+27 hag     500  2017 lyco     139   130    70          75 -0.0679
+28 non       5  2017 cara      42   130    31          75  0.0660
+29 hag      50  2015 sheet     86   125    43          54  0.0622
+30 hag      50  2015 lyco     120   125    60          71 -0.0604
+31 hag       5  2015 sheet     86   126    43          55  0.0573
+32 hag     150  2016 sheet     16   110     8          38  0.0553
+33 vin     150  2013 sheet     98   126    49          56  0.0532
+34 kal     150  2010 sheet      8    52     8          37  0.0526
+35 hag     150  2015 lyco     104   126    52          71 -0.0523
+36 hag       5  2017 stap      96   113    55          58  0.0520
+
+Per-year earliest set DOY and latest collect DOY:
+# A tibble: 12 × 3
+    year     f     l
+   <dbl> <dbl> <dbl>
+ 1  2008   162   222
+ 2  2009   143   204
+ 3  2010   154   206
+ 4  2011   155   214
+ 5  2012   140   222
+ 6  2013   156   226
+ 7  2014   151   215
+ 8  2015   157   228
+ 9  2016   157   229
+10  2017   155   230
+11  2018   154   228
+12  2019   155   220
+Common window used: DOY 160-205 (samples set >= 160 and collected <= 205)
+
+Within-plot slope of log(rate) per year (OLS; SEs ignore autocorrelation):
+# A tibble: 6 × 7
+  taxon slope_all se_all n_all slope_window se_window n_window
+  <chr>     <dbl>  <dbl> <int>        <dbl>     <dbl>    <int>
+1 cara     0.0175 0.0128   192      -0.0019    0.0204      176
+2 gnap    -0.0332 0.0176   192      -0.0363    0.0203      176
+3 lyco    -0.178  0.0192   192      -0.182     0.0244      176
+4 opil    -0.0433 0.0188   192      -0.0161    0.0255      176
+5 sheet   -0.0796 0.0128   192      -0.0461    0.0184      176
+6 stap    -0.01   0.015    192       0.0017    0.0211      176
+Plot-years retained in window subset: 179 of 192 
+Years with no samples inside the window:
+numeric(0)
+
+Infall samples with NA midge total: 78 ; analysed plot-years affected: 41 of 192 
+Change in log midge rate from dropping NA samples' days: max 0.604 ; >0.1 in 36 plot-years
+# A tibble: 36 × 6
+   trans  dist  year r_orig  r_fix  dlog
+   <chr> <dbl> <dbl>  <dbl>  <dbl> <dbl>
+ 1 hag     150  2014  40.3   73.6  0.604
+ 2 btl     150  2014 102.   177.   0.548
+ 3 hag       5  2014 209.   362.   0.548
+ 4 hag      50  2014 235.   406.   0.548
+ 5 kal       5  2014 180.   311    0.548
+ 6 kal     150  2014 155.   269.   0.548
+ 7 non       5  2014 426.   736.   0.548
+ 8 non      50  2014 231.   399.   0.548
+ 9 vin       5  2014 261.   451.   0.548
+10 vin      50  2014 246.   425.   0.548
+11 vin     150  2014  92.4  160.   0.548
+12 hag     500  2014   7.70  13.3  0.548
+13 kal      50  2014 164.   283.   0.548
+14 non     150  2014  89.3  155.   0.548
+15 hag       5  2016 188.   308.   0.492
+16 hag       5  2015  97.8  160.   0.492
+17 kal       5  2012  26.7   41.3  0.437
+18 hag       5  2018  15.1   21.4  0.353
+19 kal     150  2015  13.5   19.2  0.351
+20 hag      50  2015  72.7  103.   0.351
+21 vin      50  2018   4.38   6.11 0.334
+22 hag      50  2018  12.3   16.8  0.315
+23 btl     150  2017  10.6   14.4  0.310
+24 kal     150  2017  41.2   56.2  0.310
+25 hag     500  2016   3.96   5.38 0.306
+26 hag       5  2019  47.2   63.5  0.295
+27 hag       5  2017  58.7   75.9  0.257
+28 btl       5  2014 208.   267.   0.247
+29 btl      50  2014 258.   331.   0.247
+30 btl       5  2016 156.   196.   0.234
+# ℹ 6 more rows

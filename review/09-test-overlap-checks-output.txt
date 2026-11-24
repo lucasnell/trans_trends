@@ -1,0 +1,14 @@
+unique keys pass                                             PASS (ran)
+duplicated sample stops                                      PASS (stopped)
+known duplicate is allowed                                   PASS (ran)
+unlisted duplicate still stops when another is known         PASS (stopped)
+Samples in both: 3 | only in first: 0 | only in second: 0 
+NA vs value is reported (old check missed this)              PASS
+Samples in both: 3 | only in first: 0 | only in second: 0 
+differing count is reported                                  PASS
+Samples in both: 3 | only in first: 0 | only in second: 0 
+differing daysout is compared, not used to match             PASS
+Samples in both: 3 | only in first: 0 | only in second: 0 
+NA vs NA is not a mismatch                                   PASS
+Samples in both: 0 | only in first: 0 | only in second: 0 
+rows with NA setdate are not matched                         PASS

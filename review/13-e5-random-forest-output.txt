@@ -1,0 +1,80 @@
+- The project is out-of-sync -- use `renv::status()` for details.
+
+===== Pair 1: slot 1 = hag 5 m 06/05-06/19, slot 2 = btl 50 m 06/19-07/03 =====
+Row 1: big 4 small 291 fract 1 simu NA 
+Row 2: big 7 small 468 fract 1 simu 5 
+Assignment 1 = row 1 -> slot 1, row 2 -> slot 2. Values are log1p(per-day rate).
+  response pred_slot1 pred_slot2 oob_sd row1_y row2_y loglik_assign1 loglik_assign2
+1      big      1.775      0.783  0.385  0.251  0.405         -8.238         -7.207
+2    small      4.704      3.817  0.788  3.081  3.539         -3.544         -2.891
+3     simu      0.365      0.633  0.340     NA  0.305         -0.305          0.145
+Combined log-likelihood ratio (assignment 1 vs 2): -2.13; plug-in P(assignment 1) = 0.106
+
+===== Pair 2: slot 1 = non 50 m 07/17-07/31, slot 2 = kal 5 m 07/17-07/31 =====
+Row 1: big 0 small 360 fract 1 simu 0 
+Row 2: big 0 small 601 fract 0.22904 simu 0 
+Assignment 1 = row 1 -> slot 1, row 2 -> slot 2. Values are log1p(per-day rate).
+  response pred_slot1 pred_slot2 oob_sd row1_y row2_y loglik_assign1 loglik_assign2
+1      big      0.077      0.294  0.385  0.000  0.000         -0.240          -0.24
+2    small      3.377      4.518  0.788  3.285  5.239         -1.786          -5.38
+3     simu      0.079      0.121  0.340  0.000  0.000          0.230           0.23
+Combined log-likelihood ratio (assignment 1 vs 2): 3.59; plug-in P(assignment 1) = 0.973
+
+===== Calibration on known 2012 samples (leave-one-out forests) =====
+
+hag + btl: accuracy by |log-likelihood ratio|
+    abs_lr   n  accuracy
+1    [0,1)  51 0.6862745
+2    [1,2)  37 0.7567568
+3    [2,4)  57 0.9122807
+4    [4,8) 102 1.0000000
+5   [8,16)  82 1.0000000
+6  [16,32)  53 1.0000000
+7 [32,Inf)   9 1.0000000
+
+non + kal: accuracy by |log-likelihood ratio|
+    abs_lr  n  accuracy
+1    [0,1) 33 0.5757576
+2    [1,2) 17 0.9411765
+3    [2,4) 35 0.9428571
+4    [4,8) 41 1.0000000
+5   [8,16) 45 1.0000000
+6  [16,32) 39 1.0000000
+7 [32,Inf) 11 1.0000000
+
+      sites n_pairs correct confident_share wrong_with_p_gt_0.95
+1 hag + btl     391   0.923           0.693                0.000
+2 non + kal     221   0.923           0.697                0.005
+
+Leave-one-out prediction error (RMSE, log1p scale) on these 2012 samples:
+  response      rmse    oob_sd
+1      big 0.3967441 0.3849427
+2     simu 0.2635269 0.3404282
+3    small 0.6891862 0.7870162
+
+===== Pair log-likelihood ratios across 10 forest seeds =====
+   seed pair1 pair2
+1     1 -2.13  3.59
+2     2 -2.16  3.39
+3     3 -2.10  3.42
+4     4 -2.12  3.42
+5     5 -2.14  3.27
+6     6 -2.16  3.51
+7     7 -2.07  3.70
+8     8 -2.17  3.47
+9     9 -2.16  3.59
+10   10 -2.13  3.32
+
+===== Pair 1 candidates at the hag 5 m slot: (observed - predicted) / OOB SD =====
+  response row1_at_hag5 row2_at_hag5 row1_at_btl50 row2_at_btl50
+1      big        -3.96        -3.56         -1.38         -0.98
+2    small        -2.06        -1.48         -0.93         -0.35
+3     simu           NA        -0.18            NA         -0.96
+
+===== Known 2012 hag 5 m samples: (observed - LOO predicted) / OOB SD =====
+     setdate   big small  simu
+1 2012-05-22 -0.34 -0.58  1.04
+2 2012-06-19 -1.13  1.97 -1.23
+3 2012-07-03 -0.11  2.29 -1.06
+4 2012-07-17 -0.05  0.26  2.28
+5 2012-07-31 -0.04  0.93 -0.60

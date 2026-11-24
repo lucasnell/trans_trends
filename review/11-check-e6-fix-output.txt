@@ -1,0 +1,15 @@
+Warning message:
+One or more parsing issues, call `problems()` on your data frame for details,
+e.g.:
+  dat <- vroom(...)
+  problems(dat) 
+inf2 rows after unique(): 1008 | i2 rows: 1007 | removed: 1 
+  lakeid dist trans    setdate    coldate daysout fract_bgch bgch fract_smch
+1    myv    5   btl 2013-06-05 2013-08-14      14          1    0          1
+  smch
+1 1073
+
+btl 5 m 2013 in rebuilt myv_arth (expected 9117 midges over 70 days):
+  midges midge_days
+1   9117         70
+myv_arth rows: 1344 

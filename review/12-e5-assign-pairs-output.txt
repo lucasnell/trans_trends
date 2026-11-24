@@ -1,0 +1,74 @@
+
+===== Pair 1: hag 5 m 06/05-06/19 vs btl 50 m 06/19-07/03 =====
+Row 1: big 4, small 291 (fract 1), simu NA 
+Row 2: big 7, small 468 (fract 1), simu 5 
+Slot 1: hag 5 m 06/05-06/19 | Slot 2: btl 50 m 06/19-07/03 
+Assignment 1 = row 1 -> slot 1, row 2 -> slot 2; assignment 2 = swapped.
+pred_slot = model's predicted total (after undoing subsampling) at each empty cell.
+
+  response pred_slot1 pred_slot2 row1_total row2_total loglik_assign1 loglik_assign2
+1      big      14.71      30.20          4          7         -22.00         -24.15
+2    small    2380.95     690.13        291        468         -18.72         -18.31
+3     simu      35.52      11.22         NA          5          -2.85          -3.68
+
+Combined log-likelihood ratio (assignment 1 vs 2): 2.57
+P(assignment 1) with equal prior odds (plug-in, ignores parameter uncertainty): 0.929
+  big   alone: P(assignment 1) = 0.896
+  small alone: P(assignment 1) = 0.397
+  simu  alone: P(assignment 1) = 0.695
+
+===== Pair 2: non 50 m 07/17-07/31 vs kal 5 m 07/17-07/31 =====
+Row 1: big 0, small 360 (fract 1), simu 0 
+Row 2: big 0, small 601 (fract 0.22904), simu 0 
+Slot 1: non 50 m 07/17-07/31 | Slot 2: kal 5 m 07/17-07/31 
+Assignment 1 = row 1 -> slot 1, row 2 -> slot 2; assignment 2 = swapped.
+pred_slot = model's predicted total (after undoing subsampling) at each empty cell.
+
+  response pred_slot1 pred_slot2 row1_total row2_total loglik_assign1 loglik_assign2
+1      big       0.00       0.43          0          0          -0.43          -0.43
+2    small     266.51    1012.92        360       2624         -22.78         -47.86
+3     simu       0.38       0.40          0          0          -0.75          -0.75
+
+Combined log-likelihood ratio (assignment 1 vs 2): 25.07
+P(assignment 1) with equal prior odds (plug-in, ignores parameter uncertainty): 1.000
+  big   alone: P(assignment 1) = 0.500
+  small alone: P(assignment 1) = 1.000
+  simu  alone: P(assignment 1) = 0.500
+
+===== Calibration on known 2012 cells (leave-one-out) =====
+correct = share of known pairs assigned correctly;
+confident_share = share with P > 0.95 for one assignment;
+correct_when_confident = accuracy among those;
+wrong_with_p_gt_0.95 = share of all pairs confidently wrong.
+
+hag + btl: accuracy by |log-likelihood ratio|
+    abs_lr   n  accuracy
+1    [0,1)   3 0.6666667
+2    [1,2)   8 0.2500000
+3    [2,4)  12 0.5000000
+4    [4,8)  15 0.9333333
+5   [8,16)  33 0.7575758
+6  [16,32)  48 0.8750000
+7 [32,Inf) 272 0.9779412
+
+non + kal: accuracy by |log-likelihood ratio|
+    abs_lr   n  accuracy
+1    [0,1)   5 0.6000000
+2    [1,2)   6 0.5000000
+3    [2,4)  11 0.6363636
+4    [4,8)  15 0.6000000
+5   [8,16)  65 0.3230769
+6  [16,32)  44 0.5909091
+7 [32,Inf) 143 1.0000000
+      sites n_pairs correct confident_share correct_when_confident wrong_with_p_gt_0.95
+1 hag + btl     391   0.913           0.957                  0.936                0.061
+2 non + kal     289   0.734           0.941                  0.743                0.242
+
+===== Annual 2012 midge rate (midges/day) under each choice =====
+                                          choice hag 5 m btl 50 m non 50 m kal 5 m
+1                                   assignment 1   153.3     49.2     40.6    77.8
+2                                   assignment 2   155.5     46.9     69.6    37.4
+3                                 drop both rows   181.7     52.5     43.8    41.3
+4 current cleaning (both kept at original label)   135.3     52.5     62.9    41.3
+
+SD of log(midge rate) across all 2012 plot-years at these four sites: 0.85 

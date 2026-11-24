@@ -1,0 +1,119 @@
+- The project is out-of-sync -- use `renv::status()` for details.
+Samples: 1071 | with small-midge value: 1015 
+Test pairs: 20000 
+fold 1 
+fold 2 
+fold 3 
+fold 4 
+fold 5 
+fold 6 
+fold 7 
+fold 8 
+fold 9 
+fold 10 
+
+===== Correlation of standardized CV residuals among responses =====
+rf_gauss :
+        big small  simu
+big   1.000 0.144 0.061
+small 0.144 1.000 0.034
+simu  0.061 0.034 1.000
+gam :
+        big small  simu
+big   1.000 0.164 0.029
+small 0.164 1.000 0.068
+simu  0.029 0.068 1.000
+gam_ls :
+        big small  simu
+big   1.000 0.144 0.039
+small 0.144 1.000 0.078
+simu  0.039 0.078 1.000
+
+Scoring test pairs...
+There were 12 warnings (use warnings() to see them)
+Warning message:
+glm.fit: fitted probabilities numerically 0 or 1 occurred 
+
+===== Stacked classifier weights (fit on all pairs) =====
+  rf_gauss_big rf_gauss_small  rf_gauss_simu        gam_big      gam_small       gam_simu     gam_ls_big   gam_ls_small    gam_ls_simu 
+         0.105          0.440          0.228         -0.253          0.762          0.170          0.971         -0.175          0.085 
+
+===== Overall, per approach =====
+        approach accuracy confident_share wrong_with_p_gt_0.95 log_score
+1        stacked   0.9255          0.6994               0.0056   -0.1956
+2      gam_joint   0.9209          0.7312               0.0086   -0.2105
+3      gam_indep   0.9196          0.7298               0.0088   -0.2144
+4   gam_ls_joint   0.9256          0.7566               0.0114   -0.2167
+5   gam_ls_indep   0.9248          0.7545               0.0114   -0.2187
+6 rf_gauss_joint   0.9138          0.6818               0.0088   -0.2328
+7 rf_gauss_indep   0.9140          0.6804               0.0088   -0.2353
+
+===== Calibration: stated P(chosen) vs. observed accuracy =====
+         approach         bin     n stated observed
+1       gam_indep   [0.5,0.6)  1377  0.546    0.566
+2       gam_indep   [0.6,0.7)  1043  0.649    0.663
+3       gam_indep   [0.7,0.8)   940  0.749    0.764
+4       gam_indep   [0.8,0.9)  1159  0.852    0.840
+5       gam_indep  [0.9,0.95)   885  0.927    0.914
+6       gam_indep [0.95,0.99)  1536  0.974    0.942
+7       gam_indep    [0.99,1) 13060  0.999    0.993
+8       gam_joint   [0.5,0.6)  1387  0.547    0.567
+9       gam_joint   [0.6,0.7)  1009  0.650    0.688
+10      gam_joint   [0.7,0.8)   933  0.750    0.747
+11      gam_joint   [0.8,0.9)  1166  0.853    0.846
+12      gam_joint  [0.9,0.95)   882  0.927    0.908
+13      gam_joint [0.95,0.99)  1492  0.974    0.944
+14      gam_joint    [0.99,1) 13131  0.999    0.993
+15   gam_ls_indep   [0.5,0.6)  1184  0.544    0.554
+16   gam_ls_indep   [0.6,0.7)   928  0.649    0.683
+17   gam_ls_indep   [0.7,0.8)   913  0.751    0.774
+18   gam_ls_indep   [0.8,0.9)  1076  0.853    0.839
+19   gam_ls_indep  [0.9,0.95)   809  0.928    0.906
+20   gam_ls_indep [0.95,0.99)  1506  0.974    0.930
+21   gam_ls_indep    [0.99,1) 13584  0.999    0.991
+22   gam_ls_joint   [0.5,0.6)  1179  0.545    0.564
+23   gam_ls_joint   [0.6,0.7)   914  0.649    0.689
+24   gam_ls_joint   [0.7,0.8)   922  0.750    0.752
+25   gam_ls_joint   [0.8,0.9)  1050  0.853    0.844
+26   gam_ls_joint  [0.9,0.95)   802  0.927    0.911
+27   gam_ls_joint [0.95,0.99)  1513  0.974    0.929
+28   gam_ls_joint    [0.99,1) 13620  0.999    0.991
+29 rf_gauss_indep   [0.5,0.6)  1784  0.545    0.583
+30 rf_gauss_indep   [0.6,0.7)  1203  0.648    0.715
+31 rf_gauss_indep   [0.7,0.8)  1120  0.751    0.796
+32 rf_gauss_indep   [0.8,0.9)  1258  0.852    0.878
+33 rf_gauss_indep  [0.9,0.95)  1026  0.927    0.924
+34 rf_gauss_indep [0.95,0.99)  1594  0.974    0.952
+35 rf_gauss_indep    [0.99,1) 12015  0.999    0.992
+36 rf_gauss_joint   [0.5,0.6)  1752  0.545    0.577
+37 rf_gauss_joint   [0.6,0.7)  1222  0.648    0.712
+38 rf_gauss_joint   [0.7,0.8)  1102  0.751    0.796
+39 rf_gauss_joint   [0.8,0.9)  1252  0.852    0.873
+40 rf_gauss_joint  [0.9,0.95)  1035  0.927    0.929
+41 rf_gauss_joint [0.95,0.99)  1567  0.974    0.950
+42 rf_gauss_joint    [0.99,1) 12070  0.999    0.992
+43        stacked   [0.5,0.6)  1602  0.546    0.580
+44        stacked   [0.6,0.7)  1176  0.649    0.726
+45        stacked   [0.7,0.8)  1063  0.750    0.818
+46        stacked   [0.8,0.9)  1238  0.853    0.893
+47        stacked  [0.9,0.95)   933  0.926    0.938
+48        stacked [0.95,0.99)  1659  0.974    0.969
+49        stacked    [0.99,1) 12329  0.999    0.995
+
+===== Real pairs: LR > 0 favours assignment 1 =====
+Pair 1 assignment 1: line 863 -> hag 5 m 06/05-06/19, line 864 -> btl 50 m 06/19-07/03
+Pair 2 assignment 1: line 942 -> non 50 m 07/17-07/31, line 944 -> kal 5 m 07/17-07/31
+Pair 1 rf_gauss_indep  LR =  -1.88 | accuracy at this |LR| in test: 0.845 (n = 1777, |LR| in [1,2))
+Pair 1 gam_indep       LR =  -1.84 | accuracy at this |LR| in test: 0.811 (n = 1537, |LR| in [1,2))
+Pair 1 gam_ls_indep    LR =  -0.27 | accuracy at this |LR| in test: 0.628 (n = 2373, |LR| in [0,1))
+Pair 1 rf_gauss_joint  LR =  -1.65 | accuracy at this |LR| in test: 0.848 (n = 1753, |LR| in [1,2))
+Pair 1 gam_joint       LR =  -1.66 | accuracy at this |LR| in test: 0.808 (n = 1529, |LR| in [1,2))
+Pair 1 gam_ls_joint    LR =  -0.18 | accuracy at this |LR| in test: 0.629 (n = 2373, |LR| in [0,1))
+Pair 1 stacked         LR =  -1.20 | accuracy at this |LR| in test: 0.865 (n = 1716, |LR| in [1,2))
+Pair 2 rf_gauss_indep  LR =   2.82 | accuracy at this |LR| in test: 0.929 (n = 2377, |LR| in [2,4))
+Pair 2 gam_indep       LR =   2.60 | accuracy at this |LR| in test: 0.919 (n = 2182, |LR| in [2,4))
+Pair 2 gam_ls_indep    LR =   2.69 | accuracy at this |LR| in test: 0.917 (n = 2048, |LR| in [2,4))
+Pair 2 rf_gauss_joint  LR =   2.86 | accuracy at this |LR| in test: 0.930 (n = 2379, |LR| in [2,4))
+Pair 2 gam_joint       LR =   2.60 | accuracy at this |LR| in test: 0.917 (n = 2130, |LR| in [2,4))
+Pair 2 gam_ls_joint    LR =   2.63 | accuracy at this |LR| in test: 0.918 (n = 2071, |LR| in [2,4))
+Pair 2 stacked         LR =   2.76 | accuracy at this |LR| in test: 0.947 (n = 2333, |LR| in [2,4))

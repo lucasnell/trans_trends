@@ -1,0 +1,54 @@
+Exact duplicate rows (removed by unique() in scripts/00): 4 
+
+== Mývatn samples with the same key but different values ==
+  line trans dist    setdate    coldate daysout fract_bgch     bgch fract_smch     smch simu                                comments
+1  863   hag    5 2012-06-05 2012-06-19      14          1    4.000    1.00000   291.00   NA                                    <NA>
+2  864   hag    5 2012-06-05 2012-06-19      14          1    7.000    1.00000   468.00    5                                    <NA>
+3  942   non   50 2012-07-17 2012-07-31      14          1    0.000    1.00000   360.00    0                                    <NA>
+4  944   non   50 2012-07-17 2012-07-31      14          1    0.000    0.22904   601.00    0                                    <NA>
+5   26   non  150 2008-06-04 2008-06-10       6         NA       NA         NA       NA   NA                          Missing data??
+6   27   non  150 2008-06-04 2008-06-10       7          1   26.000    1.00000   173.00    5                                    <NA>
+7   17   vin    5 2008-05-30 2008-06-09      10          1 1842.457    1.00000 28482.42    0                                    <NA>
+8   18   vin    5 2008-05-30 2008-06-09      10          1       NA    1.00000       NA   NA may have fallen (rubber band failure)??
+
+Curation notes (comments.2):
+line 863: Simuliid was blank.There are two entries with the same transect, distance, and dates. One may be BTL 50 from the next sampling event, which is missing. No way to tell
+line 864: .There are two entries with the same transect, distance, and dates. One may be BTL 50 from the next sampling event, which is missing. No way to tell
+line 942: One of these is possibly kal 5. No way to tell
+line 944: One of these is possibly kal 5. No way to tell
+line 26: There is a comment with this entry that the data are missing, However, there is an entry for the same site/ transect/ set date with a collect date one day later. I have changed it so that it is this date. There are two other non missing datas with no dates given.; There was no subsample value given, but clearly some of these midge counts were calculated by a subsample. I have assigned a subsample value of 1 for all, because of this reason.
+line 27: I have changed this collect date from 2008-06-11. There was missing data as the comment in the original data for the same set date/ transect/ distance.;There was no subsample value given, but clearly some of these midge counts were calculated by a subsample. I have assigned a subsample value of 1 for all, because of this reason.
+line 17: There are two entries for this date. One has the comment "may have fallen (rubber band failure??)" There was no subsample value given, but clearly some of these midge counts were calculated by a subsample. I have assigned a subsample value of 1 for all, because of this reason.
+line 18: There is a second entry for this date transect distance combination. The other has values entered. I changed the 0s to NAs for this reason, but have left the entry. There was no subsample value given, but clearly some of these midge counts were calculated by a subsample. I have assigned a subsample value of 1 for all, because of this reason.
+
+== Number of 2012 samples per Mývatn plot (analysed sites) ==
+   trans dist n
+1    btl    5 6
+2    btl   50 5
+3    btl  150 6
+4    hag    5 7
+5    hag   50 6
+6    hag  150 6
+7    hag  500 6
+8    kal    5 5
+9    kal   50 6
+10   kal  150 6
+11   non    5 6
+12   non   50 7
+13   non  150 6
+14   vin    5 6
+15   vin   50 6
+16   vin  150 6
+
+== 2012 samples at btl 50 m and kal 5 m ==
+   line trans dist    setdate    coldate daysout bgch smch
+1   833   btl   50 2012-05-22 2012-06-05      14   14  118
+2   857   btl   50 2012-06-05 2012-06-19      14  142  503
+3   905   btl   50 2012-07-03 2012-07-17      14    1  771
+4   929   btl   50 2012-07-17 2012-07-31      14    2  973
+5   953   btl   50 2012-07-31 2012-08-09       9    0  886
+6   843   kal    5 2012-05-22 2012-06-05      14   11  208
+7   868   kal    5 2012-06-05 2012-06-19      14   24  612
+8   891   kal    5 2012-06-19 2012-07-03      14   NA   NA
+9   915   kal    5 2012-07-03 2012-07-17      14    1  877
+10  963   kal    5 2012-07-31 2012-08-09       9   NA   NA

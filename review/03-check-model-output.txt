@@ -1,0 +1,56 @@
+== Sampler diagnostics ==
+Divergences: 0 
+Max treedepth hit: 0 
+E-BFMI by chain: 0.344 0.431 0.38 0.38 
+Max Rhat (main pars): 1.0085   min n_eff: 391 
+              mean    sd   2.5%    50%  97.5%     n_eff  Rhat
+alpha[1]    -1.214 0.399 -2.012 -1.219 -0.400  3127.744 1.002
+alpha[2]     0.052 0.104 -0.151  0.052  0.265  4025.535 1.000
+alpha[3]    -0.105 0.132 -0.376 -0.101  0.156  2957.978 1.001
+alpha[4]    -0.127 0.221 -0.577 -0.125  0.320  3374.859 1.001
+sig_beta[1]  0.896 0.263  0.512  0.854  1.538  5519.439 1.000
+sig_beta[2]  0.456 0.061  0.348  0.453  0.585  2946.879 1.002
+sig_beta[3]  0.237 0.096  0.055  0.234  0.436  1707.621 1.003
+sig_beta[4]  0.215 0.104  0.077  0.194  0.480  4913.939 1.001
+sig_beta[5]  0.287 0.118  0.138  0.261  0.588  4597.791 1.001
+sig_beta[6]  0.482 0.180  0.240  0.446  0.932  4360.377 1.001
+phi[1]       0.348 0.088  0.167  0.351  0.515  5430.349 1.001
+phi[2]       0.349 0.077  0.194  0.351  0.495  6076.937 1.000
+phi[3]       0.387 0.089  0.209  0.388  0.556  4728.273 1.001
+phi[4]       0.046 0.031  0.006  0.040  0.121 15100.938 1.000
+phi[5]       0.172 0.095  0.026  0.159  0.387  9072.930 1.000
+phi[6]       0.474 0.109  0.236  0.480  0.665  3679.227 1.001
+sig_proc     0.370 0.118  0.089  0.387  0.558   390.893 1.008
+sig_obs      0.837 0.050  0.739  0.838  0.930   518.505 1.005
+Max Rhat (all incl. latent): 1.0085   min n_eff (all): 391 
+
+== Prior-to-posterior contraction (1 - post var / prior var) ==
+sig_beta (int_tax, int_plot, int_trans, midges, time, dist):
+[1] 0.585 0.978 0.945 0.935 0.916 0.806
+phi ( taxoncara, taxonstap, taxonopil, taxongnap, taxonsheet, taxonlyco ):
+[1] 0.846 0.880 0.842 0.981 0.819 0.763
+sig_proc: 0.916  sig_obs: 0.985 
+
+extract() order for error SDs: sig_proc, sig_obs, sig_beta 
+Max |scripts/05 taxon slope - Stan beta|: 0 
+
+== Effect sizes: scripts/05 (beta) vs long-run (beta/(1-phi)) vs implied path ==
+Cells are posterior median [95% interval]; first-to-last-year % change.
+# A tibble: 6 × 6
+  taxon phi_med script05_pct_total   longrun_pct_total    implied_path_pct     path_pct_if_no_trend
+  <chr>   <dbl> <chr>                <chr>                <chr>                <chr>               
+1 cara    0.351 58.5 [5.2, 135.4]    103.5 [7.2, 358.8]   -27.4 [-58.4, 24.3]  -62.9 [-81.7, -35.0]
+2 stap    0.351 27.7 [-17.6, 92.5]   46.0 [-23.8, 210.2]  -44.7 [-67.5, -7.7]  -61.1 [-79.3, -37.0]
+3 opil    0.388 -12.4 [-43.6, 27.1]  -19.5 [-57.1, 58.1]  -57.1 [-74.8, -30.3] -46.6 [-69.1, -23.8]
+4 gnap    0.04  -23.3 [-52.8, 24.6]  -24.2 [-54.3, 26.5]  -31.8 [-59.2, 12.6]  -8.9 [-25.7, -1.4]  
+5 sheet   0.159 -58.9 [-73.5, -37.7] -65.9 [-79.0, -44.7] -67.2 [-78.9, -49.0] -4.5 [-20.5, 2.0]   
+6 lyco    0.48  -74.2 [-85.6, -59.0] -92.7 [-96.8, -85.4] -91.9 [-95.6, -85.9] -10.9 [-42.6, 25.5] 
+# A tibble: 6 × 5
+  taxon script05_midge10x longrun_midge10x P_time_gt0 P_midge_gt0
+  <chr> <chr>             <chr>                 <dbl>       <dbl>
+1 cara  1.071             1.111                 0.985       0.726
+2 stap  1.044             1.069                 0.868       0.65 
+3 opil  1.058             1.096                 0.248       0.702
+4 gnap  1.590             1.625                 0.143       1    
+5 sheet 0.850             0.821                 0           0.075
+6 lyco  0.985             0.972                 0           0.444

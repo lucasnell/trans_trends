@@ -1,0 +1,63 @@
+- The project is out-of-sync -- use `renv::status()` for details.
+Samples: 1071 | with small-midge value: 1015 
+fold 1 
+fold 2 
+fold 3 
+fold 4 
+fold 5 
+fold 6 
+fold 7 
+fold 8 
+fold 9 
+fold 10 
+Test pairs: 20000 
+
+===== Overall, per method (cross-site same-year pairs, all years) =====
+    method     n accuracy confident_share wrong_with_p_gt_0.95 log_score
+1      gam 20000   0.9228          0.7326               0.0073   -0.1904
+2 rf_gauss 20000   0.9178          0.6870               0.0080   -0.2202
+3 rf_quant 20000   0.8952          0.7391               0.0152   -0.3499
+
+===== Accuracy by |log-likelihood ratio| =====
+    abs_lr n_gam n_rf_gauss n_rf_quant accuracy_gam accuracy_rf_gauss accuracy_rf_quant
+1    [0,1)  2733       3261       2239        0.619             0.662             0.553
+2    [1,2)  1504       1720       1733        0.830             0.840             0.671
+3    [2,4)  2173       2366       2453        0.924             0.933             0.860
+4    [4,8)  2799       2887       3335        0.982             0.973             0.965
+5   [8,16)  3130       3076       2757        0.992             0.994             0.987
+6  [16,32)  3156       3068       1459        0.999             0.997             0.985
+7 [32,Inf)  4505       3622       6024        0.999             0.999             0.998
+
+===== Calibration: stated P(chosen assignment) vs. observed accuracy =====
+     method         bin     n stated observed
+1       gam   [0.5,0.6)  1395  0.546    0.551
+2       gam   [0.6,0.7)  1024  0.649    0.678
+3       gam   [0.7,0.8)   962  0.749    0.768
+4       gam   [0.8,0.9)  1115  0.853    0.867
+5       gam  [0.9,0.95)   851  0.927    0.913
+6       gam [0.95,0.99)  1596  0.974    0.954
+7       gam    [0.99,1) 13057  0.999    0.994
+8  rf_gauss   [0.5,0.6)  1801  0.544    0.589
+9  rf_gauss   [0.6,0.7)  1124  0.648    0.743
+10 rf_gauss   [0.7,0.8)  1063  0.750    0.802
+11 rf_gauss   [0.8,0.9)  1275  0.854    0.867
+12 rf_gauss  [0.9,0.95)   996  0.927    0.923
+13 rf_gauss [0.95,0.99)  1615  0.974    0.955
+14 rf_gauss    [0.99,1) 12126  0.999    0.993
+15 rf_quant   [0.5,0.6)  1052  0.548    0.513
+16 rf_quant   [0.6,0.7)   868  0.648    0.577
+17 rf_quant   [0.7,0.8)   987  0.750    0.629
+18 rf_quant   [0.8,0.9)  1359  0.853    0.713
+19 rf_quant  [0.9,0.95)   952  0.928    0.832
+20 rf_quant [0.95,0.99)  1804  0.974    0.916
+21 rf_quant    [0.99,1) 12978  0.999    0.988
+
+===== Real pairs: LR > 0 favours assignment 1 =====
+Pair 1 assignment 1: line 863 -> hag 5 m 06/05-06/19, line 864 -> btl 50 m 06/19-07/03
+Pair 2 assignment 1: line 942 -> non 50 m 07/17-07/31, line 944 -> kal 5 m 07/17-07/31
+Pair 1 rf_gauss  LR =  -1.88 | accuracy at this |LR| in test: 0.840 (n = 1720, bin [1,2))
+Pair 1 rf_quant  LR =   0.29 | accuracy at this |LR| in test: 0.553 (n = 2239, bin [0,1))
+Pair 1 gam       LR =  -1.84 | accuracy at this |LR| in test: 0.830 (n = 1504, bin [1,2))
+Pair 2 rf_gauss  LR =   2.82 | accuracy at this |LR| in test: 0.933 (n = 2366, bin [2,4))
+Pair 2 rf_quant  LR =   4.13 | accuracy at this |LR| in test: 0.965 (n = 3335, bin [4,8))
+Pair 2 gam       LR =   2.60 | accuracy at this |LR| in test: 0.924 (n = 2173, bin [2,4))

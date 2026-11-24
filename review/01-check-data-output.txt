@@ -1,0 +1,129 @@
+Files named in scripts/00 exist?
+[1] TRUE TRUE TRUE TRUE
+
+== Overlap check that treats NA as a mismatch (scripts/00 drops NA comparisons) ==
+Overlapping samples on (lakeid, dist, trans, setdate, coldate): 558 
+  daysout     mismatches incl. NA-vs-value: 0
+  aran_other  mismatches incl. NA-vs-value: 0
+  liny        mismatches incl. NA-vs-value: 0
+  acar_total  mismatches incl. NA-vs-value: 549
+  lyco_total  mismatches incl. NA-vs-value: 0
+  gnap        mismatches incl. NA-vs-value: 0
+  opil        mismatches incl. NA-vs-value: 0
+  stap        mismatches incl. NA-vs-value: 0
+  cara        mismatches incl. NA-vs-value: 0
+
+myv samples appearing >1 time after full_join (would be double-counted): 377 
+# A tibble: 377 × 5
+   trans  dist setdate    coldate        n
+   <chr> <dbl> <date>     <date>     <int>
+ 1 btl       5 2013-06-05 2013-06-18     2
+ 2 btl       5 2013-06-18 2013-07-03     2
+ 3 btl       5 2013-07-03 2013-07-17     2
+ 4 btl       5 2013-07-17 2013-07-31     2
+ 5 btl       5 2013-07-31 2013-08-14     2
+ 6 btl       5 2014-05-31 2014-06-08     2
+ 7 btl       5 2014-06-08 2014-06-22     2
+ 8 btl       5 2014-06-22 2014-07-05     2
+ 9 btl       5 2014-07-09 2014-07-19     2
+10 btl       5 2014-07-19 2014-08-03     2
+11 btl       5 2015-06-06 2015-06-11     2
+12 btl       5 2015-06-11 2015-06-27     2
+13 btl       5 2015-06-27 2015-07-13     2
+14 btl       5 2015-07-13 2015-07-30     2
+15 btl       5 2015-07-30 2015-08-16     2
+16 btl       5 2016-06-05 2016-06-17     2
+17 btl       5 2016-06-17 2016-06-30     2
+18 btl       5 2016-06-30 2016-07-19     2
+19 btl       5 2016-07-19 2016-08-03     2
+20 btl       5 2016-08-03 2016-08-16     2
+21 btl       5 2017-06-04 2017-06-14     2
+22 btl       5 2017-06-14 2017-06-29     2
+23 btl       5 2017-06-29 2017-07-12     2
+24 btl       5 2017-07-12 2017-07-29     2
+25 btl      50 2013-06-05 2013-06-18     2
+26 btl      50 2013-06-18 2013-07-03     2
+27 btl      50 2013-07-03 2013-07-17     2
+28 btl      50 2013-07-17 2013-07-31     2
+29 btl      50 2013-07-31 2013-08-14     2
+30 btl      50 2014-05-31 2014-06-08     2
+# ℹ 347 more rows
+
+== Pitfall samples with NA count but whose daysout is still added to season_days ==
+# A tibble: 6 × 5
+  taxon n_samples  n_na na_days plot_years_affected
+  <chr>     <int> <int>   <dbl>               <int>
+1 cara       1178    19     321                  15
+2 gnap       1178    19     321                  15
+3 lyco       1178    12     219                   9
+4 opil       1178    19     321                  15
+5 sheet      1178    19     321                  15
+6 stap       1178    19     321                  15
+
+Negative or zero daysout after recomputation:
+# A tibble: 0 × 5
+# ℹ 5 variables: trans <chr>, dist <dbl>, setdate <date>, coldate <date>, daysout <dbl>
+
+myv infall samples appearing >1 time after full_join: 4 
+# A tibble: 4 × 5
+  trans  dist setdate    coldate        n
+  <chr> <dbl> <date>     <date>     <int>
+1 hag       5 2012-06-05 2012-06-19     2
+2 non      50 2012-07-17 2012-07-31     2
+3 non     150 2008-06-04 2008-06-10     2
+4 vin       5 2008-05-30 2008-06-09     2
+
+Infall samples: NA big / NA small / fract==0 or NA:
+   na_big  na_small bad_fract 
+       79        78        71 
+Infall distances present:
+
+  5  20  50 150 200 350 500 
+433  37 470 433  37  37 163 
+Pitfall distances present:
+
+  5  50 150 500 
+368 369 366  75 
+
+== data/myv_arth.csv ==
+NA midges: 0  zero midges: 0  zero season_days: 0 
+
+Observations per time series (trans x dist x taxon):
+
+12 
+96 
+Series with gaps: 0 of 96 
+# A tibble: 0 × 5
+# ℹ 5 variables: trans <chr>, dist <dbl>, n <int>, yrs <chr>, gaps <int>
+
+== Pitfall sampling window by year (one row per plot-year) ==
+# A tibble: 12 × 8
+    year first_doy last_doy season_days range_season_days midge_first midge_last midge_days
+   <dbl>     <dbl>    <dbl>       <dbl> <chr>                   <dbl>      <dbl>      <dbl>
+ 1  2008       169      220          46 46-46                     151        220         71
+ 2  2009       143      204          60 60-60                     143        211         67
+ 3  2010       154      206          52 52-52                     141        218         77
+ 4  2011       155      214          28 28-28                     137        214         77
+ 5  2012       140      222          85 85-85                     143        222         79
+ 6  2013       156      226         140 140-140                   156        226         70
+ 7  2014       151      215         120 120-120                   151        215         64
+ 8  2015       157      228         142 142-142                   157        211         54
+ 9  2016       157      229         144 144-144                   157        229         72
+10  2017       155      230         130 130-130                   155        230         75
+11  2018       154      228          74 74-74                     154        228         74
+12  2019       155      220          65 65-65                     155        220         65
+
+Correlation of season_days with year: 0.454 
+Correlation of last_doy with year: 0.647 
+Correlation of first_doy with year: -0.01 
+
+Within-taxon correlation of log1p(count/season_days) with last_doy and first_doy:
+# A tibble: 6 × 4
+  taxon  r_last  r_first   r_days
+  <chr>   <dbl>    <dbl>    <dbl>
+1 cara   0.0356  0.0425   0.0524 
+2 gnap   0.0759 -0.181    0.297  
+3 lyco  -0.272  -0.184   -0.0712 
+4 opil   0.0489  0.486   -0.0210 
+5 sheet -0.241   0.00830 -0.143  
+6 stap   0.0423  0.262   -0.00581

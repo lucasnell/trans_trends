@@ -1,0 +1,130 @@
+2012 overlap groups: 23 | samples involved: 54 
+
+btl   5 m: 07-17–07-31 (08-17); 07-17–08-09 (08-17)
+btl  50 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+btl  50 m: 07-17–07-31 (08-17); 07-17–08-09 (08-17)
+btl 150 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+btl 150 m: 07-17–07-31 (08-17); 07-17–08-09 (08-17)
+hag   5 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+hag   5 m: 07-17–07-31 (08-17); 07-17–08-09 (08-17)
+hag  50 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+hag  50 m: 07-17–07-31 (08-17); 07-17–08-09 (08-17)
+hag 150 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+hag 150 m: 07-17–07-31 (08-17); 07-17–08-09 (08-17)
+hag 500 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+hag 500 m: 07-17–07-31 (08-17); 07-17–08-09 (08-17)
+kal   5 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+kal  50 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+kal 150 m: 06-05–06-22 (08-17); 06-19–07-03 (08-17)
+non   5 m: 06-05–06-23 (08-17); 06-19–07-03 (08-17)
+non   5 m: 07-17–07-31 (08-17); 07-17–08-09 (08-17)
+non  50 m: 06-05–06-23 (08-17); 06-19–07-03 (08-17)
+non 150 m: 06-05–06-23 (08-17); 06-19–07-03 (08-17); 06-26–08-09 (08-17); 07-17–07-31 (08-17)
+vin   5 m: 06-05–06-23 (08-17); 06-19–07-03 (08-17); 06-26–08-09 (08-17); 07-17–07-31 (08-17)
+vin  50 m: 06-05–06-23 (08-17); 06-19–07-03 (08-17); 06-26–08-09 (08-17); 07-17–07-31 (08-17)
+vin 150 m: 06-05–06-23 (08-17); 06-19–07-03 (08-17); 06-26–08-09 (08-17); 07-17–07-31 (08-17)
+
+
+Counts per sample (days = coldate - setdate). Taxa: cara, stap, opil, gnap, sheet, lyco
+
+btl 5 m
+  07-17–07-31  14 d | cara    1  stap    0  opil    1  gnap    0  sheet    6  lyco    0
+  07-17–08-09  23 d | cara    1  stap    0  opil    0  gnap    0  sheet    9  lyco    1
+
+btl 50 m
+  06-05–06-22  17 d | cara    7  stap    5  opil    6  gnap   18  sheet   18  lyco   19
+  06-19–07-03  14 d | cara    2  stap    0  opil    0  gnap    0  sheet    9  lyco    0
+
+btl 50 m
+  07-17–07-31  14 d | cara    1  stap    0  opil    0  gnap    1  sheet    1  lyco    2
+  07-17–08-09  23 d | cara    1  stap    0  opil    3  gnap    0  sheet    0  lyco    4
+
+btl 150 m
+  06-05–06-22  17 d | cara   10  stap    6  opil   14  gnap    0  sheet   47  lyco   31
+  06-19–07-03  14 d | cara   16  stap    3  opil    4  gnap    5  sheet   14  lyco   10
+
+btl 150 m
+  07-17–07-31  14 d | cara    1  stap    0  opil    2  gnap    0  sheet    7  lyco    0
+  07-17–08-09  23 d | cara    0  stap    0  opil    1  gnap    0  sheet    0  lyco    0
+
+hag 5 m
+  06-05–06-22  17 d | cara    3  stap    0  opil    8  gnap    9  sheet   10  lyco   22
+  06-19–07-03  14 d | cara  3.5  stap    3  opil  1.5  gnap    0  sheet  4.5  lyco 19.5
+
+hag 5 m
+  07-17–07-31  14 d | cara    7  stap    9  opil    2  gnap    2  sheet   48  lyco   22
+  07-17–08-09  23 d | cara    3  stap    0  opil    1  gnap    2  sheet    4  lyco   11
+
+hag 50 m
+  06-05–06-22  17 d | cara    0  stap    1  opil   12  gnap    0  sheet    9  lyco   12
+  06-19–07-03  14 d | cara  1.5  stap  0.5  opil    1  gnap    1  sheet    4  lyco 15.5
+
+hag 50 m
+  07-17–07-31  14 d | cara    1  stap    2  opil    0  gnap    5  sheet    2  lyco   11
+  07-17–08-09  23 d | cara    0  stap    0  opil    0  gnap    1  sheet    0  lyco    9
+
+hag 150 m
+  06-05–06-22  17 d | cara    0  stap    0  opil    2  gnap    8  sheet    8  lyco   17
+  06-19–07-03  14 d | cara  0.5  stap    0  opil  0.5  gnap    1  sheet  6.5  lyco    7
+
+hag 150 m
+  07-17–07-31  14 d | cara    0  stap    0  opil    0  gnap    1  sheet    1  lyco    7
+  07-17–08-09  23 d | cara    0  stap    0  opil    0  gnap    1  sheet    0  lyco    2
+
+hag 500 m
+  06-05–06-22  17 d | cara    0  stap    1  opil    2  gnap    7  sheet   15  lyco   22
+  06-19–07-03  14 d | cara    1  stap    0  opil    1  gnap    1  sheet  6.5  lyco 18.5
+
+hag 500 m
+  07-17–07-31  14 d | cara    0  stap    0  opil    3  gnap    1  sheet    1  lyco    5
+  07-17–08-09  23 d | cara    0  stap    0  opil    0  gnap    0  sheet    0  lyco    2
+
+kal 5 m
+  06-05–06-22  17 d | cara    2  stap    0  opil    8  gnap    4  sheet   23  lyco   10
+  06-19–07-03  14 d | cara    1  stap    0  opil    4  gnap    2  sheet  3.5  lyco  2.5
+
+kal 50 m
+  06-05–06-22  17 d | cara    2  stap    1  opil    1  gnap   10  sheet    5  lyco   17
+  06-19–07-03  14 d | cara    0  stap    0  opil  0.5  gnap    4  sheet  4.5  lyco 20.5
+
+kal 150 m
+  06-05–06-22  17 d | cara    0  stap    0  opil    1  gnap    9  sheet    7  lyco   15
+  06-19–07-03  14 d | cara    0  stap    0  opil    0  gnap    4  sheet  7.5  lyco  6.5
+
+non 5 m
+  06-05–06-23  18 d | cara   13  stap   18  opil    3  gnap    1  sheet   23  lyco    0
+  06-19–07-03  14 d | cara   47  stap  8.5  opil  2.5  gnap    0  sheet  2.5  lyco    0
+
+non 5 m
+  07-17–07-31  14 d | cara   21  stap    3  opil    0  gnap    2  sheet    0  lyco    0
+  07-17–08-09  23 d | cara    8  stap    3  opil    0  gnap    5  sheet    0  lyco    0
+
+non 50 m
+  06-05–06-23  18 d | cara    1  stap    1  opil    0  gnap    0  sheet    3  lyco    4
+  06-19–07-03  14 d | cara    1  stap    1  opil    0  gnap  1.5  sheet    8  lyco  2.5
+
+non 150 m
+  06-05–06-23  18 d | cara    0  stap    1  opil    3  gnap    0  sheet   12  lyco   15
+  06-19–07-03  14 d | cara    0  stap    0  opil    0  gnap    1  sheet  3.5  lyco  1.5
+  06-26–08-09  44 d | cara    0  stap    0  opil    1  gnap    7  sheet    3  lyco    5
+  07-17–07-31  14 d | cara   13  stap    0  opil    1  gnap    1  sheet    2  lyco    2
+
+vin 5 m
+  06-05–06-23  18 d | cara    2  stap    1  opil    4  gnap   19  sheet   40  lyco   80
+  06-19–07-03  14 d | cara    3  stap  5.5  opil    8  gnap  3.5  sheet    9  lyco   10
+  06-26–08-09  44 d | cara    0  stap    7  opil    6  gnap    2  sheet    2  lyco    3
+  07-17–07-31  14 d | cara    1  stap   18  opil    9  gnap    1  sheet    5  lyco    2
+
+vin 50 m
+  06-05–06-23  18 d | cara    1  stap    0  opil    5  gnap   72  sheet   31  lyco   90
+  06-19–07-03  14 d | cara    4  stap  0.5  opil    1  gnap  6.5  sheet    5  lyco 39.5
+  06-26–08-09  44 d | cara    0  stap    1  opil    1  gnap    1  sheet    1  lyco   10
+  07-17–07-31  14 d | cara    0  stap    9  opil    0  gnap    1  sheet    2  lyco   22
+
+vin 150 m
+  06-05–06-23  18 d | cara    3  stap    1  opil    1  gnap   16  sheet   15  lyco   32
+  06-19–07-03  14 d | cara  1.5  stap  0.5  opil  0.5  gnap  2.5  sheet  8.5  lyco 16.5
+  06-26–08-09  44 d | cara    0  stap    0  opil    0  gnap    1  sheet    4  lyco    6
+  07-17–07-31  14 d | cara    0  stap    0  opil    0  gnap    0  sheet   18  lyco    8
+
+Groups whose samples have identical counts for all six taxa: 0 of 23 

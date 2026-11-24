@@ -1,0 +1,54 @@
+== Pitfall key uniqueness (all lakes) ==
+p1 : OK 
+# A tibble: 6 × 14
+  lakeid  dist trans setdate coldate    daysout aran_other  liny acar_total lyco_total  gnap  opil  stap  cara
+  <chr>  <dbl> <chr> <date>  <date>       <dbl>      <dbl> <dbl>      <dbl>      <dbl> <dbl> <dbl> <dbl> <dbl>
+1 hel      500 hel2  NA      2011-07-17      38         NA    NA         NA        147    NA    NA    NA    NA
+2 hel      500 hel2  NA      2011-07-17      NA         NA    NA         NA        142    NA    NA    NA    NA
+3 myv       50 vin   NA      2011-08-02      NA         NA    NA         NA         49    NA    NA    NA    NA
+4 myv       50 vin   NA      2011-08-02      NA         NA    NA         NA         18    NA    NA    NA    NA
+5 myv       NA non   NA      2011-08-02      NA         NA    NA         NA          4    NA    NA    NA    NA
+6 myv       NA non   NA      2011-08-02      NA         NA    NA         NA          4    NA    NA    NA    NA
+p2 : p2: 3 sample key(s) appear more than once (shown above). 
+
+Same check restricted to rows that survive cleaning (myv, setdate present):
+p1 : OK 
+p2 : OK 
+
+== Pitfall overlap mismatches by column ==
+Samples in both: 558 | only in first: 375 | only in second: 237 
+# A tibble: 1 × 2
+  column         n
+  <chr>      <int>
+1 acar_total   549
+Mismatches outside acar_total:
+# A tibble: 0 × 8
+# ℹ 8 variables: lakeid <chr>, dist <dbl>, trans <chr>, setdate <date>, coldate <date>, column <chr>, first <chr>,
+#   second <chr>
+
+== New join (scripts/00 lines 56-57) ==
+Rows: p1 933 + p2-only 237 = 1170 
+Duplicate sample keys among cleaned rows: none 
+
+== Infall key uniqueness (myv, setdate present) ==
+# A tibble: 8 × 10
+  lakeid  dist trans setdate    coldate    daysout fract_bgch  bgch fract_smch   smch
+  <chr>  <dbl> <chr> <date>     <date>       <dbl>      <dbl> <dbl>      <dbl>  <dbl>
+1 myv        5 hag   2012-06-05 2012-06-19      14          1    4       1       291 
+2 myv        5 hag   2012-06-05 2012-06-19      14          1    7       1       468 
+3 myv        5 vin   2008-05-30 2008-06-09      10          1 1842.      1     28482.
+4 myv        5 vin   2008-05-30 2008-06-09      10          1   NA       1        NA 
+5 myv       50 non   2012-07-17 2012-07-31      14          1    0       1       360 
+6 myv       50 non   2012-07-17 2012-07-31      14          1    0       0.229   601 
+7 myv      150 non   2008-06-04 2008-06-10       6         NA   NA      NA        NA 
+8 myv      150 non   2008-06-04 2008-06-10       7          1   26       1       173 
+i1 : i1: 4 sample key(s) appear more than once (shown above). 
+i2 : OK 
+
+== Infall overlap mismatches by column ==
+Samples in both: 719 | only in first: 974 | only in second: 289 
+# A tibble: 0 × 2
+# ℹ 2 variables: column <chr>, n <int>
+# A tibble: 0 × 8
+# ℹ 8 variables: lakeid <chr>, dist <dbl>, trans <chr>, setdate <date>, coldate <date>, column <chr>, first <chr>,
+#   second <chr>
