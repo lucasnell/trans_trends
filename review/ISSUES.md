@@ -27,6 +27,7 @@ root. Each script's output is saved next to it:
 | `16-e5-method-comparison-2.R` | `16-e5-method-comparison-2-output.txt` | E5 pairs 1–2: variance-modelling GAM, joint scoring, stacked classifier |
 | `17-check-e3-fix.R` | `17-check-e3-fix-output.txt` | E3: checks the NA-sample filters in `00-clean-data-round1.R` |
 | `18-check-e5-fix.R` | `18-check-e5-fix-output.txt` | E5: checks the pair 1–2 reassignment in `00-clean-data-round1.R` |
+| `19-check-e7-fix.R` | `19-check-e7-fix-output.txt` | E7: checks the Kálfaströnd set-date corrections; remaining overlaps |
 
 Status key: **Open**, **Resolved**, **Partly resolved**.
 
@@ -223,13 +224,15 @@ listed as allowed.
   btl 5 m row from `inf2` (committed in `0408d4b`). Exactly one row is
   removed, and the rebuilt btl 5 m 2013 values are 9,117 midges over 70 days,
   as expected (11, 17). `data/myv_arth.csv` isn't regenerated yet.
-- **Remaining overlaps** are tracked under E5 and E7. flg 500 m needs no
-  action. E6 is done once those are.
+- **Remaining overlaps:** E5 and E7 are now handled in the script, and
+  flg 500 m needs no action. At the analysed sites, the only overlaps left
+  are the two 2008 E5 duplicates, whose all-NA copies are removed by the
+  NA-count filter (19).
 - **Optional:** a within-plot date-overlap check in `00-clean-data-round1.R`
   would catch new overlaps if the raw data change. It isn't needed for the
   current data.
 
-### E7. Overlapping Kálfaströnd infall dates in 2008 and 2011 — Open
+### E7. Overlapping Kálfaströnd infall dates in 2008 and 2011 — Resolved in script (`myv_arth.csv` not regenerated)
 
 At kal 5, 50, and 150 m, one infall sample starts before the previous one
 ends, in both 2008 and 2011. All rows are in `infalls-08-17.csv` (10):
@@ -257,6 +260,13 @@ ends, in both 2008 and 2011. All rows are in `infalls-08-17.csv` (10):
 **Fix:** confirm the set dates against field sheets. If 06/26 and 07/20 are
 right, correct them in the raw file or in `00-clean-data-round1.R` with a
 comment.
+
+- **Status:** field sheets aren't available, so the pitfall service dates
+  were used. `00-clean-data-round1.R` sets the later samples' set dates to
+  2008/06/26 and 2011/07/20 at all three distances, identifying rows by
+  plot and dates; it stops unless exactly three rows match in each year. The
+  samples are now consecutive, and midge-trap-days are 72 (2008, was 75) and
+  77 (2011, was 78) (19).
 
 ---
 

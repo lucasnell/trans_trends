@@ -180,7 +180,21 @@ e5_to_kal5 <- with(i1, lakeid == "myv" & trans == "non" & dist == 50 &
                        coldate == as.Date("2012-07-31") &
                        bgch == 0 & smch == 601) %in% TRUE    # line 944
 stopifnot(sum(e5_to_btl50) == 1, sum(e5_to_kal5) == 1)
+# At kal 5, 50, and 150 m, one infall sample starts before the previous one
+# was collected, in 2008 (set 06-23, previous collected 06-26) and 2011 (set
+# 07-19, previous collected 07-20). Pitfall traps at these plots were serviced
+# on 2008-06-26 and 2011-07-20, so those are used as the set dates:
+e7_2008 <- with(i1, lakeid == "myv" & trans == "kal" & dist %in% c(5, 50, 150) &
+                    setdate == as.Date("2008-06-23") &
+                    coldate == as.Date("2008-07-08")) %in% TRUE
+e7_2011 <- with(i1, lakeid == "myv" & trans == "kal" & dist %in% c(5, 50, 150) &
+                    setdate == as.Date("2011-07-19") &
+                    coldate == as.Date("2011-08-02")) %in% TRUE
+stopifnot(sum(e7_2008) == 3, sum(e7_2011) == 3)
 i1 <- i1 |>
+    mutate(setdate = case_when(e7_2008 ~ as.Date("2008-06-26"),
+                               e7_2011 ~ as.Date("2011-07-20"),
+                               .default = setdate)) |>
     mutate(trans = case_when(e5_to_btl50 ~ "btl", e5_to_kal5 ~ "kal",
                              .default = trans),
            dist = case_when(e5_to_btl50 ~ 50, e5_to_kal5 ~ 5,
